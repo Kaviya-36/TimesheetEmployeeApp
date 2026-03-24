@@ -1,0 +1,277 @@
+<div class="app-shell"><app-sidebar /><div class="app-main"><app-navbar />
+<div class="app-content">
+  <div class="zpage-header"><div><h1 class="zpage-title">HR Dashboard</h1><p class="zpage-sub">Manage employees, attendance, leaves & payroll</p></div><span class="zhr-pill">👥 HR</span></div>
+  <div class="ztab-bar">
+    @for (t of tabs; track t.key) { <button class="ztab-btn" [class.active]="activeTab()===t.key" (click)="setTab(t.key)">{{ t.icon }} {{ t.label }}</button> }
+  </div>
+
+  @if (activeTab()==='employees') {
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-icon-wrap">👥</div><div class="stat-body"><div class="stat-value">{{ employees().length }}</div><div class="stat-label">Total Employees</div></div></div>
+      <div class="stat-card sc-success"><div class="stat-icon-wrap">✅</div><div class="stat-body"><div class="stat-value">{{ activeCount() }}</div><div class="stat-label">Active</div></div></div>
+      <div class="stat-card sc-warning"><div class="stat-icon-wrap">⚠</div><div class="stat-body"><div class="stat-value">{{ lateToday() }}</div><div class="stat-label">Late Today</div></div></div>
+      <div class="stat-card sc-info"><div class="stat-icon-wrap">🌴</div><div class="stat-body"><div class="stat-value">{{ pendingLv() }}</div><div class="stat-label">Pending Leaves</div></div></div>
+    </div>
+    <div class="zcard">
+      <div class="zcard-header"><span class="zcard-title">Employee Directory</span></div>
+      <div class="zfilter-bar">
+        <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="empSearch()" (ngModelChange)="empSearch.set($event);empPage.set(1)" placeholder="Search name, email, ID..." /></div>
+        <select class="zfilter-select" [ngModel]="empRoleF()" (ngModelChange)="empRoleF.set($event);empPage.set(1)">
+          <option value="all">All Roles</option>@for (r of roleOptions;track r){<option [value]="r">{{ r }}</option>}
+        </select>
+        <select class="zfilter-select" [ngModel]="empStatusF()" (ngModelChange)="empStatusF.set($event);empPage.set(1)">
+          <option value="all">All Status</option><option value="active">Active</option><option value="inactive">Inactive</option>
+        </select>
+        <span class="zresult-count">{{ filteredEmps().length }} employees</span>
+      </div>
+      <div class="ztable-wrap"><table class="ztable">
+        <thead><tr><th>Employee</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody>
+          @for (u of pagedEmps(); track u.id) {
+            <tr>
+              <td><div class="zuser-cell"><div class="zhr-av">{{ (u.name??'U')[0].toUpperCase() }}</div><div><strong>{{ u.name }}</strong><br><code class="zemp-id">{{ u.employeeId }}</code></div></div></td>
+              <td class="ztext-muted">{{ u.email }}</td><td class="ztext-muted">{{ u.phone||'—' }}</td>
+              <td><span class="zbadge zbadge-role">{{ u.role }}</span></td>
+              <td><span class="zbadge" [class]="u.status==='Active'?'zbadge-active':'zbadge-inactive'">{{ u.status||'Inactive' }}</span></td>
+              <td class="ztext-muted">{{ u.joiningDate | date:'dd MMM yyyy' }}</td>
+              <td><div class="zaction-row">
+                <button class="zbtn zbtn-outline zbtn-sm" (click)="openEdit(u)">✏ Edit</button>
+                @if (u.status==='Active') { <button class="zbtn zbtn-warning zbtn-sm" (click)="confirmToggle(u)">🚫 Deactivate</button> }
+                @else { <button class="zbtn zbtn-success zbtn-sm" (click)="confirmToggle(u)">✅ Activate</button> }
+                <button class="zbtn zbtn-danger zbtn-sm" (click)="confirmDelete(u)">🗑</button>
+              </div></td>
+            </tr>
+          }
+          @if (pagedEmps().length===0) { <tr class="empty-row"><td colspan="7">No employees found.</td></tr> }
+        </tbody>
+      </table></div>
+      <div class="zpagination">
+        <span class="zpagination-info">{{ filteredEmps().length }} employees</span>
+        <div class="zpagination-btns">
+          <button class="zpg-btn" (click)="empPage.set(1)" [disabled]="empPage()===1">«</button>
+          <button class="zpg-btn" (click)="empPage.update(p=>p-1)" [disabled]="empPage()===1">‹</button>
+          @for (p of pages(empTotalPages());track p){@if(p===empPage()||p===1||p===empTotalPages()||(p>=empPage()-1&&p<=empPage()+1)){<button class="zpg-btn" [class.active]="p===empPage()" (click)="empPage.set(p)">{{ p }}</button>}}
+          <button class="zpg-btn" (click)="empPage.update(p=>p+1)" [disabled]="empPage()===empTotalPages()">›</button>
+          <button class="zpg-btn" (click)="empPage.set(empTotalPages())" [disabled]="empPage()===empTotalPages()">»</button>
+        </div>
+      </div>
+    </div>
+    @if (editEmployee()) {
+      <div class="zmodal-overlay" (click)="editEmployee.set(null)"><div class="zmodal" (click)="$event.stopPropagation()">
+        <div class="zmodal-header"><span class="zmodal-title">✏ Edit Employee</span><button class="zmodal-close" (click)="editEmployee.set(null)">✕</button></div>
+        <div class="zmodal-body"><form [formGroup]="editForm" novalidate>
+          <div class="zgrid-2">
+            <div class="zform-group"><label class="zform-label">Name *</label><input formControlName="name" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">Email *</label><input formControlName="email" type="email" class="zform-control" /></div>
+          </div>
+          <div class="zgrid-2">
+            <div class="zform-group"><label class="zform-label">Phone</label><input formControlName="phone" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">Role *</label><select formControlName="role" class="zform-control">@for(r of roleOptions;track r){<option [value]="r">{{ r }}</option>}</select></div>
+          </div>
+        </form></div>
+        <div class="zmodal-footer"><button class="zbtn zbtn-outline" (click)="editEmployee.set(null)">Cancel</button><button class="zbtn zbtn-primary" [disabled]="editForm.invalid" (click)="saveEdit()">Save Changes</button></div>
+      </div></div>
+    }
+  }
+
+  @if (activeTab()==='attendance') {
+    <div class="zcard">
+      <div class="zcard-header"><span class="zcard-title">Attendance Records</span></div>
+      <div class="zfilter-bar">
+        <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="attSearch()" (ngModelChange)="attSearch.set($event);attPage.set(1)" placeholder="Search employee..." /></div>
+        <span class="zresult-count">{{ filteredAtt().length }} records</span>
+      </div>
+      <div class="ztable-wrap"><table class="ztable">
+        <thead><tr><th>Employee</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Total Hours</th><th>Status</th></tr></thead>
+        <tbody>
+          @for (a of pagedAtt(); track a.id) {
+            <tr>
+              <td><strong>{{ a.employeeName }}</strong></td>
+              <td>{{ a.date | date:'dd MMM yyyy' }}</td>
+              <td class="ztime-cell">{{ a.checkIn||'—' }}</td><td class="ztime-cell">{{ a.checkOut||'—' }}</td>
+              <td><strong>{{ a.totalHours||'—' }}</strong></td>
+              <td>@if(a.isLate){<span class="zbadge zbadge-pending">⚠ Late</span>}@else{<span class="zbadge zbadge-approved">✅ On Time</span>}</td>
+            </tr>
+          }
+          @if (pagedAtt().length===0) { <tr class="empty-row"><td colspan="6">No attendance records.</td></tr> }
+        </tbody>
+      </table></div>
+      <div class="zpagination">
+        <span class="zpagination-info">{{ filteredAtt().length }} records</span>
+        <div class="zpagination-btns">
+          <button class="zpg-btn" (click)="attPage.update(p=>p-1)" [disabled]="attPage()===1">‹ Prev</button>
+          <span style="padding:0 12px;font-size:13px;color:#6B7280">Page {{ attPage() }}/{{ attTotalPages() }}</span>
+          <button class="zpg-btn" (click)="attPage.update(p=>p+1)" [disabled]="attPage()===attTotalPages()">Next ›</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (activeTab()==='leaves') {
+    <div class="zcard">
+      <div class="zcard-header"><span class="zcard-title">Leave Management</span></div>
+      <div class="zfilter-bar">
+        <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="lvSearch()" (ngModelChange)="lvSearch.set($event);lvPage.set(1)" placeholder="Search employee..." /></div>
+        <select class="zfilter-select" [ngModel]="lvStatusF()" (ngModelChange)="lvStatusF.set($event);lvPage.set(1)">
+          <option value="all">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option>
+        </select>
+        <span class="zresult-count">{{ filteredLv().length }} records</span>
+      </div>
+      <div class="ztable-wrap"><table class="ztable">
+        <thead><tr><th>Employee</th><th>Leave Type</th><th>From</th><th>To</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          @for (l of pagedLv(); track l.id) {
+            <tr>
+              <td><strong>{{ l.employeeName }}</strong></td><td>{{ l.leaveType }}</td>
+              <td>{{ l.fromDate | date:'dd MMM yyyy' }}</td><td>{{ l.toDate | date:'dd MMM yyyy' }}</td>
+              <td class="ztext-muted">{{ l.reason||'—' }}</td>
+              <td><span class="zbadge" [class]="stClass(l.status)">{{ stText(l.status) }}</span></td>
+              <td>@if(+l.status===0){<div class="zaction-row"><button class="zbtn zbtn-success zbtn-sm" (click)="approveLeave(l)">✅ Approve</button><button class="zbtn zbtn-danger zbtn-sm" (click)="rejectLeave(l)">❌ Reject</button></div>}@else{<span class="ztext-muted">—</span>}</td>
+            </tr>
+          }
+          @if (pagedLv().length===0) { <tr class="empty-row"><td colspan="7">No leave requests.</td></tr> }
+        </tbody>
+      </table></div>
+      <div class="zpagination">
+        <span class="zpagination-info">{{ filteredLv().length }} records</span>
+        <div class="zpagination-btns">
+          <button class="zpg-btn" (click)="lvPage.update(p=>p-1)" [disabled]="lvPage()===1">‹ Prev</button>
+          <span style="padding:0 12px;font-size:13px;color:#6B7280">Page {{ lvPage() }}/{{ lvTotalPages() }}</span>
+          <button class="zpg-btn" (click)="lvPage.update(p=>p+1)" [disabled]="lvPage()===lvTotalPages()">Next ›</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (activeTab()==='payroll') {
+    <div class="zcard">
+      <div class="zcard-header"><span class="zcard-title">Payroll Management</span><button class="zbtn zbtn-primary zbtn-sm" (click)="showPayrollModal.set(true)">+ Generate Payroll</button></div>
+      <div class="zpay-summary-row">
+        <div class="zpay-stat"><span class="zpay-lbl">Total Payout</span><span class="zpay-val">₹{{ totalPayroll() | number:'1.0-0' }}</span></div>
+        <div class="zpay-stat"><span class="zpay-lbl">Records</span><span class="zpay-val">{{ payrolls().length }}</span></div>
+      </div>
+      <div class="zfilter-bar">
+        <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="paySearch()" (ngModelChange)="paySearch.set($event);payPage.set(1)" placeholder="Search employee..." /></div>
+        <span class="zresult-count">{{ filteredPay().length }} records</span>
+      </div>
+      <div class="ztable-wrap"><table class="ztable">
+        <thead><tr><th>Employee</th><th>Emp ID</th><th>Basic Salary</th><th>Overtime</th><th>Deductions</th><th>Net Salary</th><th>Month</th><th>Generated</th></tr></thead>
+        <tbody>
+          @for (p of pagedPay(); track p.payrollId) {
+            <tr>
+              <td><strong>{{ p.employeeName }}</strong></td>
+              <td><code class="zemp-id">{{ p.employeeId }}</code></td>
+              <td>₹{{ p.basicSalary | number:'1.0-0' }}</td>
+              <td class="zpay-green">+₹{{ p.overtimeAmount | number:'1.0-0' }}</td>
+              <td class="zpay-red">−₹{{ p.deductions | number:'1.0-0' }}</td>
+              <td><strong class="zpay-net">₹{{ p.netSalary | number:'1.0-0' }}</strong></td>
+              <td>{{ p.salaryMonth | date:'MMM yyyy' }}</td>
+              <td class="ztext-muted">{{ p.generatedDate | date:'dd MMM yyyy' }}</td>
+            </tr>
+          }
+          @if (pagedPay().length===0) { <tr class="empty-row"><td colspan="8">No payroll records.</td></tr> }
+        </tbody>
+      </table></div>
+      <div class="zpagination">
+        <span class="zpagination-info">{{ filteredPay().length }} records</span>
+        <div class="zpagination-btns">
+          <button class="zpg-btn" (click)="payPage.update(p=>p-1)" [disabled]="payPage()===1">‹ Prev</button>
+          <span style="padding:0 12px;font-size:13px;color:#6B7280">Page {{ payPage() }}/{{ payTotalPages() }}</span>
+          <button class="zpg-btn" (click)="payPage.update(p=>p+1)" [disabled]="payPage()===payTotalPages()">Next ›</button>
+        </div>
+      </div>
+    </div>
+    @if (showPayrollModal()) {
+      <div class="zmodal-overlay" (click)="showPayrollModal.set(false)"><div class="zmodal" (click)="$event.stopPropagation()">
+        <div class="zmodal-header"><span class="zmodal-title">💰 Generate Payroll</span><button class="zmodal-close" (click)="showPayrollModal.set(false)">✕</button></div>
+        <div class="zmodal-body"><form [formGroup]="payrollForm" novalidate>
+          <div class="zform-group"><label class="zform-label">Employee *</label>
+            <select formControlName="userId" class="zform-control"><option value="">— Select Employee —</option>@for(e of employees();track e.id){<option [value]="e.id">{{ e.name }} ({{ e.employeeId }})</option>}</select>
+          </div>
+          <div class="zgrid-2">
+            <div class="zform-group"><label class="zform-label">Basic Salary *</label><input formControlName="basicSalary" type="number" class="zform-control" placeholder="50000" /></div>
+            <div class="zform-group"><label class="zform-label">Overtime Hours</label><input formControlName="overtimeHours" type="number" class="zform-control" placeholder="0" /></div>
+          </div>
+          <div class="zgrid-2">
+            <div class="zform-group"><label class="zform-label">Deductions</label><input formControlName="deductions" type="number" class="zform-control" placeholder="0" /></div>
+            <div class="zform-group"><label class="zform-label">Salary Month *</label><input formControlName="salaryMonth" type="month" class="zform-control" /></div>
+          </div>
+        </form></div>
+        <div class="zmodal-footer"><button class="zbtn zbtn-outline" (click)="showPayrollModal.set(false)">Cancel</button><button class="zbtn zbtn-primary" [disabled]="payrollForm.invalid" (click)="generatePayroll()">Generate</button></div>
+      </div></div>
+    }
+  }
+
+  @if (activeTab()==='reports') {
+
+  <!-- HEADER -->
+  <div class="zreports-header">
+    <h3>📊 Reports & Analytics</h3>
+
+    <div class="zreport-actions">
+      <button class="zbtn zbtn-success" (click)="exportEmployeesExcel()">⬇ Employees (Excel)</button>
+      <button class="zbtn zbtn-danger" (click)="exportEmployeesPDF()">📄 Employees (PDF)</button>
+
+      <button class="zbtn zbtn-success" (click)="exportAttendanceExcel()">⬇ Attendance (Excel)</button>
+      <button class="zbtn zbtn-danger" (click)="exportAttendancePDF()">📄 Attendance (PDF)</button>
+    </div>
+  </div>
+
+  <!-- GRID -->
+  <div class="zreports-grid">
+
+    <!-- EMPLOYEE -->
+    <div class="zcard">
+      <div class="zreport-icon">👥</div>
+      <h4 class="zreport-title">Employee Summary</h4>
+
+      <div class="zreport-stat"><span>Total</span><strong>{{ employees().length }}</strong></div>
+      <div class="zreport-stat"><span>Active</span><strong class="green">{{ activeCount() }}</strong></div>
+      <div class="zreport-stat"><span>Inactive</span><strong class="red">{{ employees().length - activeCount() }}</strong></div>
+      
+    </div>
+
+    <!-- ATTENDANCE -->
+    <div class="zcard">
+      <div class="zreport-icon">📅</div>
+      <h4 class="zreport-title">Attendance Report</h4>
+
+      <div class="zreport-stat"><span>Total Records</span><strong>{{ attendance().length }}</strong></div>
+      <div class="zreport-stat"><span>Late Today</span><strong class="orange">{{ lateToday() }}</strong></div>
+    </div>
+
+    <!-- LEAVE -->
+    <div class="zcard">
+      <div class="zreport-icon">🌴</div>
+      <h4 class="zreport-title">Leave Report</h4>
+
+      <div class="zreport-stat"><span>Total</span><strong>{{ allLeaves().length }}</strong></div>
+      <div class="zreport-stat"><span>Pending</span><strong class="orange">{{ pendingLv() }}</strong></div>
+
+      <div class="zreport-actions">
+        <button class="zbtn zbtn-success" (click)="exportLeavesExcel()">Excel</button>
+        <button class="zbtn zbtn-danger" (click)="exportLeavesPDF()">PDF</button>
+      </div>
+    </div>
+
+    <!-- PAYROLL -->
+    <div class="zcard">
+      <div class="zreport-icon">💰</div>
+      <h4 class="zreport-title">Payroll</h4>
+
+      <div class="zreport-stat"><span>Generated</span><strong>{{ payrolls().length }}</strong></div>
+      <div class="zreport-stat">
+        <span>Total</span>
+        <strong class="green">₹{{ totalPayroll() | number:'1.0-0' }}</strong>
+      </div>
+
+      <div class="zreport-actions">
+        <button class="zbtn zbtn-success" (click)="exportPayrollExcel()">Excel</button>
+        <button class="zbtn zbtn-danger" (click)="exportPayrollPDF()">PDF</button>
+      </div>
+    </div>
+
+  </div>
+}
+</div></div></div>
+<app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()" [type]="cfgType()" (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />

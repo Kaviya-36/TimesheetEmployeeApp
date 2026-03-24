@@ -1,0 +1,275 @@
+<div class="app-shell"><app-sidebar /><div class="app-main"><app-navbar />
+<div class="app-content">
+  <div class="zpage-header">
+    <div><h1 class="zpage-title">Manager Dashboard</h1><p class="zpage-sub">Team oversight, approvals & project management</p></div>
+    <span class="zmgr-pill">📋 Manager</span>
+  </div>
+  <div class="ztab-bar">
+    @for (t of tabs; track t.key) {
+      <button class="ztab-btn" [class.active]="activeTab()===t.key" (click)="setTab(t.key)">{{ t.icon }} {{ t.label }}</button>
+    }
+  </div>
+
+  @if (activeTab()==='dashboard') {
+    <div class="stat-grid">
+      <div class="stat-card sc-warning"><div class="stat-icon-wrap">⏳</div><div class="stat-body"><div class="stat-value">{{ pendingTs().length }}</div><div class="stat-label">Pending Timesheets</div></div></div>
+      <div class="stat-card sc-warning"><div class="stat-icon-wrap">🌴</div><div class="stat-body"><div class="stat-value">{{ pendingLv().length }}</div><div class="stat-label">Pending Leaves</div></div></div>
+      <div class="stat-card sc-info"><div class="stat-icon-wrap">👥</div><div class="stat-body"><div class="stat-value">{{ teamMembers().length }}</div><div class="stat-label">Team Members</div></div></div>
+      <div class="stat-card"><div class="stat-icon-wrap">🗂</div><div class="stat-body"><div class="stat-value">{{ projects().length }}</div><div class="stat-label">Projects</div></div></div>
+    </div>
+    @if (pendingTs().length > 0) {
+      <div class="zcard" style="margin-top:16px">
+        <div class="zcard-header"><span class="zcard-title">⏳ Quick Approvals — Timesheets</span><span class="zbadge zbadge-pending">{{ pendingTs().length }}</span></div>
+        <div class="zcard-body">
+          @for (ts of pendingTs().slice(0,5); track ts.id) {
+            <div class="zpending-row">
+              <div class="zpending-info"><strong>{{ ts.employeeName }}</strong><span class="ztext-muted"> · {{ ts.projectName }} · {{ ts.date | date:'dd MMM' }} · {{ ts.hoursWorked }}h</span></div>
+              <div class="zaction-row">
+                <button class="zbtn zbtn-success zbtn-sm" (click)="reviewTs(ts,true)">✅ Approve</button>
+                <button class="zbtn zbtn-danger zbtn-sm" (click)="reviewTs(ts,false)">❌ Reject</button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+
+  @if (activeTab()==='timesheets') {
+    <div class="zcard">
+      <div class="zcard-header"><span class="zcard-title">Team Timesheets</span></div>
+      <div class="zfilter-bar">
+        <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="tsSearch()" (ngModelChange)="tsSearch.set($event);tsPage.set(1)" placeholder="Search employee or project..." /></div>
+        <select class="zfilter-select" [ngModel]="tsStatus()" (ngModelChange)="tsStatus.set($event);tsPage.set(1)">
+          <option value="all">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option>
+        </select>
+        <span class="zresult-count">{{ filteredTs().length }} records</span>
+      </div>
+      <div class="ztable-wrap"><table class="ztable">
+        <thead><tr>
+          <th class="sortable" (click)="sortTs('employee')">Employee {{ ico(tsSortCol()==='employee',tsSortDir()) }}</th>
+          <th>Project</th>
+          <th class="sortable" (click)="sortTs('date')">Date {{ ico(tsSortCol()==='date',tsSortDir()) }}</th>
+          <th class="sortable" (click)="sortTs('hours')">Hours {{ ico(tsSortCol()==='hours',tsSortDir()) }}</th>
+          <th>Status</th><th>Comment</th><th>Actions</th>
+        </tr></thead>
+        <tbody>
+          @for (ts of pagedTs(); track ts.id) {
+            <tr>
+              <td><strong>{{ ts.employeeName }}</strong><br><code class="zemp-id">{{ ts.employeeId }}</code></td>
+              <td>{{ ts.projectName }}</td>
+              <td>{{ ts.date | date:'dd MMM yyyy' }}</td>
+              <td><strong class="zhours">{{ ts.hoursWorked }}h</strong></td>
+              <td><span class="zbadge" [class]="stClass(ts.status)">{{ stText(ts.status) }}</span></td>
+              <td class="ztext-muted">{{ ts.managerComment || '—' }}</td>
+              <td>
+                @if (ts.status === 0) {
+                  <div class="zaction-row">
+                    <button class="zbtn zbtn-success zbtn-sm" (click)="reviewTs(ts,true)">✅</button>
+                    <button class="zbtn zbtn-danger zbtn-sm" (click)="reviewTs(ts,false)">❌</button>
+                  </div>
+                } @else { <span class="ztext-muted">—</span> }
+              </td>
+            </tr>
+          }
+          @if (pagedTs().length===0) { <tr class="empty-row"><td colspan="7">No timesheets found.</td></tr> }
+        </tbody>
+      </table></div>
+      <div class="zpagination">
+        <span class="zpagination-info">{{ filteredTs().length }} records · Page {{ tsPage() }}/{{ tsTotalPages() }}</span>
+        <div class="zpagination-btns">
+          <button class="zpg-btn" (click)="tsPage.set(1)" [disabled]="tsPage()===1">«</button>
+          <button class="zpg-btn" (click)="tsPage.update(p=>p-1)" [disabled]="tsPage()===1">‹</button>
+          @for (p of pages(tsTotalPages()); track p) {
+            @if (p===tsPage()||p===1||p===tsTotalPages()||(p>=tsPage()-1&&p<=tsPage()+1)) {
+              <button class="zpg-btn" [class.active]="p===tsPage()" (click)="tsPage.set(p)">{{ p }}</button>
+            }
+          }
+          <button class="zpg-btn" (click)="tsPage.update(p=>p+1)" [disabled]="tsPage()===tsTotalPages()">›</button>
+          <button class="zpg-btn" (click)="tsPage.set(tsTotalPages())" [disabled]="tsPage()===tsTotalPages()">»</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (activeTab()==='leaves') {
+    <div class="zcard">
+      <div class="zcard-header"><span class="zcard-title">Leave Requests</span></div>
+      <div class="zfilter-bar">
+        <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="lvSearch()" (ngModelChange)="lvSearch.set($event);lvPage.set(1)" placeholder="Search employee..." /></div>
+        <select class="zfilter-select" [ngModel]="lvStatus()" (ngModelChange)="lvStatus.set($event);lvPage.set(1)">
+          <option value="all">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option>
+        </select>
+        <span class="zresult-count">{{ filteredLv().length }} records</span>
+      </div>
+      <div class="ztable-wrap"><table class="ztable">
+        <thead><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          @for (l of pagedLv(); track l.id) {
+            <tr>
+              <td><strong>{{ l.employeeName }}</strong></td>
+              <td>{{ l.leaveType }}</td>
+              <td>{{ l.fromDate | date:'dd MMM yyyy' }}</td>
+              <td>{{ l.toDate | date:'dd MMM yyyy' }}</td>
+              <td class="ztext-muted">{{ l.reason || '—' }}</td>
+              <td><span class="zbadge" [class]="stClass(l.status)">{{ stText(l.status) }}</span></td>
+              <td>
+                @if (+l.status===0) {
+                  <div class="zaction-row">
+                    <button class="zbtn zbtn-success zbtn-sm" (click)="reviewLeave(l,true)">✅ Approve</button>
+                    <button class="zbtn zbtn-danger zbtn-sm" (click)="reviewLeave(l,false)">❌ Reject</button>
+                  </div>
+                } @else { <span class="ztext-muted">—</span> }
+              </td>
+            </tr>
+          }
+          @if (pagedLv().length===0) { <tr class="empty-row"><td colspan="7">No leave requests found.</td></tr> }
+        </tbody>
+      </table></div>
+      <div class="zpagination">
+        <span class="zpagination-info">{{ filteredLv().length }} records</span>
+        <div class="zpagination-btns">
+          <button class="zpg-btn" (click)="lvPage.update(p=>p-1)" [disabled]="lvPage()===1">‹ Prev</button>
+          <span style="padding:0 12px;font-size:13px;color:#6B7280">Page {{ lvPage() }}/{{ lvTotalPages() }}</span>
+          <button class="zpg-btn" (click)="lvPage.update(p=>p+1)" [disabled]="lvPage()===lvTotalPages()">Next ›</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (activeTab()==='team') {
+    <div class="zcard">
+      <div class="zcard-header"><span class="zcard-title">My Team</span></div>
+      <div class="zfilter-bar">
+        <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="teamSearch()" (ngModelChange)="teamSearch.set($event);teamPage.set(1)" placeholder="Search name or role..." /></div>
+        <span class="zresult-count">{{ filteredTeam().length }} members</span>
+      </div>
+      <div class="ztable-wrap"><table class="ztable">
+        <thead><tr><th>Member</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th></tr></thead>
+        <tbody>
+          @for (u of pagedTeam(); track u.id) {
+            <tr>
+              <td><div class="zuser-cell"><div class="zavatar" style="width:28px;height:28px;font-size:12px">{{ (u.name??'U')[0].toUpperCase() }}</div><span>{{ u.name }}</span></div></td>
+              <td class="ztext-muted">{{ u.email }}</td>
+              <td><span class="zbadge zbadge-role">{{ u.role }}</span></td>
+              <td><span class="zbadge" [class]="u.status==='Active'?'zbadge-active':'zbadge-inactive'">{{ u.status }}</span></td>
+              <td class="ztext-muted">{{ u.joiningDate | date:'dd MMM yyyy' }}</td>
+            </tr>
+          }
+          @if (pagedTeam().length===0) { <tr class="empty-row"><td colspan="5">No team members found.</td></tr> }
+        </tbody>
+      </table></div>
+      <div class="zpagination">
+        <span class="zpagination-info">{{ filteredTeam().length }} members</span>
+        <div class="zpagination-btns">
+          <button class="zpg-btn" (click)="teamPage.update(p=>p-1)" [disabled]="teamPage()===1">‹ Prev</button>
+          <span style="padding:0 12px;font-size:13px;color:#6B7280">Page {{ teamPage() }}/{{ teamTotalPages() }}</span>
+          <button class="zpg-btn" (click)="teamPage.update(p=>p+1)" [disabled]="teamPage()===teamTotalPages()">Next ›</button>
+        </div>
+      </div>
+    </div>
+  }
+  
+  @if (activeTab()==='projects') {
+
+  <!-- Assign Section -->
+  <div class="zcard" style="margin-bottom:16px">
+    <div class="zcard-header">
+      <span class="zcard-title">Assign Team Member to Project</span>
+    </div>
+    <div class="zcard-body">
+      <div class="zassign-row">
+
+        <select class="zfilter-select" [(ngModel)]="selProjectId">
+          <option [value]="null">— Select Project —</option>
+          @for (p of projects(); track p.id) {
+            <option [value]="p.id">{{ p.projectName }}</option>
+          }
+        </select>
+
+        <select class="zfilter-select" [(ngModel)]="selUserId">
+          <option [value]="null">— Select Member —</option>
+          @for (u of teamMembers(); track u.id) {
+            <option [value]="u.id">{{ u.name }}</option>
+          }
+        </select>
+
+        <button class="zbtn zbtn-primary" (click)="assignUserToProject()">
+          Assign
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Projects Table -->
+  <div class="zcard">
+    <div class="zcard-header">
+      <span class="zcard-title">All Projects</span>
+    </div>
+
+    <div class="ztable-wrap">
+      <table class="ztable">
+
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th>Description</th>
+            <th>Manager</th>
+            <th>Start</th>
+            <th>End</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          @for (p of projects(); track p.id) {
+
+            <!-- Project Row -->
+            <tr>
+              <td><strong>{{ p.projectName }}</strong></td>
+              <td class="ztext-muted">{{ p.description || '—' }}</td>
+              <td>{{ p.managerName || '—' }}</td>
+              <td>{{ p.startDate | date:'dd MMM yyyy' }}</td>
+              <td>{{ p.endDate ? (p.endDate | date:'dd MMM yyyy') : 'Ongoing' }}</td>
+            </tr>
+
+            <!-- 🔥 Assigned Users Row -->
+            <tr class="assigned-row">
+              <td colspan="5">
+
+                @if (projectAssignments()[p.id]?.length) {
+
+                  <div class="user-list">
+
+                    @for (a of projectAssignments()[p.id]; track a.assignmentId) {
+                      <span class="user-chip">
+                        👤 {{ a.userName }}
+                      </span>
+                    }
+
+                  </div>
+
+                } @else {
+                  <span class="ztext-muted">No users assigned</span>
+                }
+
+              </td>
+            </tr>
+
+          }
+
+          @if (projects().length === 0) {
+            <tr class="empty-row">
+              <td colspan="5">No projects found.</td>
+            </tr>
+          }
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+  
+</div></div></div>
+<app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()" [type]="cfgType()" (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />

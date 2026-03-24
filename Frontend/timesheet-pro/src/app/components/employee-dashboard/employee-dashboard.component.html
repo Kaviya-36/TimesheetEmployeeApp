@@ -1,0 +1,408 @@
+<div class="app-shell">
+  <app-sidebar />
+  <div class="app-main">
+    <app-navbar />
+    <div class="app-content">
+
+      <div class="zpage-header">
+        <div>
+          <h1 class="zpage-title">My Workspace</h1>
+          <p class="zpage-sub">Welcome back, {{ auth.username() }} 👋</p>
+        </div>
+        <span class="zemp-role-pill">{{ auth.currentRole() }}</span>
+      </div>
+
+      <div class="ztab-bar">
+        @for (t of tabs; track t.key) {
+          <button class="ztab-btn" [class.active]="activeTab()===t.key" (click)="setTab(t.key)">
+            {{ t.icon }} {{ t.label }}
+          </button>
+        }
+      </div>
+
+      <!-- ═══════════ DASHBOARD ═══════════ -->
+      @if (activeTab() === 'dashboard') {
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-icon-wrap">📋</div><div class="stat-body"><div class="stat-value">{{ timesheets().length }}</div><div class="stat-label">Total Timesheets</div></div></div>
+          <div class="stat-card sc-success"><div class="stat-icon-wrap">✅</div><div class="stat-body"><div class="stat-value">{{ approvedCount() }}</div><div class="stat-label">Approved</div></div></div>
+          <div class="stat-card sc-warning"><div class="stat-icon-wrap">⏳</div><div class="stat-body"><div class="stat-value">{{ pendingCount() }}</div><div class="stat-label">Pending</div></div></div>
+        </div>
+
+        <!-- Today Attendance Card -->
+        <div class="zatt-hero">
+          <div class="zatt-hero-left">
+            <div class="zatt-hero-title">Today's Attendance</div>
+            <div class="zatt-hero-date">{{ todayDate | date:'EEEE, MMMM d, y' }}</div>
+
+            @if (todayAtt()?.checkIn && !todayAtt()?.checkOut) {
+              <div class="zlive-timer-wrap">
+                <span class="zlive-dot"></span>
+                <span class="zlive-label">LIVE</span>
+                <span class="zlive-time">{{ liveTimer() }}</span>
+              </div>
+            }
+
+            <div class="zatt-stats-row">
+              <div class="zatt-stat">
+                <span class="zatt-stat-label">Check In</span>
+                <span class="zatt-stat-value">{{ todayAtt()?.checkIn || '—' }}</span>
+              </div>
+              <div class="zatt-stat">
+                <span class="zatt-stat-label">Check Out</span>
+                <span class="zatt-stat-value">{{ todayAtt()?.checkOut || '—' }}</span>
+              </div>
+              <div class="zatt-stat">
+                <span class="zatt-stat-label">Total Hours</span>
+                <span class="zatt-stat-value">{{ todayAtt()?.totalHours || '—' }}</span>
+              </div>
+              <div class="zatt-stat">
+                <span class="zatt-stat-label">Status</span>
+                <span class="zatt-stat-value" [class.zlate]="todayAtt()?.isLate">
+                  @if (todayAtt()?.isLate) { ⚠ Late } @else { ✅ On Time }
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="zatt-hero-right">
+            @if (!todayAtt()?.checkIn) {
+              <div class="zatt-status-badge zatt-not-started">● Not Started</div>
+              <button class="zbtn zbtn-primary zbtn-lg zatt-btn" (click)="checkIn()" [disabled]="attLoading()">
+                @if (attLoading()) { <span class="zbtn-spin"></span> } 📍 Check In
+              </button>
+            } @else if (!todayAtt()?.checkOut) {
+              <div class="zatt-status-badge zatt-active">● Active</div>
+              <button class="zbtn zbtn-warning zbtn-lg zatt-btn" (click)="checkOut()" [disabled]="attLoading()">
+                @if (attLoading()) { <span class="zbtn-spin"></span> } ⏏ Check Out
+              </button>
+            } @else {
+              <div class="zatt-status-badge zatt-done">● Completed</div>
+              <button class="zbtn zbtn-outline zbtn-lg zatt-btn" disabled>✔ Day Done</button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ═══════════ TIMESHEETS ═══════════ -->
+      @if (activeTab() === 'timesheet') {
+        <div class="zcard">
+          <div class="zcard-header">
+            <span class="zcard-title">My Timesheets</span>
+            <button class="zbtn zbtn-primary zbtn-sm" (click)="showTsModal.set(true)">+ Add Timesheet</button>
+          </div>
+
+          <!-- Filters -->
+          <div class="zfilter-bar">
+            <div class="zfilter-wrap">
+              <input class="zfilter-input" [ngModel]="tsSearch()"
+                (ngModelChange)="tsSearch.set($event); tsPage.set(1)"
+                placeholder="Search project..." />
+            </div>
+            <select class="zfilter-select" [ngModel]="tsStatus()"
+              (ngModelChange)="tsStatus.set($event); tsPage.set(1)">
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <span class="zresult-count">{{ filteredTs().length }} records</span>
+          </div>
+
+          <div class="ztable-wrap">
+            <table class="ztable">
+              <thead>
+                <tr>
+                  <th class="sortable" (click)="sortTs('project')">Project {{ ico(tsSortCol()==='project', tsSortDir()) }}</th>
+                  <th class="sortable" (click)="sortTs('date')">Date {{ ico(tsSortCol()==='date', tsSortDir()) }}</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Break</th>
+                  <th class="sortable" (click)="sortTs('hours')">Hours {{ ico(tsSortCol()==='hours', tsSortDir()) }}</th>
+                  <th>Status</th>
+                  <th>Comment</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (ts of pagedTs(); track ts.id) {
+                  <tr>
+                    <td><strong>{{ ts.projectName }}</strong></td>
+                    <td>{{ ts.date | date:'dd MMM yyyy' }}</td>
+                    <td class="ztime-cell">{{ ts.startTime }}</td>
+                    <td class="ztime-cell">{{ ts.endTime }}</td>
+                    <td class="ztime-cell">{{ ts.breakTime }}</td>
+                    <td><strong class="zhours">{{ ts.hoursWorked }}h</strong></td>
+                    <td><span class="zbadge" [class]="stClass(ts.status)">{{ stText(ts.status) }}</span></td>
+                    <td class="ztext-muted zcomment-cell">{{ ts.managerComment || '—' }}</td>
+                    <td>
+                      @if (ts.status === 0) {
+                        <div class="zaction-row">
+                          <button class="zbtn zbtn-outline zbtn-sm" (click)="openEditTs(ts)" title="Edit">✏</button>
+                          <button class="zbtn zbtn-danger zbtn-sm" (click)="confirmDeleteTs(ts)" title="Delete">🗑</button>
+                        </div>
+                      } @else {
+                        <span class="ztext-muted">—</span>
+                      }
+                    </td>
+                  </tr>
+                }
+                @if (pagedTs().length === 0) {
+                  <tr class="empty-row"><td colspan="9">No timesheets found. Click "Add Timesheet" to get started.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="zpagination">
+            <span class="zpagination-info">{{ filteredTs().length }} total · Page {{ tsPage() }}/{{ tsTotalPages() }}</span>
+            <div class="zpagination-btns">
+              <button class="zpg-btn" (click)="tsPage.set(1)" [disabled]="tsPage()===1">«</button>
+              <button class="zpg-btn" (click)="tsPage.update(p=>p-1)" [disabled]="tsPage()===1">‹</button>
+              @for (p of pages(tsTotalPages()); track p) {
+                @if (p===tsPage()||p===1||p===tsTotalPages()||(p>=tsPage()-1&&p<=tsPage()+1)) {
+                  <button class="zpg-btn" [class.active]="p===tsPage()" (click)="tsPage.set(p)">{{ p }}</button>
+                }
+              }
+              <button class="zpg-btn" (click)="tsPage.update(p=>p+1)" [disabled]="tsPage()===tsTotalPages()">›</button>
+              <button class="zpg-btn" (click)="tsPage.set(tsTotalPages())" [disabled]="tsPage()===tsTotalPages()">»</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ═══════════ ATTENDANCE ═══════════ -->
+      @if (activeTab() === 'attendance') {
+        <div class="zcard">
+          <div class="zcard-header"><span class="zcard-title">Attendance History</span></div>
+          <div class="ztable-wrap">
+            <table class="ztable">
+              <thead>
+                <tr><th>Date</th><th>Check In</th><th>Check Out</th><th>Total Hours</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                @for (a of pagedAtt(); track a.id) {
+                  <tr>
+                    <td>{{ a.date | date:'EEE, dd MMM yyyy' }}</td>
+                    <td class="ztime-cell">{{ a.checkIn || '—' }}</td>
+                    <td class="ztime-cell">{{ a.checkOut || '—' }}</td>
+                    <td><strong>{{ a.totalHours || '—' }}</strong></td>
+                    <td>
+                      @if (a.isLate) { <span class="zbadge zbadge-pending">⚠ Late</span> }
+                      @else          { <span class="zbadge zbadge-approved">✅ On Time</span> }
+                    </td>
+                  </tr>
+                }
+                @if (pagedAtt().length === 0) {
+                  <tr class="empty-row"><td colspan="5">No attendance records found.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="zpagination">
+            <span class="zpagination-info">{{ attendances().length }} records</span>
+            <div class="zpagination-btns">
+              <button class="zpg-btn" (click)="attPage.update(p=>p-1)" [disabled]="attPage()===1">‹ Prev</button>
+              <span class="zpg-info-text">Page {{ attPage() }}/{{ attTotalPages() }}</span>
+              <button class="zpg-btn" (click)="attPage.update(p=>p+1)" [disabled]="attPage()===attTotalPages()">Next ›</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ═══════════ LEAVE ═══════════ -->
+      @if (activeTab() === 'leave') {
+        <div class="zcard">
+          <div class="zcard-header">
+            <span class="zcard-title">My Leave Requests</span>
+            <button class="zbtn zbtn-primary zbtn-sm" (click)="showLeaveModal.set(true)">+ Apply Leave</button>
+          </div>
+          <div class="ztable-wrap">
+            <table class="ztable">
+              <thead>
+                <tr><th>Leave Type</th><th>From</th><th>To</th><th>Days</th><th>Reason</th><th>Status</th><th>Comment</th></tr>
+              </thead>
+              <tbody>
+                @for (l of pagedLv(); track l.id) {
+                  <tr>
+                    <td><strong>{{ l.leaveType }}</strong></td>
+                    <td>{{ l.fromDate | date:'dd MMM yyyy' }}</td>
+                    <td>{{ l.toDate | date:'dd MMM yyyy' }}</td>
+                    <td><span class="zdays-badge">{{ leaveDays(l) }}d</span></td>
+                    <td class="ztext-muted">{{ l.reason || '—' }}</td>
+                    <td><span class="zbadge" [class]="stClass(l.status)">{{ stText(l.status) }}</span></td>
+                    <td class="ztext-muted">{{ l.managerComment || '—' }}</td>
+                  </tr>
+                }
+                @if (pagedLv().length === 0) {
+                  <tr class="empty-row"><td colspan="7">No leave requests. Click "+ Apply Leave" to submit one.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="zpagination">
+            <span class="zpagination-info">{{ leaves().length }} requests</span>
+            <div class="zpagination-btns">
+              <button class="zpg-btn" (click)="lvPage.update(p=>p-1)" [disabled]="lvPage()===1">‹ Prev</button>
+              <span class="zpg-info-text">Page {{ lvPage() }}/{{ lvTotalPages() }}</span>
+              <button class="zpg-btn" (click)="lvPage.update(p=>p+1)" [disabled]="lvPage()===lvTotalPages()">Next ›</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ═══════════ PROFILE ═══════════ -->
+      @if (activeTab() === 'profile') {
+        <div class="zprofile-card">
+          <div class="zprofile-banner"></div>
+          <div class="zprofile-body">
+            <div class="zprofile-avatar-lg">{{ (auth.username()?? 'U')[0].toUpperCase() }}</div>
+            <h2 class="zprofile-name">{{ auth.username() }}</h2>
+            <span class="zbadge zbadge-role">{{ auth.currentRole() }}</span>
+            <div class="zprofile-stats">
+              <div class="zpstat"><span class="zpstat-val">{{ timesheets().length }}</span><span class="zpstat-lbl">Timesheets</span></div>
+              <div class="zpstat"><span class="zpstat-val">{{ approvedCount() }}</span><span class="zpstat-lbl">Approved</span></div>
+              <div class="zpstat"><span class="zpstat-val">{{ leaves().length }}</span><span class="zpstat-lbl">Leaves</span></div>
+            </div>
+            <button class="zbtn zbtn-danger" (click)="auth.logout()">⎋ Sign Out</button>
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ADD TIMESHEET MODAL ═══ -->
+@if (showTsModal()) {
+  <div class="zmodal-overlay" (click)="showTsModal.set(false)">
+    <div class="zmodal" (click)="$event.stopPropagation()">
+      <div class="zmodal-header">
+        <span class="zmodal-title">📋 Add Timesheet</span>
+        <button class="zmodal-close" (click)="showTsModal.set(false)">✕</button>
+      </div>
+      <div class="zmodal-body">
+        <form [formGroup]="tsForm" novalidate>
+          <div class="zform-group">
+            <label class="zform-label">Project <span class="req">*</span></label>
+            <select formControlName="projectId" class="zform-control" (change)="onProjectChange()">
+              <option value="">— Select Project —</option>
+              @for (p of projectsAssignment(); track p.id) {
+                <option [value]="p.id">{{ p.projectName }}</option>
+              }
+            </select>
+            @if (projectsAssignment().length === 0) {
+              <span class="zform-error">No projects assigned. Contact your manager.</span>
+            }
+          </div>
+          <div class="zform-group">
+            <label class="zform-label">Work Date <span class="req">*</span></label>
+            <input formControlName="workDate" type="date" class="zform-control" [max]="todayDate" />
+          </div>
+          <div class="zgrid-3">
+            <div class="zform-group">
+              <label class="zform-label">Start Time <span class="req">*</span></label>
+              <input formControlName="startTime" type="time" class="zform-control" />
+            </div>
+            <div class="zform-group">
+              <label class="zform-label">End Time <span class="req">*</span></label>
+              <input formControlName="endTime" type="time" class="zform-control" />
+            </div>
+            <div class="zform-group">
+              <label class="zform-label">Break Time</label>
+              <input formControlName="breakTime" type="time" class="zform-control" />
+            </div>
+          </div>
+          <div class="zform-group">
+            <label class="zform-label">Task Description</label>
+            <textarea formControlName="taskDescription" class="zform-control" rows="3"
+              placeholder="Describe what you worked on..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="showTsModal.set(false)">Cancel</button>
+        <button class="zbtn zbtn-primary" [disabled]="tsForm.invalid" (click)="submitTimesheet()">Submit</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══ EDIT TIMESHEET MODAL ═══ -->
+@if (showEditModal()) {
+  <div class="zmodal-overlay" (click)="showEditModal.set(false)">
+    <div class="zmodal" (click)="$event.stopPropagation()">
+      <div class="zmodal-header">
+        <span class="zmodal-title">✏ Edit Timesheet — {{ editTs()?.projectName }}</span>
+        <button class="zmodal-close" (click)="showEditModal.set(false)">✕</button>
+      </div>
+      <div class="zmodal-body">
+        <form [formGroup]="editTsForm" novalidate>
+          <div class="zform-group">
+            <label class="zform-label">Work Date <span class="req">*</span></label>
+            <input formControlName="workDate" type="date" class="zform-control" [max]="todayDate" />
+          </div>
+          <div class="zgrid-3">
+            <div class="zform-group"><label class="zform-label">Start</label><input formControlName="startTime" type="time" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">End</label><input formControlName="endTime" type="time" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">Break</label><input formControlName="breakTime" type="time" class="zform-control" /></div>
+          </div>
+          <div class="zform-group">
+            <label class="zform-label">Description</label>
+            <textarea formControlName="taskDescription" class="zform-control" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="showEditModal.set(false)">Cancel</button>
+        <button class="zbtn zbtn-primary" [disabled]="editTsForm.invalid" (click)="updateTimesheet()">Update</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══ APPLY LEAVE MODAL ═══ -->
+@if (showLeaveModal()) {
+  <div class="zmodal-overlay" (click)="showLeaveModal.set(false)">
+    <div class="zmodal zmodal-sm" (click)="$event.stopPropagation()">
+      <div class="zmodal-header">
+        <span class="zmodal-title">🌴 Apply for Leave</span>
+        <button class="zmodal-close" (click)="showLeaveModal.set(false)">✕</button>
+      </div>
+      <div class="zmodal-body">
+        <form [formGroup]="leaveForm" novalidate>
+          <div class="zform-group">
+            <label class="zform-label">Leave Type <span class="req">*</span></label>
+            <select formControlName="leaveTypeId" class="zform-control">
+              <option value="">— Select Type —</option>
+              @for (lt of leaveTypes(); track lt.id) {
+                <option [value]="lt.id">{{ lt.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="zgrid-2">
+            <div class="zform-group">
+              <label class="zform-label">From <span class="req">*</span></label>
+              <input formControlName="fromDate" type="date" class="zform-control" />
+            </div>
+            <div class="zform-group">
+              <label class="zform-label">To <span class="req">*</span></label>
+              <input formControlName="toDate" type="date" class="zform-control" />
+            </div>
+          </div>
+          <div class="zform-group">
+            <label class="zform-label">Reason</label>
+            <textarea formControlName="reason" class="zform-control" rows="3" placeholder="Optional reason..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="showLeaveModal.set(false)">Cancel</button>
+        <button class="zbtn zbtn-primary" [disabled]="leaveForm.invalid" (click)="submitLeave()">Apply</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Confirm -->
+<app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()"
+  (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />

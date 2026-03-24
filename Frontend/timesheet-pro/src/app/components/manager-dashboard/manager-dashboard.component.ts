@@ -1,0 +1,285 @@
+import { DatePipe } from '@angular/common';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Leave, Project, Timesheet, User } from '../../models';
+import {
+  LeaveService,
+  ProjectService,
+  TimesheetService,
+  UserService
+} from '../../services/api.services';
+import { AuthService } from '../../services/auth.service';
+import { BreadcrumbService } from '../../services/breadcrumb.service';
+import { NotificationService } from '../../services/notification.service';
+import { ToastService } from '../../services/toast.service';
+import { ConfirmComponent } from '../confirm-dialog/confirm.component';
+import { NavbarComponent } from '../navbar/navbar.component';
+import { SidebarComponent } from '../sidebar/sidebar.component';
+
+export type ManagerTab = 'dashboard' | 'timesheets' | 'leaves' | 'team' | 'projects';
+
+@Component({
+  selector: 'app-manager-dashboard',
+  standalone: true,
+  imports: [DatePipe, ReactiveFormsModule, FormsModule,
+    NavbarComponent, SidebarComponent, ConfirmComponent],
+  templateUrl: './manager-dashboard.component.html',
+  styleUrl:    './manager-dashboard.component.css'
+})
+export class ManagerDashboardComponent implements OnInit {
+
+  readonly auth  = inject(AuthService);
+  private  toast = inject(ToastService);
+  private  bc    = inject(BreadcrumbService);
+  private  notif = inject(NotificationService);
+  private  tsSvc  = inject(TimesheetService);
+  private  lvSvc  = inject(LeaveService);
+  private  usrSvc = inject(UserService);
+  private  prjSvc = inject(ProjectService);
+
+  activeTab = signal<ManagerTab>('dashboard');
+  readonly tabs = [
+    { key: 'dashboard'  as ManagerTab, label: 'Overview',   icon: '📊' },
+    { key: 'timesheets' as ManagerTab, label: 'Timesheets', icon: '📋' },
+    { key: 'leaves'     as ManagerTab, label: 'Leaves',     icon: '🌴' },
+    { key: 'team'       as ManagerTab, label: 'My Team',    icon: '👥' },
+    { key: 'projects'   as ManagerTab, label: 'Projects',   icon: '🗂' },
+  ];
+
+  allTimesheets = signal<Timesheet[]>([]);
+  allLeaves     = signal<Leave[]>([]);
+  teamMembers   = signal<User[]>([]);
+  projects      = signal<Project[]>([]);
+  projectAssignments = signal<{ [projectId: number]: any[] }>({});
+
+  // ── TS filter/sort/page ────────────────────────────────────────────────────
+  tsSearch  = signal('');
+  tsStatus  = signal('all');
+  tsSortCol = signal<'date' | 'hours' | 'employee'>('date');
+  tsSortDir = signal<'asc' | 'desc'>('desc');
+  tsPage    = signal(1);
+  tsPS = 8;
+
+  filteredTs = computed(() => {
+    let d = this.allTimesheets();
+    const q = this.tsSearch().toLowerCase();
+    if (q) d = d.filter(t => (t.employeeName ?? '').toLowerCase().includes(q)
+                           || (t.projectName ?? '').toLowerCase().includes(q));
+    if (this.tsStatus() !== 'all') {
+      const sv: Record<string, number> = { pending: 0, approved: 1, rejected: 2 };
+      d = d.filter(t => Number(t.status) === sv[this.tsStatus()]);
+    }
+    const col = this.tsSortCol(); const dir = this.tsSortDir();
+    d = [...d].sort((a, b) => {
+      const v = col === 'date'     ? new Date(a.date).getTime() - new Date(b.date).getTime()
+              : col === 'hours'    ? (a.hoursWorked ?? 0) - (b.hoursWorked ?? 0)
+              : (a.employeeName ?? '').localeCompare(b.employeeName ?? '');
+      return dir === 'asc' ? v : -v;
+    });
+    return d;
+  });
+  tsTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredTs().length / this.tsPS)));
+  pagedTs      = computed(() => { const s = (this.tsPage()-1)*this.tsPS; return this.filteredTs().slice(s,s+this.tsPS); });
+
+  // ── Leave filter/page ──────────────────────────────────────────────────────
+  lvSearch  = signal('');
+  lvStatus  = signal('all');
+  lvPage    = signal(1);
+  lvPS = 8;
+
+  filteredLv = computed(() => {
+    let d = this.allLeaves();
+    const q = this.lvSearch().toLowerCase();
+    if (q) d = d.filter(l => (l.employeeName ?? '').toLowerCase().includes(q));
+    if (this.lvStatus() !== 'all') {
+      const sv: Record<string, number> = { pending: 0, approved: 1, rejected: 2 };
+      d = d.filter(l => Number(l.status) === sv[this.lvStatus()]);
+    }
+    return d;
+  });
+  lvTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredLv().length / this.lvPS)));
+  pagedLv      = computed(() => { const s = (this.lvPage()-1)*this.lvPS; return this.filteredLv().slice(s,s+this.lvPS); });
+
+  // ── Team filter/page ───────────────────────────────────────────────────────
+  teamSearch = signal('');
+  teamPage   = signal(1);
+  teamPS = 8;
+
+  filteredTeam = computed(() => {
+    const q = this.teamSearch().toLowerCase();
+    if (!q) return this.teamMembers();
+    return this.teamMembers().filter(u => (u.name??'').toLowerCase().includes(q) || (u.role??'').toLowerCase().includes(q));
+  });
+  teamTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredTeam().length / this.teamPS)));
+  pagedTeam      = computed(() => { const s=(this.teamPage()-1)*this.teamPS; return this.filteredTeam().slice(s,s+this.teamPS); });
+
+  // ── Stats ─────────────────────────────────────────────────────────────────
+  pendingTs  = computed(() => this.allTimesheets().filter(t => Number(t.status) === 0));
+  pendingLv  = computed(() => this.allLeaves().filter(l => Number(l.status) === 0));
+  totalHours = computed(() => {
+  const total = this.allTimesheets()
+    ?.filter(t => t.status === 1)
+    ?.reduce((s, t) => {
+      const hours = Number(t?.hoursWorked);
+      return s + (isNaN(hours) ? 0 : hours);
+    }, 0) ?? 0;
+
+  return total.toFixed(1);
+});
+
+  // ── Project assign ────────────────────────────────────────────────────────
+  selProjectId: number | null = null;
+  selUserId:    number | null = null;
+
+  // ── Confirm ───────────────────────────────────────────────────────────────
+  cfgVisible = signal(false);
+  cfgTitle   = signal('');
+  cfgMsg     = signal('');
+  cfgType    = signal<'danger'|'warning'|'info'>('info');
+  private cfgAction: (() => void) | null = null;
+
+  ngOnInit() {
+    this.bc.set([{ label: 'Manager Dashboard' }]);
+    this.loadAll();
+  }
+
+  private toArr<T>(r: any): T[] {
+    if (Array.isArray(r)) return r;
+    if (Array.isArray(r?.data)) return r.data;
+    if (Array.isArray(r?.data?.data)) return r.data.data;
+    return [];
+  }
+
+  loadAll() {
+    this.tsSvc.getAll().subscribe({
+      next: (r: any) => {
+        const d = r?.data?.data ?? r?.data ?? r ?? [];
+        this.allTimesheets.set((Array.isArray(d) ? d : []).filter((t: any) => t?.id && t?.employeeName));
+      }, error: () => {}
+    });
+    this.lvSvc.getAll().subscribe({
+      next: (r: any) => {
+        const d = r?.data?.data ?? r?.data ?? r ?? [];
+        this.allLeaves.set((Array.isArray(d) ? d : []).filter((l: any) => l?.id && l?.employeeName));
+      }, error: () => {}
+    });
+    this.usrSvc.getAll().subscribe({
+      next: (r: any) => {
+        const d = this.toArr<User>(r);
+        this.teamMembers.set(d.filter(u => ['Employee','Intern','Mentor'].includes(u.role)));
+      }, error: () => {}
+    });
+   this.prjSvc.getAll().subscribe({
+  next: (r: any) => {
+    const projects = this.toArr<Project>(r);
+    this.projects.set(projects);
+
+    // 🔥 load assignments for each project
+    projects.forEach(p => this.loadAssignments(p.id));
+  }
+});
+  }
+
+  sortTs(col: 'date'|'hours'|'employee') {
+    if (this.tsSortCol() === col) this.tsSortDir.update(d => d==='asc'?'desc':'asc');
+    else { this.tsSortCol.set(col); this.tsSortDir.set('asc'); }
+    this.tsPage.set(1);
+  }
+  ico(active: boolean, dir: string) { return !active ? '⇅' : dir==='asc' ? '↑' : '↓'; }
+
+  private confirm(title: string, msg: string, action: ()=>void, type: 'danger'|'warning'|'info'='info') {
+    this.cfgTitle.set(title); this.cfgMsg.set(msg); this.cfgType.set(type);
+    this.cfgAction = action; this.cfgVisible.set(true);
+  }
+  onCfgOk()     { this.cfgAction?.(); this.cfgVisible.set(false); this.cfgAction = null; }
+  onCfgCancel() { this.cfgVisible.set(false); this.cfgAction = null; }
+
+  reviewTs(ts: Timesheet, approve: boolean) {
+    const uid = this.auth.currentUser();
+    if (!uid) { this.toast.error('Error','Invalid session.'); return; }
+    this.confirm(
+      approve ? 'Approve Timesheet' : 'Reject Timesheet',
+      `${approve?'Approve':'Reject'} timesheet for "${ts.employeeName}" (${ts.projectName}) on ${new Date(ts.date).toLocaleDateString()}?`,
+      () => {
+        this.tsSvc.approveOrReject({
+          timesheetId: ts.id, approvedById: uid,
+          isApproved: approve, managerComment: approve ? 'Approved by Manager' : 'Rejected by Manager'
+        }).subscribe({
+          next: () => {
+            this.toast.success(approve ? 'Approved' : 'Rejected', `Timesheet for ${ts.employeeName}.`);
+            this.notif.pushLocal('Timesheet', `Timesheet ${approve?'approved':'rejected'} for ${ts.employeeName}`);
+            this.loadAll();
+          },
+          error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Action failed.')
+        });
+      },
+      approve ? 'info' : 'warning'
+    );
+  }
+
+  reviewLeave(l: Leave, approve: boolean) {
+    const uid = this.auth.currentUser();
+    if (!uid) { this.toast.error('Error','Invalid session.'); return; }
+    this.confirm(
+      approve ? 'Approve Leave' : 'Reject Leave',
+      `${approve?'Approve':'Reject'} leave request from "${l.employeeName}"?`,
+      () => {
+        this.lvSvc.approveOrReject({
+          leaveId: l.id, approvedById: uid,
+          isApproved: approve, managerComment: approve ? 'Approved' : 'Rejected'
+        }).subscribe({
+          next: () => {
+            this.toast.success(approve ? 'Leave Approved' : 'Leave Rejected', `For ${l.employeeName}`);
+            this.loadAll();
+          },
+          error: (e: any) => this.toast.error('Failed', e?.error?.message ?? '')
+        });
+      },
+      approve ? 'info' : 'warning'
+    );
+  }
+
+  assignUserToProject() {
+    if (!this.selProjectId || !this.selUserId) {
+      this.toast.warning('Select Both', 'Please select a project and a team member.');
+      return;
+    }
+    const project = this.projects().find(p => p.id === this.selProjectId);
+    this.prjSvc.assign({
+      projectId: this.selProjectId, userId: this.selUserId,
+      projectName: project?.projectName ?? ''
+    }).subscribe({
+      next: () => {
+        this.toast.success('Assigned', 'Team member assigned to project.');
+        this.selProjectId = null; this.selUserId = null;
+      },
+      error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Assignment failed.')
+    });
+  }
+  loadAssignments(projectId: number) {
+  this.prjSvc.getAssignmentsByProject(projectId).subscribe({
+    next: (res: any) => {
+      const data = res?.data ?? res ?? [];
+
+      this.projectAssignments.update(prev => ({
+        ...prev,
+        [projectId]: data
+      }));
+    },
+    error: () => {
+      this.toast.error('Error', 'Failed to load assigned users');
+    }
+  });
+}
+
+  stText(s: any)  { return s==0?'Pending':s==1?'Approved':'Rejected'; }
+  stClass(s: any) { return s==0?'zbadge-pending':s==1?'zbadge-approved':'zbadge-rejected'; }
+
+  setTab(t: ManagerTab) {
+    this.activeTab.set(t);
+    this.bc.set([{label:'Manager Dashboard'},{label:this.tabs.find(x=>x.key===t)?.label??''}]);
+    this.tsPage.set(1); this.lvPage.set(1); this.teamPage.set(1);
+  }
+
+  pages(total: number) { return Array.from({length:total},(_,i)=>i+1); }
+}

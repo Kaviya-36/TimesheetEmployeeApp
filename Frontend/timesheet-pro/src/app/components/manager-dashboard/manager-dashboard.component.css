@@ -1,0 +1,23 @@
+.zmgr-pill{background:#EFF6FF;color:#2563EB;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid #BFDBFE}
+.zpending-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #F3F4F6;gap:12px}
+.zpending-row:last-child{border-bottom:none}.zpending-info{font-size:13px}.ztext-muted{color:#9CA3AF}.zhours{color:#E05B2B;font-size:14px}.zemp-id{font-family:monospace;font-size:11px;color:#E05B2B;background:#FEF0EB;padding:2px 6px;border-radius:4px}
+.zuser-cell{display:flex;align-items:center;gap:8px}.zavatar{background:linear-gradient(135deg,#2563EB,#7C3AED)}
+.zassign-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.assigned-row {
+  background: #f9fafb;
+}
+
+.user-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.user-chip {
+  background: #eef2ff;
+  color: #3730a3;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}

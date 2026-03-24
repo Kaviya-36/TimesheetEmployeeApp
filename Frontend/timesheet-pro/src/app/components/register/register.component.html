@@ -1,0 +1,99 @@
+<div class="zauth-page">
+  <div class="zreg-left">
+    <div class="zauth-logo-mark">T</div>
+    <h2 class="zreg-brand">TimeSheet <span>Pro</span></h2>
+    <p class="zreg-sub">Join your team's workspace.<br>Register and get started today.</p>
+    <div class="zreg-info-box">
+      <p class="zreg-info-title">📋 Registration Process</p>
+      <div class="zreg-step"><span class="zstep-num">1</span> Fill in your details</div>
+      <div class="zreg-step"><span class="zstep-num">2</span> Admin approves your account</div>
+      <div class="zreg-step"><span class="zstep-num">3</span> Login to your dashboard</div>
+    </div>
+  </div>
+
+  <div class="zreg-right">
+    <div class="zauth-card">
+
+      @if (success()) {
+        <div class="zauth-status-screen">
+          <span class="zstatus-icon">🎉</span>
+          <h2 class="zstatus-title">Registration Submitted!</h2>
+          <p class="zstatus-desc">Your account is pending Admin approval. You'll be notified once activated — usually within 1 business day.</p>
+          <div class="zstatus-steps">
+            <div class="zstep done">✅ Account Created</div>
+            <div class="zstep active">⏳ Awaiting Admin Approval</div>
+            <div class="zstep">🔓 Account Activated</div>
+            <div class="zstep">🚀 Access Dashboard</div>
+          </div>
+          <a routerLink="/login" class="zbtn zbtn-primary" style="width:100%;justify-content:center;padding:11px">Go to Login</a>
+        </div>
+      }
+
+      @if (!success()) {
+        <div class="zauth-form-header">
+          <h2 class="zauth-form-title">Create Account</h2>
+          <p class="zauth-form-sub">Register to join TimeSheet Pro</p>
+        </div>
+
+        @if (error()) {
+          <div class="zalert zalert-error" style="margin-bottom:14px"><span>⚠</span> {{ error() }}</div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+          <div class="zgrid-2">
+            <div class="zform-group">
+              <label class="zform-label">Full Name <span class="req">*</span></label>
+              <input formControlName="name" class="zform-control" placeholder="John Doe" />
+              @if (f['name'].invalid && f['name'].touched) { <span class="zform-error">Required</span> }
+            </div>
+            <div class="zform-group">
+              <label class="zform-label">Employee ID <span class="req">*</span></label>
+              <input formControlName="employeeId" class="zform-control" placeholder="EMP001" />
+              @if (f['employeeId'].invalid && f['employeeId'].touched) { <span class="zform-error">Required</span> }
+            </div>
+          </div>
+          <div class="zform-group">
+            <label class="zform-label">Email Address <span class="req">*</span></label>
+            <input formControlName="email" type="email" class="zform-control" placeholder="john@company.com" />
+            @if (f['email'].invalid && f['email'].touched) { <span class="zform-error">Valid email required</span> }
+          </div>
+          <div class="zgrid-2">
+            <div class="zform-group">
+              <label class="zform-label">Password <span class="req">*</span></label>
+              <input formControlName="password" type="password" class="zform-control" placeholder="Min 6 chars" />
+              @if (f['password'].invalid && f['password'].touched) { <span class="zform-error">Min 6 characters</span> }
+            </div>
+            <div class="zform-group">
+              <label class="zform-label">Phone</label>
+              <input formControlName="phone" class="zform-control" placeholder="+91 9876543210" />
+            </div>
+          </div>
+          <div class="zgrid-2">
+            <div class="zform-group">
+              <label class="zform-label">Role <span class="req">*</span></label>
+              <select formControlName="role" class="zform-control">
+                <option value="">-- Select Role --</option>
+                @for (r of roles; track r) { <option [value]="r">{{ r }}</option> }
+              </select>
+              @if (f['role'].invalid && f['role'].touched) { <span class="zform-error">Required</span> }
+            </div>
+            <div class="zform-group">
+              <label class="zform-label">Department <span class="req">*</span></label>
+              <select formControlName="departmentId" class="zform-control">
+                <option value="">-- Select Dept --</option>
+                @for (d of departments; track d.id) { <option [value]="d.id">{{ d.name }}</option> }
+              </select>
+              @if (f['departmentId'].invalid && f['departmentId'].touched) { <span class="zform-error">Required</span> }
+            </div>
+          </div>
+          <div class="zinfo-banner">ℹ Your account will be <strong>Pending</strong> until an Admin approves it. You cannot login until approved.</div>
+          <button type="submit" class="zbtn zbtn-primary zw-full" [disabled]="form.invalid || loading()">
+            @if (loading()) { <span class="zbtn-spin"></span> Creating... } @else { Create Account }
+          </button>
+        </form>
+
+        <p class="zauth-register-link">Already have an account? <a routerLink="/login">Sign in</a></p>
+      }
+    </div>
+  </div>
+</div>

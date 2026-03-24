@@ -1,0 +1,72 @@
+.zhr-pill{background:#F0FDF4;color:#16A34A;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid #BBF7D0}
+.zhr-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#059669,#10B981);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.zuser-cell{display:flex;align-items:center;gap:8px}.zemp-id{font-family:monospace;font-size:11px;color:#E05B2B;background:#FEF0EB;padding:2px 6px;border-radius:4px}.ztext-muted{color:#9CA3AF}.ztime-cell{font-family:monospace;font-size:12px}
+.zpay-summary-row{display:flex;gap:16px;padding:16px 20px;background:#F9FAFB;border-bottom:1px solid #E5E7EB}
+.zpay-stat{display:flex;flex-direction:column}.zpay-lbl{font-size:11px;color:#6B7280;text-transform:uppercase;letter-spacing:.5px}.zpay-val{font-size:20px;font-weight:800;color:#111827}
+.zpay-green{color:#16A34A}.zpay-red{color:#DC2626}.zpay-net{color:#16A34A;font-size:14px}
+.zreports-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.zreport-icon{font-size:36px;margin-bottom:10px}.zreport-title{font-size:15px;font-weight:700;color:#111827;margin:0 0 14px}
+.zreport-stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F3F4F6;font-size:13px;color:#374151}
+.zreport-stat:last-child{border-bottom:none}
+.zreports-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.zreport-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.zreports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.zcard {
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.zreport-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.zreport-title {
+  margin-bottom: 12px;
+}
+
+.zreport-stat {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0;
+}
+
+.green { color: #16A34A; }
+.red { color: #DC2626; }
+.orange { color: #D97706; }
+
+.zbtn {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.zbtn-success {
+  background: #16A34A;
+  color: white;
+}
+
+.zbtn-danger {
+  background: #DC2626;
+  color: white;
+}

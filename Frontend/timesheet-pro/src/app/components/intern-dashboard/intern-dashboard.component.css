@@ -1,0 +1,16 @@
+.zintern-pill{background:#FFFBEB;color:#D97706;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid #FDE68A}
+.zintern-att-card{background:linear-gradient(135deg,#F97316,#E05B2B);border-radius:16px;padding:24px 28px;margin-bottom:20px;color:#fff}
+.zintern-att-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.zintern-att-title{font-size:16px;font-weight:800;color:#fff}.zintern-att-date{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.zbadge-info{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3)}
+.zintern-timer{font-family:'Roboto Mono',monospace;font-size:28px;font-weight:800;color:#fff;letter-spacing:2px;text-align:center;padding:12px 0}
+.zintern-att-row{display:flex;gap:24px;margin-bottom:20px}
+.zintern-att-stat{display:flex;flex-direction:column;gap:3px}
+.zintern-att-stat span{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px}
+.zintern-att-stat strong{font-size:15px;font-weight:700;color:#fff}
+.zintern-att-actions{display:flex;justify-content:center}
+.ztime-cell{font-family:monospace;font-size:12px}.zhours{color:#E05B2B}.ztext-muted{color:#9CA3AF}
+.ztask-list{display:flex;flex-direction:column;gap:10px}
+.ztask-item{display:flex;align-items:center;gap:12px;padding:12px;background:#F9FAFB;border-radius:10px;border:1px solid #E5E7EB}
+.ztask-icon{font-size:18px;flex-shrink:0}.ztask-info{flex:1}.ztask-title{font-weight:600;font-size:14px;color:#111827}.ztask-desc{font-size:12px;margin-top:2px}
+.ztask-meta{display:flex;align-items:center;gap:8px;flex-shrink:0}.ztask-due{font-size:11px;color:#6B7280}

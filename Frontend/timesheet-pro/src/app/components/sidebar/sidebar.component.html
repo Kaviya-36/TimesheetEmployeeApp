@@ -1,0 +1,59 @@
+<aside class="zsidebar" [class.collapsed]="collapsed()">
+
+  <!-- Logo -->
+  <div class="zsidebar-logo">
+    <div class="zlogo-mark">
+      <span>T</span>
+    </div>
+    @if (!collapsed()) {
+      <div class="zlogo-text">
+        <span class="zlogo-name">TimeSheet</span>
+        <span class="zlogo-tag">Pro</span>
+      </div>
+    }
+  </div>
+
+  <!-- Role Badge -->
+  @if (!collapsed()) {
+    <div class="zrole-badge">
+      <div class="zavatar">{{ (auth.username() ?? 'U')[0].toUpperCase() }}</div>
+      <div class="zrole-info">
+        <span class="zrole-name">{{ auth.username() }}</span>
+        <span class="zrole-tag">{{ auth.currentRole() }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- Nav -->
+  <nav class="zsidebar-nav">
+    @if (!collapsed()) {
+      <p class="znav-section-label">NAVIGATION</p>
+    }
+
+    @for (item of visibleNav(); track item.route) {
+      <a [routerLink]="item.route" routerLinkActive="active"
+         class="znav-item" [title]="collapsed() ? item.label : ''">
+        <span class="znav-icon">
+          @switch (item.label) {
+            @case ('Dashboard')  { 🏠 }
+            @case ('HR Portal')  { 👥 }
+            @case ('Team View')  { 📋 }
+            @case ('My Space')   { 💼 }
+            @case ('Intern Hub') { 🎓 }
+            @default             { ◉ }
+          }
+        </span>
+        @if (!collapsed()) {
+          <span class="znav-label">{{ item.label }}</span>
+        }
+      </a>
+    }
+  </nav>
+
+  <!-- Collapse Toggle -->
+  <button class="zcollapse-btn" (click)="collapsed.update(v => !v)"
+          [title]="collapsed() ? 'Expand' : 'Collapse'">
+    @if (collapsed()) { › } @else { ‹ }
+  </button>
+
+</aside>

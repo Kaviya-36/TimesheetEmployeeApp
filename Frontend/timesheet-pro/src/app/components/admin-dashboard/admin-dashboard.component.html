@@ -1,0 +1,387 @@
+<div class="app-shell">
+  <app-sidebar />
+  <div class="app-main">
+    <app-navbar />
+    <div class="app-content">
+
+      <!-- Page Header -->
+      <div class="zpage-header">
+        <div>
+          <h1 class="zpage-title">Admin Dashboard</h1>
+          <p class="zpage-sub">System-wide management &amp; oversight</p>
+        </div>
+        <span class="zrole-pill">🛡 Administrator</span>
+      </div>
+
+      <!-- Tab Bar -->
+      <div class="ztab-bar">
+        @for (t of tabs; track t.key) {
+          <button class="ztab-btn" [class.active]="activeTab()===t.key" (click)="setTab(t.key)">
+            {{ t.icon }} {{ t.label }}
+          </button>
+        }
+      </div>
+
+      <!-- ═══ OVERVIEW ═══ -->
+      @if (activeTab()==='overview') {
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-icon-wrap">👥</div><div class="stat-body"><div class="stat-value">{{ totalUsers() }}</div><div class="stat-label">Total Users</div></div></div>
+          <div class="stat-card sc-success"><div class="stat-icon-wrap">✅</div><div class="stat-body"><div class="stat-value">{{ activeUsers() }}</div><div class="stat-label">Active Users</div></div></div>
+          <div class="stat-card sc-danger"><div class="stat-icon-wrap">🚫</div><div class="stat-body"><div class="stat-value">{{ inactiveUsers() }}</div><div class="stat-label">Inactive Users</div></div></div>
+          <div class="stat-card sc-info"><div class="stat-icon-wrap">🗂</div><div class="stat-body"><div class="stat-value">{{ allProjects().length }}</div><div class="stat-label">Projects</div></div></div>
+          <div class="stat-card sc-warning"><div class="stat-icon-wrap">⏳</div><div class="stat-body"><div class="stat-value">{{ pendingTs() }}</div><div class="stat-label">Pending Timesheets</div></div></div>
+          <div class="stat-card sc-warning"><div class="stat-icon-wrap">🌴</div><div class="stat-body"><div class="stat-value">{{ pendingLv() }}</div><div class="stat-label">Pending Leaves</div></div></div>
+        </div>
+        <div class="zcard">
+          <div class="zcard-header"><span class="zcard-title">Users by Role</span></div>
+          <div class="zcard-body zrole-grid">
+            @for (r of roleBreakdown(); track r.role) {
+              <div class="zrole-chip">
+                <span class="zrole-count">{{ r.count }}</span>
+                <span class="zrole-name">{{ r.role }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ═══ USERS ═══ -->
+      @if (activeTab()==='users') {
+        <div class="zcard">
+          <div class="zcard-header">
+            <span class="zcard-title">User Management</span>
+            <button class="zbtn zbtn-primary zbtn-sm" (click)="showAddUser.set(true)">+ Add User</button>
+          </div>
+          <div class="zfilter-bar">
+            <div class="zfilter-wrap">
+              <input class="zfilter-input" [ngModel]="uSearch()" (ngModelChange)="uSearch.set($event);uPage.set(1)" placeholder="Search name, email, ID..." />
+            </div>
+            <select class="zfilter-select" [ngModel]="uRole()" (ngModelChange)="uRole.set($event);uPage.set(1)">
+              <option value="all">All Roles</option>
+              @for (r of roleOptions; track r) { <option [value]="r">{{ r }}</option> }
+            </select>
+            <select class="zfilter-select" [ngModel]="uStatus()" (ngModelChange)="uStatus.set($event);uPage.set(1)">
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <span class="zresult-count">{{ filteredUsers().length }} results</span>
+          </div>
+          <div class="ztable-wrap">
+            <table class="ztable">
+              <thead><tr>
+                <th class="sortable" (click)="sortU('name')">Name {{ ico(uSort()==='name', uSortDir()) }}</th>
+                <th>Emp ID</th>
+                <th>Email</th>
+                <th class="sortable" (click)="sortU('role')">Role {{ ico(uSort()==='role', uSortDir()) }}</th>
+                <th class="sortable" (click)="sortU('status')">Status {{ ico(uSort()==='status', uSortDir()) }}</th>
+                <th class="sortable" (click)="sortU('joined')">Joined {{ ico(uSort()==='joined', uSortDir()) }}</th>
+                <th>Actions</th>
+              </tr></thead>
+              <tbody>
+                @for (u of pagedUsers(); track u.id) {
+                  <tr>
+                    <td><div class="zuser-cell"><div class="zavatar">{{ (u.name??'U')[0].toUpperCase() }}</div><span>{{ u.name }}</span></div></td>
+                    <td><code class="zemp-id">{{ u.employeeId }}</code></td>
+                    <td class="ztext-muted">{{ u.email }}</td>
+                    <td><span class="zbadge zbadge-role">{{ u.role }}</span></td>
+                    <td><span class="zbadge" [class]="u.status==='Active'?'zbadge-active':'zbadge-inactive'">{{ u.status||'Inactive' }}</span></td>
+                    <td class="ztext-muted">{{ u.joiningDate | date:'dd MMM yyyy' }}</td>
+                    <td>
+                      <div class="zaction-row">
+                        <button class="zbtn zbtn-outline zbtn-sm" (click)="openEditUser(u)">🎭 Role</button>
+                        @if (u.status === 'Active') {
+                          <button class="zbtn zbtn-warning zbtn-sm" (click)="toggleActive(u)">🚫 Deactivate</button>
+                        } @else {
+                          <button class="zbtn zbtn-success zbtn-sm" (click)="toggleActive(u)">✅ Activate</button>
+                        }
+                        <button class="zbtn zbtn-danger zbtn-sm" (click)="confirmDeleteUser(u)">🗑</button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+                @if (pagedUsers().length === 0) {
+                  <tr class="empty-row"><td colspan="7">No users found matching your filters.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="zpagination">
+            <span class="zpagination-info">Showing {{ (uPage()-1)*uPS+1 }}–{{ uPage()*uPS > filteredUsers().length ? filteredUsers().length : uPage()*uPS }} of {{ filteredUsers().length }}</span>
+            <div class="zpagination-btns">
+              <button class="zpg-btn" (click)="uPage.set(1)" [disabled]="uPage()===1">«</button>
+              <button class="zpg-btn" (click)="uPage.update(p=>p-1)" [disabled]="uPage()===1">‹</button>
+              @for (p of pages(uTotalPages()); track p) {
+                @if (p === uPage() || p === 1 || p === uTotalPages() || (p >= uPage()-1 && p <= uPage()+1)) {
+                  <button class="zpg-btn" [class.active]="p===uPage()" (click)="uPage.set(p)">{{ p }}</button>
+                }
+              }
+              <button class="zpg-btn" (click)="uPage.update(p=>p+1)" [disabled]="uPage()===uTotalPages()">›</button>
+              <button class="zpg-btn" (click)="uPage.set(uTotalPages())" [disabled]="uPage()===uTotalPages()">»</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ═══ PROJECTS ═══ -->
+      @if (activeTab()==='projects') {
+        <div class="zcard">
+          <div class="zcard-header">
+            <span class="zcard-title">Project Management</span>
+            <button class="zbtn zbtn-primary zbtn-sm" (click)="showAddProject.set(true)">+ New Project</button>
+          </div>
+          <div class="ztable-wrap">
+            <table class="ztable">
+              <thead><tr><th>Project Name</th><th>Description</th><th>Manager</th><th>Start Date</th><th>End Date</th><th>Actions</th></tr></thead>
+              <tbody>
+                @for (p of pagedProjects(); track p.id) {
+                  <tr>
+                    <td><strong>{{ p.projectName }}</strong></td>
+                    <td class="ztext-muted zdesc-cell">{{ p.description || '—' }}</td>
+                    <td>{{ p.managerName || '—' }}</td>
+                    <td>{{ p.startDate | date:'dd MMM yyyy' }}</td>
+                    <td>{{ p.endDate ? (p.endDate | date:'dd MMM yyyy') : 'Ongoing' }}</td>
+                    <td><button class="zbtn zbtn-danger zbtn-sm" (click)="confirmDeleteProject(p)">🗑 Delete</button></td>
+                  </tr>
+                }
+                @if (pagedProjects().length === 0) {
+                  <tr class="empty-row"><td colspan="6">No projects found.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="zpagination">
+            <span class="zpagination-info">{{ allProjects().length }} total projects</span>
+            <div class="zpagination-btns">
+              <button class="zpg-btn" (click)="prjPage.update(p=>p-1)" [disabled]="prjPage()===1">‹ Prev</button>
+              <span style="padding:0 12px;font-size:13px;color:#6B7280">Page {{ prjPage() }} / {{ prjTotalPages() }}</span>
+              <button class="zpg-btn" (click)="prjPage.update(p=>p+1)" [disabled]="prjPage()===prjTotalPages()">Next ›</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ═══ TIMESHEETS ═══ -->
+      @if (activeTab()==='timesheets') {
+        <div class="zcard">
+          <div class="zcard-header"><span class="zcard-title">All Timesheets</span></div>
+          <div class="zfilter-bar">
+            <div class="zfilter-wrap">
+              <input class="zfilter-input" [ngModel]="tsSearch()" (ngModelChange)="tsSearch.set($event);tsPage.set(1)" placeholder="Search employee or project..." />
+            </div>
+            <select class="zfilter-select" [ngModel]="tsStatus()" (ngModelChange)="tsStatus.set($event);tsPage.set(1)">
+              <option value="all">All Status</option><option value="pending">Pending</option>
+              <option value="approved">Approved</option><option value="rejected">Rejected</option>
+            </select>
+            <span class="zresult-count">{{ filteredTs().length }} records</span>
+          </div>
+          <div class="ztable-wrap">
+            <table class="ztable">
+              <thead><tr>
+                <th class="sortable" (click)="sortTs('employee')">Employee {{ ico(tsSortCol()==='employee', tsSortDir()) }}</th>
+                <th>Project</th>
+                <th class="sortable" (click)="sortTs('date')">Date {{ ico(tsSortCol()==='date', tsSortDir()) }}</th>
+                <th class="sortable" (click)="sortTs('hours')">Hours {{ ico(tsSortCol()==='hours', tsSortDir()) }}</th>
+                <th>Status</th><th>Comment</th>
+              </tr></thead>
+              <tbody>
+                @for (ts of pagedTs(); track ts.id) {
+                  <tr>
+                    <td><strong>{{ ts.employeeName }}</strong><br><code class="zemp-id">{{ ts.employeeId }}</code></td>
+                    <td>{{ ts.projectName }}</td>
+                    <td>{{ ts.date | date:'dd MMM yyyy' }}</td>
+                    <td><strong class="zhours">{{ ts.hoursWorked }}h</strong></td>
+                    <td><span class="zbadge" [class]="ts.statusClass">{{ ts.statusText }}</span></td>
+                    <td class="ztext-muted">{{ ts.managerComment || '—' }}</td>
+                  </tr>
+                }
+                @if (pagedTs().length === 0) {
+                  <tr class="empty-row"><td colspan="6">No timesheets found.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="zpagination">
+            <span class="zpagination-info">{{ filteredTs().length }} records</span>
+            <div class="zpagination-btns">
+              <button class="zpg-btn" (click)="tsPage.set(1)" [disabled]="tsPage()===1">«</button>
+              <button class="zpg-btn" (click)="tsPage.update(p=>p-1)" [disabled]="tsPage()===1">‹</button>
+              @for (p of pages(tsTotalPages()); track p) {
+                @if (p===tsPage()||p===1||p===tsTotalPages()||(p>=tsPage()-1&&p<=tsPage()+1)) {
+                  <button class="zpg-btn" [class.active]="p===tsPage()" (click)="tsPage.set(p)">{{ p }}</button>
+                }
+              }
+              <button class="zpg-btn" (click)="tsPage.update(p=>p+1)" [disabled]="tsPage()===tsTotalPages()">›</button>
+              <button class="zpg-btn" (click)="tsPage.set(tsTotalPages())" [disabled]="tsPage()===tsTotalPages()">»</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ═══ LEAVES ═══ -->
+      @if (activeTab()==='leaves') {
+        <div class="zcard">
+          <div class="zcard-header"><span class="zcard-title">Leave Requests</span></div>
+          <div class="zfilter-bar">
+            <div class="zfilter-wrap">
+              <input class="zfilter-input" [ngModel]="lvSearch()" (ngModelChange)="lvSearch.set($event);lvPage.set(1)" placeholder="Search employee..." />
+            </div>
+            <select class="zfilter-select" [ngModel]="lvStatus()" (ngModelChange)="lvStatus.set($event);lvPage.set(1)">
+              <option value="all">All Status</option><option value="pending">Pending</option>
+              <option value="approved">Approved</option><option value="rejected">Rejected</option>
+            </select>
+            <span class="zresult-count">{{ filteredLv().length }} records</span>
+          </div>
+          <div class="ztable-wrap">
+            <table class="ztable">
+              <thead><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                @for (l of pagedLv(); track l.id) {
+                  <tr>
+                    <td><strong>{{ l.employeeName }}</strong></td>
+                    <td>{{ l.leaveType }}</td>
+                    <td>{{ l.fromDate | date:'dd MMM yyyy' }}</td>
+                    <td>{{ l.toDate | date:'dd MMM yyyy' }}</td>
+                    <td class="ztext-muted">{{ l.reason || '—' }}</td>
+                    <td><span class="zbadge" [class]="stClass(l.status)">{{ stText(l.status) }}</span></td>
+                    <td>
+                      @if (+l.status === 0) {
+                        <div class="zaction-row">
+                          <button class="zbtn zbtn-success zbtn-sm" (click)="approveLeave(l)">✅ Approve</button>
+                          <button class="zbtn zbtn-danger zbtn-sm"  (click)="rejectLeave(l)">❌ Reject</button>
+                        </div>
+                      } @else { <span class="ztext-muted">—</span> }
+                    </td>
+                  </tr>
+                }
+                @if (pagedLv().length === 0) {
+                  <tr class="empty-row"><td colspan="7">No leave requests found.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="zpagination">
+            <span class="zpagination-info">{{ filteredLv().length }} records</span>
+            <div class="zpagination-btns">
+              <button class="zpg-btn" (click)="lvPage.update(p=>p-1)" [disabled]="lvPage()===1">‹ Prev</button>
+              <span style="padding:0 12px;font-size:13px;color:#6B7280">Page {{ lvPage() }} / {{ lvTotalPages() }}</span>
+              <button class="zpg-btn" (click)="lvPage.update(p=>p+1)" [disabled]="lvPage()===lvTotalPages()">Next ›</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ═══ SETTINGS ═══ -->
+      @if (activeTab()==='settings') {
+        <div class="zsettings-grid">
+          <div class="zcard">
+            <div class="zcard-header"><span class="zcard-title">🕐 Working Hours</span></div>
+            <div class="zcard-body">
+              <div class="zform-group"><label class="zform-label">Office Start Time</label><input type="time" class="zform-control" [(ngModel)]="settings.startTime" /></div>
+              <div class="zform-group"><label class="zform-label">Office End Time</label><input type="time" class="zform-control" [(ngModel)]="settings.endTime" /></div>
+              <button class="zbtn zbtn-primary" (click)="saveSettings()">Save Settings</button>
+            </div>
+          </div>
+          <div class="zcard">
+            <div class="zcard-header"><span class="zcard-title">📧 Email Settings</span></div>
+            <div class="zcard-body">
+              <div class="zform-group"><label class="zform-label">SMTP Host</label><input class="zform-control" [(ngModel)]="settings.smtp" placeholder="smtp.company.com" /></div>
+              <div class="zform-group"><label class="zform-label">From Email</label><input type="email" class="zform-control" [(ngModel)]="settings.email" placeholder="noreply@company.com" /></div>
+              <button class="zbtn zbtn-primary" (click)="saveSettings()">Save Settings</button>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+@if (showAddUser()) {
+  <div class="zmodal-overlay" (click)="showAddUser.set(false)">
+    <div class="zmodal" (click)="$event.stopPropagation()">
+      <div class="zmodal-header"><span class="zmodal-title">👤 Add New User</span><button class="zmodal-close" (click)="showAddUser.set(false)">✕</button></div>
+      <div class="zmodal-body">
+        <form [formGroup]="addUserForm" novalidate>
+          <div class="zgrid-2">
+            <div class="zform-group"><label class="zform-label">Name <span class="req">*</span></label><input formControlName="name" class="zform-control" placeholder="Full Name" /></div>
+            <div class="zform-group"><label class="zform-label">Employee ID <span class="req">*</span></label><input formControlName="employeeId" class="zform-control" placeholder="EMP001" /></div>
+          </div>
+          <div class="zform-group"><label class="zform-label">Email <span class="req">*</span></label><input formControlName="email" type="email" class="zform-control" placeholder="user@company.com" /></div>
+          <div class="zgrid-2">
+            <div class="zform-group"><label class="zform-label">Password <span class="req">*</span></label><input formControlName="password" type="password" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">Phone</label><input formControlName="phone" class="zform-control" /></div>
+          </div>
+          <div class="zgrid-2">
+            <div class="zform-group"><label class="zform-label">Role</label>
+              <select formControlName="role" class="zform-control">@for (r of roleOptions; track r) { <option [value]="r">{{ r }}</option> }</select>
+            </div>
+            <div class="zform-group"><label class="zform-label">Department <span class="req">*</span></label>
+              <select formControlName="departmentId" class="zform-control">
+                <option value="">-- Select --</option>
+                @for (d of departments; track d.id) { <option [value]="d.id">{{ d.name }}</option> }
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="showAddUser.set(false)">Cancel</button>
+        <button class="zbtn zbtn-primary" [disabled]="addUserForm.invalid" (click)="addUser()">Create User</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (editUser()) {
+  <div class="zmodal-overlay" (click)="editUser.set(null)">
+    <div class="zmodal zmodal-sm" (click)="$event.stopPropagation()">
+      <div class="zmodal-header"><span class="zmodal-title">🎭 Change Role</span><button class="zmodal-close" (click)="editUser.set(null)">✕</button></div>
+      <div class="zmodal-body">
+        <p style="font-size:13px;color:#6B7280;margin-bottom:12px">User: <strong>{{ editUser()!.name }}</strong></p>
+        <div class="zform-group"><label class="zform-label">New Role</label>
+          <select class="zform-control" [(ngModel)]="newRole">
+            @for (r of roleOptions; track r) { <option [value]="r">{{ r }}</option> }
+          </select>
+        </div>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="editUser.set(null)">Cancel</button>
+        <button class="zbtn zbtn-primary" (click)="saveRole()">Save Role</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showAddProject()) {
+  <div class="zmodal-overlay" (click)="showAddProject.set(false)">
+    <div class="zmodal" (click)="$event.stopPropagation()">
+      <div class="zmodal-header"><span class="zmodal-title">🗂 Create Project</span><button class="zmodal-close" (click)="showAddProject.set(false)">✕</button></div>
+      <div class="zmodal-body">
+        <form [formGroup]="projectForm" novalidate>
+          <div class="zform-group"><label class="zform-label">Project Name <span class="req">*</span></label><input formControlName="projectName" class="zform-control" placeholder="e.g. CRM Revamp" /></div>
+          <div class="zform-group"><label class="zform-label">Description</label><textarea formControlName="description" class="zform-control" rows="2"></textarea></div>
+          <div class="zform-group"><label class="zform-label">Assign Manager</label>
+            <select formControlName="managerId" class="zform-control">
+              <option value="">— None —</option>
+              @for (m of managers(); track m.id) { <option [value]="m.id">{{ m.name }}</option> }
+            </select>
+          </div>
+          <div class="zgrid-2">
+            <div class="zform-group"><label class="zform-label">Start Date <span class="req">*</span></label><input formControlName="startDate" type="date" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">End Date</label><input formControlName="endDate" type="date" class="zform-control" /></div>
+          </div>
+        </form>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="showAddProject.set(false)">Cancel</button>
+        <button class="zbtn zbtn-primary" [disabled]="projectForm.invalid" (click)="createProject()">Create Project</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Confirm Dialog -->
+<app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()" [type]="cfgType()"
+  (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />

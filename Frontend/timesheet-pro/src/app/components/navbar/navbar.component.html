@@ -1,0 +1,107 @@
+<header class="znavbar">
+
+  <!-- Left: Breadcrumb -->
+  <div class="znavbar-left">
+    <app-breadcrumb />
+  </div>
+
+  <!-- Right: Actions -->
+  <div class="znavbar-right">
+
+    <!-- Notification Bell -->
+    <div class="znotif-wrapper">
+      <button class="znavbar-icon-btn znotif-trigger" (click)="toggleNotif()" aria-label="Notifications">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        @if (notif.unreadCount() > 0) {
+          <span class="znotif-badge">{{ notif.unreadCount() > 9 ? '9+' : notif.unreadCount() }}</span>
+        }
+      </button>
+
+      @if (showNotif) {
+        <div class="znotif-panel">
+          <div class="znotif-header">
+            <span class="znotif-header-title">
+              Notifications
+              @if (notif.unreadCount() > 0) {
+                <span class="znotif-count-pill">{{ notif.unreadCount() }}</span>
+              }
+            </span>
+            <button class="znotif-mark-read" (click)="notif.markAllRead()">Mark all read</button>
+          </div>
+
+          <div class="znotif-list">
+            @if (notif.notifications().length === 0) {
+              <div class="znotif-empty">
+                <span style="font-size:28px">🔔</span>
+                <p>No notifications yet</p>
+              </div>
+            }
+
+            @for (n of notif.notifications(); track $index; let i = $index) {
+              <div class="znotif-item" [class.unread]="!n.read" (click)="notif.markRead(i)">
+                <div class="znotif-dot" [style.opacity]="n.read ? '0' : '1'"></div>
+                <div class="znotif-content">
+                  <div class="znotif-type">
+                    {{ getNotifIcon(n.type) }} {{ n.type }}
+                  </div>
+                  <div class="znotif-msg">{{ n.message }}</div>
+                  <div class="znotif-time">{{ n.time | date:'dd MMM, h:mm a' }}</div>
+                </div>
+              </div>
+            }
+          </div>
+
+          @if (notif.notifications().length > 0) {
+            <div class="znotif-footer">
+              <span class="znotif-conn" [class.connected]="notif.connected()">
+                {{ notif.connected() ? '🟢 Live' : '⚪ Offline' }}
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Divider -->
+    <div class="znavbar-divider"></div>
+
+    <!-- User Profile -->
+    <div class="zprofile-wrapper">
+      <button class="zprofile-trigger" (click)="toggleProfile()">
+        <div class="zavatar">{{ initial() }}</div>
+        <div class="zuser-meta">
+          <span class="zuser-name">{{ auth.username() }}</span>
+          <span class="zuser-role">{{ auth.currentRole() }}</span>
+        </div>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:#9CA3AF">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+
+      @if (showProfile) {
+        <div class="zprofile-menu">
+          <div class="zprofile-info">
+            <div class="zavatar zavatar-lg">{{ initial() }}</div>
+            <div>
+              <div class="zprofile-uname">{{ auth.username() }}</div>
+              <div class="zprofile-role-tag">{{ auth.currentRole() }}</div>
+            </div>
+          </div>
+          <div class="zprofile-divider"></div>
+          <button class="zprofile-item" (click)="auth.logout()">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Sign Out
+          </button>
+        </div>
+      }
+    </div>
+
+  </div>
+</header>

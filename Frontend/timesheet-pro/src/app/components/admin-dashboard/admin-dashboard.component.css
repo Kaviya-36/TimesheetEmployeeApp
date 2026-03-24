@@ -1,0 +1,23 @@
+.zrole-pill {
+  background: linear-gradient(135deg,#E05B2B,#F07A4A);
+  color:#fff; padding:6px 16px; border-radius:20px;
+  font-size:12px; font-weight:700;
+}
+.zrole-grid { display:flex; flex-wrap:wrap; gap:10px; }
+.zrole-chip {
+  display:flex; flex-direction:column; align-items:center;
+  padding:12px 20px; background:#F9FAFB; border-radius:10px;
+  border:1px solid #E5E7EB; min-width:90px;
+}
+.zrole-count { font-size:22px; font-weight:800; color:#E05B2B; }
+.zrole-name  { font-size:11px; color:#6B7280; margin-top:4px; text-transform:uppercase; letter-spacing:.5px; }
+.zuser-cell  { display:flex; align-items:center; gap:8px; }
+.zemp-id     { font-family:monospace; font-size:11px; color:#E05B2B; background:#FEF0EB; padding:2px 6px; border-radius:4px; }
+.ztext-muted { color:#9CA3AF; }
+.zdesc-cell  { max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.zhours      { color:#E05B2B; font-size:14px; }
+.zsettings-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+@media(max-width:768px) { .zsettings-grid { grid-template-columns:1fr; } }
+
+/* Shared pipe workaround */
+.uPS { display:none; }

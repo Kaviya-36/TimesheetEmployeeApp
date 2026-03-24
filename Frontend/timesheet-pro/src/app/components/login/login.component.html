@@ -1,0 +1,152 @@
+<div class="zauth-page">
+
+  <!-- Left panel -->
+  <div class="zauth-left">
+    <div class="zauth-brand">
+      <div class="zauth-logo-mark">T</div>
+      <h1 class="zauth-brand-name">TimeSheet <span>Pro</span></h1>
+    </div>
+    <div class="zauth-illustration">
+      <div class="zill-card zill-card-1">
+        <span>📋</span>
+        <div>
+          <p class="zill-title">Timesheets</p>
+          <p class="zill-sub">Track work hours easily</p>
+        </div>
+      </div>
+      <div class="zill-card zill-card-2">
+        <span>⏰</span>
+        <div>
+          <p class="zill-title">Attendance</p>
+          <p class="zill-sub">One-click check-in/out</p>
+        </div>
+      </div>
+      <div class="zill-card zill-card-3">
+        <span>🌴</span>
+        <div>
+          <p class="zill-title">Leave Management</p>
+          <p class="zill-sub">Apply & track leaves</p>
+        </div>
+      </div>
+      <div class="zill-card zill-card-4">
+        <span>📊</span>
+        <div>
+          <p class="zill-title">Analytics</p>
+          <p class="zill-sub">Role-based dashboards</p>
+        </div>
+      </div>
+    </div>
+    <p class="zauth-tagline">Enterprise-grade attendance & timesheet management</p>
+  </div>
+
+  <!-- Right panel -->
+  <div class="zauth-right">
+    <div class="zauth-card">
+
+      <!-- ── PENDING APPROVAL STATE ── -->
+      @if (loginState() === 'pending') {
+        <div class="zauth-status-screen">
+          <div class="zstatus-icon zstatus-pending">⏳</div>
+          <h2 class="zstatus-title">Awaiting Admin Approval</h2>
+          <p class="zstatus-desc">
+            Your account has been registered but is pending approval by an Administrator.
+            You will be able to log in once your account is activated.
+          </p>
+          <div class="zstatus-steps">
+            <div class="zstep done">✅ Account Created</div>
+            <div class="zstep active">⏳ Admin Review</div>
+            <div class="zstep">🔓 Account Activated</div>
+            <div class="zstep">🚀 Access Dashboard</div>
+          </div>
+          <button class="zbtn zbtn-outline zw-full" (click)="backToForm()">← Back to Login</button>
+        </div>
+      }
+
+      <!-- ── INACTIVE/DEACTIVATED STATE ── -->
+      @if (loginState() === 'inactive') {
+        <div class="zauth-status-screen">
+          <div class="zstatus-icon zstatus-inactive">🚫</div>
+          <h2 class="zstatus-title">Account Deactivated</h2>
+          <p class="zstatus-desc">
+            Your account has been deactivated. Please contact your system administrator to
+            re-activate your account.
+          </p>
+          <div class="zstatus-contact">
+            <span>📧 Contact HR or Admin for assistance</span>
+          </div>
+          <button class="zbtn zbtn-outline zw-full" (click)="backToForm()">← Back to Login</button>
+        </div>
+      }
+
+      <!-- ── LOGIN FORM ── -->
+      @if (loginState() === 'form') {
+        <div class="zauth-form-header">
+          <h2 class="zauth-form-title">Welcome back</h2>
+          <p class="zauth-form-sub">Sign in to your account</p>
+        </div>
+
+        @if (error()) {
+          <div class="zalert zalert-error" style="margin-bottom:16px">
+            <span>⚠</span> {{ error() }}
+          </div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+          <div class="zform-group">
+            <label class="zform-label" for="username">Username</label>
+            <input id="username" formControlName="username" type="text"
+              class="zform-control" placeholder="Enter your username" autocomplete="username" />
+            @if (form.get('username')?.invalid && form.get('username')?.touched) {
+              <span class="zform-error">Username is required</span>
+            }
+          </div>
+
+          <div class="zform-group">
+            <label class="zform-label" for="password">Password</label>
+            <div class="zpw-wrap">
+              <input id="password" formControlName="password"
+                [type]="showPw() ? 'text' : 'password'"
+                class="zform-control" placeholder="Enter your password" autocomplete="current-password" />
+              <button type="button" class="zpw-toggle" (click)="showPw.update(v => !v)">
+                {{ showPw() ? '🙈' : '👁' }}
+              </button>
+            </div>
+            @if (form.get('password')?.invalid && form.get('password')?.touched) {
+              <span class="zform-error">Min 6 characters required</span>
+            }
+          </div>
+
+          <button type="submit" class="zbtn zbtn-primary zw-full zlogin-btn"
+            [disabled]="form.invalid || loading()">
+            @if (loading()) {
+              <span class="zbtn-spin"></span> Signing in...
+            } @else {
+              Sign In
+            }
+          </button>
+
+        </form>
+
+        <p class="zauth-register-link">
+          Don't have an account? <a routerLink="/register">Register here</a>
+        </p>
+
+        <!-- Demo Credentials -->
+        <div class="zdemo-section">
+          <p class="zdemo-label">Quick Demo Login</p>
+          <div class="zdemo-grid">
+            @for (d of demos; track d.role) {
+              <button class="zdemo-btn" (click)="fillDemo(d)">
+                <span class="zdemo-role">{{ d.role }}</span>
+                <span class="zdemo-user">{{ d.username }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+
+</div>

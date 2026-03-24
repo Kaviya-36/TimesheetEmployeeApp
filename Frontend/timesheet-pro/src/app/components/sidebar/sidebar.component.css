@@ -1,0 +1,83 @@
+.zsidebar {
+  width: 240px;
+  background: #1A1F2E;
+  display: flex;
+  flex-direction: column;
+  transition: width .25s cubic-bezier(.4,0,.2,1);
+  flex-shrink: 0;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow: hidden;
+  border-right: 1px solid rgba(255,255,255,.06);
+}
+.zsidebar.collapsed { width: 64px; }
+
+/* Logo */
+.zsidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  flex-shrink: 0;
+}
+.zlogo-mark {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: linear-gradient(135deg, #E05B2B, #F07A4A);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 16px; color: #fff;
+  flex-shrink: 0;
+}
+.zlogo-text { display: flex; flex-direction: column; }
+.zlogo-name { font-weight: 800; font-size: 15px; color: #fff; line-height: 1; white-space: nowrap; }
+.zlogo-tag  { font-size: 10px; color: #E05B2B; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+/* Role Badge */
+.zrole-badge {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; margin: 10px;
+  background: rgba(255,255,255,.06);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.08);
+  flex-shrink: 0;
+}
+.zavatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, #E05B2B, #F07A4A);
+  color: #fff; font-weight: 700; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.zrole-info { display: flex; flex-direction: column; overflow: hidden; }
+.zrole-name { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zrole-tag  { font-size: 10px; color: rgba(255,255,255,.4); font-weight: 500; }
+
+/* Nav */
+.zsidebar-nav {
+  flex: 1; padding: 8px 10px;
+  display: flex; flex-direction: column;
+  gap: 2px; overflow-y: auto;
+}
+.znav-section-label {
+  font-size: 10px; font-weight: 700; color: rgba(255,255,255,.25);
+  letter-spacing: 1px; padding: 8px 8px 4px;
+}
+.znav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 8px;
+  text-decoration: none; color: rgba(255,255,255,.6);
+  font-size: 13px; font-weight: 500;
+  transition: all .15s; white-space: nowrap; overflow: hidden;
+}
+.znav-item:hover  { background: rgba(255,255,255,.08); color: #fff; }
+.znav-item.active { background: rgba(224,91,43,.2); color: #E05B2B; border: 1px solid rgba(224,91,43,.25); }
+.znav-icon { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
+.znav-label { white-space: nowrap; }
+
+/* Collapse */
+.zcollapse-btn {
+  margin: 10px; padding: 8px; background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08); border-radius: 8px;
+  color: rgba(255,255,255,.4); cursor: pointer; font-size: 18px;
+  transition: all .15s; flex-shrink: 0;
+}
+.zcollapse-btn:hover { background: rgba(255,255,255,.12); color: #fff; }

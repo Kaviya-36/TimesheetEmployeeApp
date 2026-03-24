@@ -1,0 +1,240 @@
+﻿using TimeSheetAppWeb.Exceptions;
+using TimeSheetAppWeb.Interface;
+using TimeSheetAppWeb.Interfaces;
+using TimeSheetAppWeb.Model;
+using TimeSheetAppWeb.Model.DTOs;
+using TimeSheetAppWeb.Models.DTOs;
+
+namespace TimeSheetAppWeb.Services
+{
+    public class UserService : IUserService
+    {
+        private readonly IRepository<int, User> _userRepository;
+        private readonly IPasswordService _passwordService;
+        private readonly ITokenService _tokenService;
+        private readonly ILogger<UserService> _logger;
+
+        public UserService(
+            IRepository<int, User> userRepository,
+            IPasswordService passwordService,
+            ITokenService tokenService,
+            ILogger<UserService> logger)
+        {
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _passwordService = passwordService ?? throw new ArgumentNullException(nameof(passwordService));
+            _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        // ---------------- LOGIN ----------------
+        public async Task<CheckUserResponseDto> LoginAsync(CheckUserRequestDto request)
+        {
+            _logger.LogInformation("Login attempt for user {Username}", request.Username);
+
+            var users = await _userRepository.GetAllAsync() ?? Enumerable.Empty<User>();
+
+            var user = users.FirstOrDefault(u =>
+                u.Name.Equals(request.Username, StringComparison.OrdinalIgnoreCase));
+
+            if (user == null || !_passwordService.VerifyPassword(request.Password, user.PasswordHash))
+            {
+                _logger.LogWarning("Unauthorized login attempt for user {Username}", request.Username);
+                throw new UnAuthorizedException("Invalid username or password");
+            }
+
+            if (!user.IsActive)
+            {
+                _logger.LogWarning("Inactive user login attempt: {Username}", request.Username);
+                throw new InvalidOperationException("User is inactive");
+            }
+
+            var token = _tokenService.CreateToken(new TokenPayloadDto
+            {
+                UserId = user.Id,
+                Username = user.Name,
+                Role = user.Role.ToString()
+            });
+
+            _logger.LogInformation("User {Username} logged in successfully", request.Username);
+
+            return new CheckUserResponseDto
+            {
+                Token = token,
+                UserId = user.Id,
+                Username = user.Name,
+                Role = user.Role.ToString()
+            };
+        }
+
+        // ---------------- REGISTER ----------------
+        public async Task<UserResponse> RegisterUserAsync(UserCreateRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("Registering new user with Email: {Email} and EmployeeId: {EmployeeId}",
+                    request.Email, request.EmployeeId);
+
+                var users = await _userRepository.GetAllAsync() ?? Enumerable.Empty<User>();
+
+                if (users.Any(u => u.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase)))
+                {
+                    _logger.LogWarning("Registration failed: Email {Email} already exists", request.Email);
+                    throw new InvalidOperationException("Email already exists");
+                }
+
+                if (users.Any(u => u.EmployeeId.Equals(request.EmployeeId, StringComparison.OrdinalIgnoreCase)))
+                {
+                    _logger.LogWarning("Registration failed: EmployeeId {EmployeeId} already exists", request.EmployeeId);
+                    throw new InvalidOperationException("EmployeeId already exists");
+                }
+
+                var hashedPassword = _passwordService.HashPassword(request.Password);
+
+                var user = new User
+                {
+                    EmployeeId = request.EmployeeId,
+                    Name = request.Name,
+                    Email = request.Email,
+                    Phone = request.Phone,
+                    DepartmentId = request.DepartmentId,
+                    Role = Enum.TryParse<UserRole>(request.Role, true, out var role) ? role : UserRole.Employee,
+                    PasswordHash = hashedPassword,
+                    IsActive = false,
+                    JoiningDate = DateTime.UtcNow
+                };
+
+                var addedUser = await _userRepository.AddAsync(user);
+
+                _logger.LogInformation("User {Username} registered successfully with ID {UserId}",
+                    user.Name, addedUser?.Id);
+
+                return MapToDto(addedUser!);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while registering user with Email {Email}", request.Email);
+                throw new Exception("An error occurred while registering the user.", ex);
+            }
+        }
+
+        // ---------------- GET USER BY ID ----------------
+        public async Task<UserResponse> GetUserByIdAsync(int userId)
+        {
+            try
+            {
+                _logger.LogInformation("Fetching user with ID {UserId}", userId);
+
+                var user = await _userRepository.GetByIdAsync(userId)
+                           ?? throw new KeyNotFoundException("User not found");
+
+                _logger.LogInformation("User {Username} retrieved successfully", user.Name);
+
+                return MapToDto(user);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching user with ID {UserId}", userId);
+                throw new Exception($"An error occurred while fetching user with ID {userId}.", ex);
+            }
+        }
+
+        // ---------------- GET ALL USERS ----------------
+        public async Task<IEnumerable<UserResponse>> GetAllUsersAsync(int pageNumber = 1, int pageSize = 10)
+        {
+            try
+            {
+                _logger.LogInformation("Fetching all users. Page: {PageNumber}, PageSize: {PageSize}", pageNumber, pageSize);
+
+                var users = await _userRepository.GetAllAsync() ?? Enumerable.Empty<User>();
+
+                var pagedUsers = users
+                    .OrderBy(u => u.Id)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize);
+
+                _logger.LogInformation("Retrieved {Count} users", pagedUsers.Count());
+
+                return pagedUsers.Select(MapToDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching all users");
+                throw new Exception("An error occurred while fetching all users.", ex);
+            }
+        }
+
+        // ---------------- UPDATE USER ----------------
+        public async Task<UserResponse> UpdateUserAsync(int userId, UserUpdateRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("Updating user with ID {UserId}", userId);
+
+                var user = await _userRepository.GetByIdAsync(userId)
+                           ?? throw new KeyNotFoundException("User not found");
+
+                if (!string.IsNullOrEmpty(request.Name)) user.Name = request.Name;
+                if (!string.IsNullOrEmpty(request.Email)) user.Email = request.Email;
+                if (!string.IsNullOrEmpty(request.Phone)) user.Phone = request.Phone;
+                if (request.DepartmentId.HasValue) user.DepartmentId = request.DepartmentId.Value;
+                if (!string.IsNullOrEmpty(request.Role) &&
+                    Enum.TryParse<UserRole>(request.Role, true, out var role)) user.Role = role;
+                if (request.IsActive.HasValue) user.IsActive = request.IsActive.Value;
+
+                var updatedUser = await _userRepository.UpdateAsync(userId, user);
+
+                _logger.LogInformation("User with ID {UserId} updated successfully", userId);
+
+                return MapToDto(updatedUser!);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating user with ID {UserId}", userId);
+                throw new Exception($"An error occurred while updating user with ID {userId}.", ex);
+            }
+        }
+
+        // ---------------- DELETE USER ----------------
+        public async Task<bool> DeleteUserAsync(int userId)
+        {
+            try
+            {
+                _logger.LogInformation("Deleting user with ID {UserId}", userId);
+
+                var user = await _userRepository.GetByIdAsync(userId);
+
+                if (user == null)
+                {
+                    _logger.LogWarning("Delete failed: User with ID {UserId} not found", userId);
+                    return false;
+                }
+
+                await _userRepository.DeleteAsync(userId);
+
+                _logger.LogInformation("User with ID {UserId} deleted successfully", userId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while deleting user with ID {UserId}", userId);
+                throw new Exception($"An error occurred while deleting user with ID {userId}.", ex);
+            }
+        }
+
+        // ---------------- HELPER: MAP USER TO DTO ----------------
+        private UserResponse MapToDto(User user)
+        {
+            return new UserResponse
+            {
+                Id = user.Id,
+                EmployeeId = user.EmployeeId,
+                Name = user.Name,
+                Email = user.Email,
+                Phone = user.Phone,
+                Role = user.Role.ToString(),
+                Status = user.IsActive ? "Active" : "Inactive",
+                JoiningDate = user.JoiningDate
+            };
+        }
+    }
+}
