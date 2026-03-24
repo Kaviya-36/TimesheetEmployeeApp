@@ -131,19 +131,6 @@
         <p class="zauth-register-link">
           Don't have an account? <a routerLink="/register">Register here</a>
         </p>
-
-        <!-- Demo Credentials -->
-        <div class="zdemo-section">
-          <p class="zdemo-label">Quick Demo Login</p>
-          <div class="zdemo-grid">
-            @for (d of demos; track d.role) {
-              <button class="zdemo-btn" (click)="fillDemo(d)">
-                <span class="zdemo-role">{{ d.role }}</span>
-                <span class="zdemo-user">{{ d.username }}</span>
-              </button>
-            }
-          </div>
-        </div>
       }
 
     </div>

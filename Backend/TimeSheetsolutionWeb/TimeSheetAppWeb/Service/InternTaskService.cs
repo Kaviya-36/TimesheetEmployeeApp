@@ -198,8 +198,7 @@ namespace TimeSheetAppWeb.Services
             try
             {
                 _logger.LogInformation("DeleteTask requested by Role={UserRole} for TaskId={TaskId}", userRole, taskId);
-
-                if (userRole != "HR" && userRole != "Manager" && userRole != "Admin")
+                if (userRole != "HR" && userRole != "Manager" && userRole != "Admin" && userRole != "Mentor")
                     return new ApiResponse<bool>
                     {
                         Success = false,

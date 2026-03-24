@@ -1,17 +1,19 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
-import { NavbarComponent }     from '../navbar/navbar.component';
-import { SidebarComponent }    from '../sidebar/sidebar.component';
-import { ConfirmComponent }    from '../confirm-dialog/confirm.component';
-import { AuthService }         from '../../services/auth.service';
-import { ToastService }        from '../../services/toast.service';
-import { BreadcrumbService }   from '../../services/breadcrumb.service';
-import { NotificationService } from '../../services/notification.service';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DashboardSummary, Leave, Project, Timesheet, User } from '../../models';
 import {
-  UserService, ProjectService, TimesheetService, AnalyticsService, LeaveService
+  AnalyticsService, LeaveService,
+  ProjectService, TimesheetService,
+  UserService
 } from '../../services/api.services';
-import { User, Project, Timesheet, Leave, DashboardSummary } from '../../models';
+import { AuthService } from '../../services/auth.service';
+import { BreadcrumbService } from '../../services/breadcrumb.service';
+import { NotificationService } from '../../services/notification.service';
+import { ToastService } from '../../services/toast.service';
+import { ConfirmComponent } from '../confirm-dialog/confirm.component';
+import { NavbarComponent } from '../navbar/navbar.component';
+import { SidebarComponent } from '../sidebar/sidebar.component';
 
 export type AdminTab = 'overview' | 'users' | 'projects' | 'timesheets' | 'leaves' | 'settings';
 

@@ -41,7 +41,7 @@ namespace TimeSheetAppWeb.Controllers
 
         // ---------------- GET ALL USERS ----------------
         [HttpGet]
-        [Authorize(Roles = "Admin,HR,Manager")]
+        [Authorize(Roles = "Admin,HR,Manager,Mentor")]
         public async Task<IActionResult> GetAllUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try
@@ -57,7 +57,7 @@ namespace TimeSheetAppWeb.Controllers
 
         // ---------------- UPDATE USER ----------------
         [HttpPut("{userId}")]
-        [Authorize(Roles = "Admin,HR,Manager")]
+        [Authorize(Roles = "Admin,HR,Manager,Mentor")]
         public async Task<IActionResult> UpdateUser(int userId, [FromBody] UserUpdateRequest request)
         {
             try

@@ -1,8 +1,8 @@
-import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { computed, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, User, UserRole } from '../models';
 
@@ -37,6 +37,7 @@ export class AuthService {
   readonly isManager   = computed(() => this._role() === 'Manager');
   readonly isEmployee  = computed(() => this._role() === 'Employee');
   readonly isIntern    = computed(() => this._role() === 'Intern');
+  readonly isMentor   = computed(() => this._role() === 'Mentor');
 
   constructor(private http: HttpClient, private router: Router) {}
 
@@ -60,7 +61,7 @@ export class AuthService {
   redirectByRole(): void {
     const map: Record<string, string> = {
       Admin: '/admin', HR: '/hr', Manager: '/manager',
-      Employee: '/employee', Mentor: '/employee', Intern: '/intern'
+      Employee: '/employee', Mentor: '/mentor', Intern: '/intern'
     };
     this.router.navigate([map[this._role() ?? ''] ?? '/login']);
   }

@@ -105,7 +105,7 @@
       <div class="ztable-wrap"><table class="ztable">
         <thead><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
-          @for (l of pagedLv(); track l.id) {
+          @for (l of pagedLv(); track l.id ?? $index)  {
             <tr>
               <td><strong>{{ l.employeeName }}</strong></td>
               <td>{{ l.leaveType }}</td>
@@ -242,7 +242,7 @@
 
                   <div class="user-list">
 
-                    @for (a of projectAssignments()[p.id]; track a.assignmentId) {
+                    @for (a of projectAssignments()[p.id]; track a.assignmentId ?? $index){
                       <span class="user-chip">
                         👤 {{ a.userName }}
                       </span>

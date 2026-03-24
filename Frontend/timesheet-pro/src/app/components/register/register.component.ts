@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
@@ -18,7 +18,7 @@ export class RegisterComponent {
   readonly error   = signal('');
   readonly success = signal(false);
 
-  readonly roles = ['Employee', 'Intern', 'Manager', 'HR'];
+  readonly roles = ['Employee', 'Intern', 'Manager', 'HR','Mentor'];
   readonly departments = [
     { id: 1, name: 'IT' }, { id: 2, name: 'HR' },
     { id: 3, name: 'Finance' }, { id: 4, name: 'Marketing' }

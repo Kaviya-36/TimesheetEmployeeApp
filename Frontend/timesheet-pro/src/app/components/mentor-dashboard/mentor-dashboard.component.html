@@ -1,0 +1,163 @@
+<div class="app-shell">
+  <app-sidebar />
+  <div class="app-main">
+    <app-navbar />
+
+    <div class="app-content">
+
+      <!-- HEADER -->
+      <div class="zpage-header">
+        <h2>Mentor Dashboard</h2>
+      </div>
+
+      <!-- SEARCH -->
+      <input
+        class="zfilter-input"
+        placeholder="Search interns..."
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+
+      <div class="grid">
+
+        <!-- =========================
+             INTERN LIST
+        ========================== -->
+        <div class="zcard">
+          <div class="zcard-header">Interns</div>
+
+          <table class="ztable">
+            @for (i of filteredInterns(); track i.id) {
+              <tr>
+                <td>
+                  <strong>{{ i.name }}</strong><br>
+                  <span class="ztext-muted">{{ i.email }}</span>
+                </td>
+
+                <td>
+                  <button class="zbtn zbtn-primary"
+                          (click)="selectIntern(i)">
+                    Select
+                  </button>
+                </td>
+              </tr>
+            }
+
+            @if (filteredInterns().length === 0) {
+              <tr>
+                <td colspan="2">No interns found</td>
+              </tr>
+            }
+          </table>
+        </div>
+
+        <!-- =========================
+             TASK PANEL
+        ========================== -->
+        @if (selectedIntern()) {
+          <div class="zcard">
+            <div class="zcard-header">
+              Tasks - {{ selectedIntern()?.name }}
+
+              <button class="zbtn zbtn-success"
+                      (click)="openAssign()">
+                + Assign Task
+              </button>
+            </div>
+
+            <table class="ztable">
+
+              @for (t of tasks(); track t.id) {
+                <tr>
+                  <td>
+                    <strong>{{ t.taskTitle }}</strong><br>
+                    <span class="ztext-muted">{{ t.description }}</span>
+                  </td>
+
+                  <td>
+                    {{ t.dueDate | date:'dd MMM yyyy' }}
+                  </td>
+
+                  <td>
+                    <span class="zbadge"
+                          [class]="statusClass(t.status)">
+                      {{ t.status }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <button class="zbtn zbtn-danger"
+                            (click)="deleteTask(t)">
+                      ✖
+                    </button>
+                  </td>
+                </tr>
+              }
+
+              @if (tasks().length === 0) {
+                <tr>
+                  <td colspan="4">No tasks assigned</td>
+                </tr>
+              }
+
+            </table>
+          </div>
+        }
+
+      </div>
+
+      <!-- =========================
+           ASSIGN TASK MODAL
+      ========================== -->
+      @if (showModal()) {
+        <div class="modal">
+          <div class="modal-content">
+
+            <h3>Assign Task</h3>
+
+            <form [formGroup]="taskForm">
+
+              <!-- Title -->
+              <label>Task Title</label>
+              <input
+                type="text"
+                formControlName="taskTitle"
+                placeholder="Enter task title"
+              />
+
+              <!-- Description -->
+              <label>Description</label>
+              <textarea
+                formControlName="description"
+                placeholder="Enter description">
+              </textarea>
+
+              <!-- Due Date -->
+              <label>Due Date</label>
+              <input
+                type="date"
+                formControlName="dueDate"
+              />
+
+              <!-- Buttons -->
+              <div class="modal-actions">
+                <button type="button"
+                        (click)="assignTask()">
+                  Assign
+                </button>
+
+                <button type="button"
+                        (click)="showModal.set(false)">
+                  Cancel
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+</div>

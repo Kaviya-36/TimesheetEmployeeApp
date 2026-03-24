@@ -28,18 +28,6 @@ export class LoginComponent {
     password: ['', [Validators.required, Validators.minLength(6)]]
   });
 
-  readonly demos = [
-    { role: 'Admin',    username: 'admin',    password: 'Admin@123'   },
-    { role: 'HR',       username: 'hruser',   password: 'Hr@12345'    },
-    { role: 'Manager',  username: 'manager1', password: 'Manager@123' },
-    { role: 'Employee', username: 'emp001',   password: 'Emp@12345'   },
-    { role: 'Intern',   username: 'intern01', password: 'Intern@123'  },
-  ];
-
-  fillDemo(d: { username: string; password: string }) {
-    this.form.setValue({ username: d.username, password: d.password });
-  }
-
   onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();

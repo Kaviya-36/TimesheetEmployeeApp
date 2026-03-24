@@ -134,10 +134,56 @@ export class InternService {
   private readonly api = `${environment.apiUrl}/interntask`;
   constructor(private http: HttpClient) {}
 
-  getTasks(internId: number): Observable<any>            { return this.http.get<any>(`${this.api}/intern/${internId}`); }
-  createTask(req: InternTaskCreateRequest): Observable<any> { return this.http.post<any>(this.api, req); }
-  updateTask(id: number, req: any): Observable<any>      { return this.http.put<any>(`${this.api}/${id}`, req); }
-  deleteTask(id: number): Observable<any>                { return this.http.delete<any>(`${this.api}/${id}`); }
+  getInterns(): Observable<any> {
+    return this.http.get<any>(this.api);
+  }
+
+  // Get intern by ID
+  getInternById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.api}/${id}`);
+  }
+
+  // Create intern
+  createIntern(data: any): Observable<any> {
+    return this.http.post<any>(this.api, data);
+  }
+
+  // Update intern
+  updateIntern(id: number, data: any): Observable<any> {
+    return this.http.put<any>(`${this.api}/${id}`, data);
+  }
+
+  // Delete intern
+  deleteIntern(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.api}/${id}`);
+  }
+
+
+  // ===========================
+  // 📋 INTERN TASK APIs
+  // ===========================
+
+  // Get tasks by intern
+  getTasks(internId: number): Observable<any> {
+    return this.http.get<any>(`${this.api}/intern/${internId}`);
+  }
+
+  // Create task
+  createTask(req: InternTaskCreateRequest): Observable<any> {
+    return this.http.post<any>(`${this.api}/create`, req);
+  }
+
+  // Update task
+  updateTask(taskId: number, req: any) {
+  return this.http.put(`${this.api}/update/${taskId}`, {
+    request: req   // 🔥 REQUIRED
+  });
+}
+
+  // Delete task
+  deleteTask(taskId: number): Observable<any> {
+    return this.http.delete<any>(`${this.api}/delete/${taskId}`);
+  }
 }
 
 // ── Analytics ──────────────────────────────────────────────────────────────

@@ -4165,11 +4165,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Kaviya\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\TimeSheetAppWeb.csproj",
+      "projectUniqueName": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\TimeSheetAppWeb.csproj",
       "projectName": "TimeSheetAppWeb",
-      "projectPath": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Kaviya\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\TimeSheetAppWeb.csproj",
+      "projectPath": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\TimeSheetAppWeb.csproj",
       "packagesPath": "C:\\Users\\Kaviya.N\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Kaviya\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\obj\\",
+      "outputPath": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
