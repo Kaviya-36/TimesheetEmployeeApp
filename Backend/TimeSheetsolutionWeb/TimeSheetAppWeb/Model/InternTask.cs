@@ -1,4 +1,7 @@
-﻿namespace TimeSheetAppWeb.Model
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
+
+namespace TimeSheetAppWeb.Model
 {
     public enum TaskStatus
     {
@@ -6,37 +9,27 @@
         InProgress = 2,
         Completed = 3
     }
-    public class InternTask : IComparable<InternTask>, IEquatable<InternTask>
+
+    public class InternTask
     {
+        [Key]
         public int Id { get; set; }
 
+        [Required]
         public int InternId { get; set; }
+
         public User? Intern { get; set; }
 
-        public string? Title { get; set; }
+        [Required(ErrorMessage = "Title is required")]
+        public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
 
+        [Required]
         public DateTime AssignedDate { get; set; }
+
         public DateTime? DueDate { get; set; }
 
+        [Required]
         public TaskStatus Status { get; set; } = TaskStatus.Pending;
-
-        public int CompareTo(InternTask? other)
-        {
-            if (other == null) return 1;
-
-            int dueDateComparison = Nullable.Compare(this.DueDate, other.DueDate);
-            if (dueDateComparison != 0)
-                return dueDateComparison;
-
-            return this.AssignedDate.CompareTo(other.AssignedDate);
-        }
-        public bool Equals(InternTask? other)
-        {
-            if (other == null) return false;
-
-            return this.Id == other.Id;
-        }
-
     }
 }

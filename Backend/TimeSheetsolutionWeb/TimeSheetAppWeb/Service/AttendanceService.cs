@@ -160,6 +160,21 @@ namespace TimeSheetAppWeb.Services
                     };
                 }
 
+                // ✅ AUTO CHECK-OUT AFTER 12 HOURS
+                if (attendance.CheckIn.HasValue && !attendance.CheckOut.HasValue)
+                {
+                    var checkInDateTime = attendance.Date.Add(attendance.CheckIn.Value);
+                    var autoCheckoutTime = checkInDateTime.AddHours(12);
+
+                    if (DateTime.Now >= autoCheckoutTime)
+                    {
+                        attendance.CheckOut = autoCheckoutTime.TimeOfDay;
+                        attendance.TotalHours = attendance.CheckOut.Value - attendance.CheckIn.Value;
+
+                        await _attendanceRepository.UpdateAsync(attendance.Id, attendance);
+                    }
+                }
+
                 return new ApiResponse<AttendanceResponse>
                 {
                     Success = true,

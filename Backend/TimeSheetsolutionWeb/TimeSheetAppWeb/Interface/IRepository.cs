@@ -2,6 +2,7 @@
 {
     public interface IRepository <K,T> where T : class
     {
+        Task<IQueryable<T>> GetQueryableAsync();
         Task<IEnumerable<T>?> GetAllAsync();
         Task<T?> GetByIdAsync(K id);
         Task<T?> AddAsync(T entity);

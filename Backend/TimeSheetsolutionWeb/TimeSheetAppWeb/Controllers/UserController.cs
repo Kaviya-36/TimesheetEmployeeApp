@@ -38,7 +38,13 @@ namespace TimeSheetAppWeb.Controllers
                 return StatusCode(500, new { Success = false, Message = "Error fetching user.", Details = ex.Message });
             }
         }
-
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyProfile()
+        {
+            var result = await _userService.GetMyProfileAsync(User);
+            return Ok(result);
+        }
         // ---------------- GET ALL USERS ----------------
         [HttpGet]
         [Authorize(Roles = "Admin,HR,Manager,Mentor")]

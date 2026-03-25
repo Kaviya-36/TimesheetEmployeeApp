@@ -1,36 +1,28 @@
-﻿namespace TimeSheetAppWeb.Model
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace TimeSheetAppWeb.Model
 {
-    public class Attendance : IComparable<Attendance>, IEquatable<Attendance>
+    public class Attendance
     {
+        [Key]
         public int Id { get; set; }
 
+        [Required]
         public int UserId { get; set; }
+
         public User? User { get; set; }
 
+        [Required]
         public DateTime Date { get; set; }
+
         public TimeSpan? CheckIn { get; set; }
+
         public TimeSpan? CheckOut { get; set; }
-        public bool IsLate { get; set; }
-        public TimeSpan TotalHours { get; set; }
 
-        public int CompareTo(Attendance? other)
-        {
-            if (other == null) return 1;
+        public bool IsLate { get; set; } = false;
 
-            int dateComparison = this.Date.CompareTo(other.Date);
-            if (dateComparison != 0)
-                return dateComparison;
-
-            return this.UserId.CompareTo(other.UserId);
-        }
-
-        public bool Equals(Attendance? other)
-        {
-            if (other == null) return false;
-
-            return this.Id == other.Id &&
-                   this.UserId == other.UserId &&
-                   this.Date.Date == other.Date.Date;
-        }
+        [Range(typeof(TimeSpan), "00:00:00", "23:59:59",
+            ErrorMessage = "Total hours must be between 0 and 24 hours")]
+        public TimeSpan TotalHours { get; set; } = TimeSpan.Zero;
     }
 }

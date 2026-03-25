@@ -1,22 +1,19 @@
-﻿namespace TimeSheetAppWeb.Model
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+
+namespace TimeSheetAppWeb.Model
 {
-    public class Department : IComparable<Department>, IEquatable<Department>
+    [Index(nameof(Name), IsUnique = true)]
+    public class Department
     {
+        [Key]
         public int Id { get; set; }
+
+        [Required(ErrorMessage = "Department name is required")]
+        [StringLength(100, MinimumLength = 2,
+            ErrorMessage = "Department name must be between 2 and 100 characters")]
         public string Name { get; set; } = string.Empty;
 
-        public ICollection<User>? Users { get; set; }
-        public int CompareTo(Department? other)
-        {
-            if (other == null) return 1;
-            return string.Compare(this.Name, other.Name, StringComparison.OrdinalIgnoreCase);
-        }
-
-        public bool Equals(Department? other)
-        {
-            if (other == null) return false;
-
-            return this.Id == other.Id;
-        }
+        public ICollection<User> Users { get; set; } = new List<User>();
     }
 }

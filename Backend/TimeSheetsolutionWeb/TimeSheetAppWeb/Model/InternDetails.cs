@@ -1,35 +1,28 @@
-﻿namespace TimeSheetAppWeb.Model
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace TimeSheetAppWeb.Model
 {
-    public class InternDetails : IComparable<InternDetails>, IEquatable<InternDetails>
+    public class InternDetails
     {
+        [Key]
         public int Id { get; set; }
 
+        [Required]
         public int UserId { get; set; }
+
         public User? User { get; set; }
 
+        [Required(ErrorMessage = "Training start date is required")]
         public DateTime TrainingStart { get; set; }
+
+        [Required(ErrorMessage = "Training end date is required")]
         public DateTime TrainingEnd { get; set; }
 
         public int? MentorId { get; set; }
+
+        [ForeignKey("MentorId")]
         public User? Mentor { get; set; }
-
-        public int CompareTo(InternDetails? other)
-        {
-            if (other == null) return 1;
-
-            int startComparison = this.TrainingStart.CompareTo(other.TrainingStart);
-            if (startComparison != 0)
-                return startComparison;
-
-            return this.TrainingEnd.CompareTo(other.TrainingEnd);
-        }
-
-        public bool Equals(InternDetails? other)
-        {
-            if (other == null) return false;
-
-            return this.UserId == other.UserId;
-        }
     }
 }
-    

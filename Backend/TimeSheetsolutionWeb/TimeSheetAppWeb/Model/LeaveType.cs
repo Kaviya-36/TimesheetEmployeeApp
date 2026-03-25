@@ -1,28 +1,22 @@
-﻿namespace TimeSheetAppWeb.Model
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
+
+namespace TimeSheetAppWeb.Model
 {
-    public class LeaveType : IComparable<LeaveType>, IEquatable<LeaveType>
+    [Index(nameof(Name), IsUnique = true)]
+    public class LeaveType
     {
+        [Key]
         public int Id { get; set; }
+
+        [Required(ErrorMessage = "Leave type name is required")]
+        [StringLength(100, MinimumLength = 2,
+            ErrorMessage = "Name must be between 2 and 100 characters")]
         public string Name { get; set; } = string.Empty;
+
+        [Range(0, 365, ErrorMessage = "Max days must be between 0 and 365")]
         public int MaxDaysPerYear { get; set; }
-        public bool IsActive { get; set; }
 
-        public int CompareTo(LeaveType? other)
-        {
-            if (other == null) return 1;
-
-            int nameComparison = string.Compare(this.Name, other.Name, StringComparison.OrdinalIgnoreCase);
-            if (nameComparison != 0)
-                return nameComparison;
-
-            return this.MaxDaysPerYear.CompareTo(other.MaxDaysPerYear);
-        }
-
-        public bool Equals(LeaveType? other)
-        {
-            if (other == null) return false;
-
-            return this.Id == other.Id;
-        }
+        public bool IsActive { get; set; } = true;
     }
 }

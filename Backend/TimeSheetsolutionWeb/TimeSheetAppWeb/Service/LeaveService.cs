@@ -46,13 +46,13 @@ namespace TimeSheetAppWeb.Services
 
                 var totalDays = (request.ToDate - request.FromDate).Days + 1;
 
-                // 🔹 Check max allowed days
+                // 🔹 Check max allowed per request
                 if (totalDays > leaveType.MaxDaysPerYear)
                     return Fail<LeaveResponse>($"Max {leaveType.MaxDaysPerYear} days allowed");
 
-                // 🔹 Check overlapping leaves
                 var allLeaves = await _leaveRepo.GetAllAsync() ?? Enumerable.Empty<LeaveRequest>();
 
+                // 🔹 Overlap check
                 var overlap = allLeaves.Any(l =>
                     l.UserId == userId &&
                     l.Status != LeaveStatus.Rejected &&
@@ -61,6 +61,23 @@ namespace TimeSheetAppWeb.Services
 
                 if (overlap)
                     return Fail<LeaveResponse>("Leave already exists in selected range");
+
+                // ✅ CALCULATE USED LEAVES (APPROVED + PENDING optional)
+                var usedLeaves = allLeaves
+                    .Where(l => l.UserId == userId &&
+                                l.LeaveTypeId == request.LeaveTypeId &&
+                                l.Status != LeaveStatus.Rejected)
+                    .Sum(l => (l.ToDate - l.FromDate).Days + 1);
+
+                // ✅ CALCULATE REMAINING
+                var remainingLeaves = leaveType.MaxDaysPerYear - usedLeaves - totalDays;
+
+                if (remainingLeaves < 0)
+                {
+                    return Fail<LeaveResponse>(
+                        $"Not enough leave balance. You only have {leaveType.MaxDaysPerYear - usedLeaves} days left"
+                    );
+                }
 
                 var leave = new LeaveRequest
                 {
@@ -74,8 +91,11 @@ namespace TimeSheetAppWeb.Services
 
                 await _leaveRepo.AddAsync(leave);
 
-                return Success("Leave applied successfully",
-                    MapToDto(leave, user, leaveType));
+                // ✅ CUSTOM SUCCESS MESSAGE
+                return Success(
+                    "Leave applied successfully",
+                    MapToDto(leave, user, leaveType, remainingLeaves)
+                );
             }
             catch (Exception ex)
             {
@@ -196,7 +216,7 @@ namespace TimeSheetAppWeb.Services
         }
 
         // ================= HELPER =================
-        private LeaveResponse MapToDto(LeaveRequest leave, User user, LeaveType type)
+        private LeaveResponse MapToDto(LeaveRequest leave, User user, LeaveType type, int remainingLeaves = 0)
         {
             return new LeaveResponse
             {
@@ -209,7 +229,8 @@ namespace TimeSheetAppWeb.Services
                 Status = leave.Status,
                 ApprovedById = leave.ApprovedById,
                 ApprovedDate = leave.ApprovedDate,
-                ManagerComment = leave.ManagerComment
+                ManagerComment = leave.ManagerComment,
+                RemainingLeaves = remainingLeaves
             };
         }
 

@@ -1,4 +1,8 @@
-﻿namespace TimeSheetAppWeb.Model
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+
+namespace TimeSheetAppWeb.Model
 {
     public enum ProjectStatus
     {
@@ -7,37 +11,33 @@
         OnHold
     }
 
-    public class Project : IComparable<Project>, IEquatable<Project>
+    [Index(nameof(ProjectName), IsUnique = true)]
+    public class Project
     {
+        [Key]
         public int Id { get; set; }
+
+        [Required(ErrorMessage = "Project name is required")]
         public string ProjectName { get; set; } = string.Empty;
+
+        [StringLength(1000)]
         public string? Description { get; set; }
 
-        public int? ManagerId { get; set; } // <-- nullable now
+        public int? ManagerId { get; set; }
+
+        [ForeignKey("ManagerId")]
         public User? Manager { get; set; }
 
+        [Required(ErrorMessage = "Start date is required")]
         public DateTime StartDate { get; set; }
+
         public DateTime? EndDate { get; set; }
 
-        public ICollection<ProjectAssignment>? ProjectAssignments { get; set; }
-        public ICollection<Timesheet>? Timesheets { get; set; }
+        [Required]
+        public ProjectStatus Status { get; set; } = ProjectStatus.Active;
 
-        public int CompareTo(Project? other)
-        {
-            if (other == null) return 1;
+        public ICollection<ProjectAssignment> ProjectAssignments { get; set; } = new List<ProjectAssignment>();
 
-            int startDateComparison = this.StartDate.CompareTo(other.StartDate);
-            if (startDateComparison != 0)
-                return startDateComparison;
-
-            return string.Compare(this.ProjectName, other.ProjectName, StringComparison.OrdinalIgnoreCase);
-        }
-
-        public bool Equals(Project? other)
-        {
-            if (other == null) return false;
-
-            return this.Id == other.Id;
-        }
+        public ICollection<Timesheet> Timesheets { get; set; } = new List<Timesheet>();
     }
 }

@@ -4,13 +4,12 @@ namespace TimeSheetAppWeb.Interface
 {
     public interface IProjectService
     {
-        // ---------------- PROJECT CRUD ----------------
+       
         Task<ApiResponse<ProjectResponse>> CreateProjectAsync(ProjectCreateRequest request);
         Task<ApiResponse<ProjectResponse>> UpdateProjectAsync(int projectId, ProjectUpdateRequest request);
         Task<ApiResponse<bool>> DeleteProjectAsync(int projectId);
         Task<ApiResponse<ProjectResponse>> GetProjectByIdAsync(int projectId);
 
-        // ---------------- GET ALL PROJECTS WITH PAGINATION & FILTERS ----------------
         Task<ApiResponse<IEnumerable<ProjectResponse>>> GetAllProjectsAsync(
             int pageNumber = 1,
             int pageSize = 10,
@@ -21,17 +20,15 @@ namespace TimeSheetAppWeb.Interface
             DateTime? endTo = null);
 
         Task<ApiResponse<IEnumerable<ProjectResponse>>> GetMyProjectsAsync(int userId);
-        // ---------------- PROJECT ASSIGNMENTS ----------------
+
         Task<ApiResponse<ProjectAssignmentResponse>> AssignUserToProjectAsync(ProjectAssignRequest request);
         Task<ApiResponse<bool>> RemoveUserFromProjectAsync(int assignmentId);
 
-        // ---------------- GET PROJECT ASSIGNMENTS WITH PAGINATION ----------------
         Task<ApiResponse<IEnumerable<ProjectAssignmentResponse>>> GetProjectAssignmentsAsync(
             int projectId,
             int pageNumber = 1,
             int pageSize = 10);
 
-        // ---------------- GET USER PROJECT ASSIGNMENTS WITH PAGINATION ----------------
         Task<ApiResponse<IEnumerable<ProjectAssignmentResponse>>> GetUserProjectAssignmentsAsync(
             int userId,
             int pageNumber = 1,

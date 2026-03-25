@@ -32,6 +32,45 @@ namespace TimeSheetAppWeb.Services
             {
                 _logger.LogInformation("Creating new project: {ProjectName}", request.ProjectName);
 
+                var today = DateTime.Today;
+
+                // ---------------- DATE VALIDATION ----------------
+
+                // Default StartDate if null
+                var startDate = request.StartDate ?? DateTime.Now;
+
+                // ❌ Prevent past start date
+                if (startDate.Date < today)
+                {
+                    return new ApiResponse<ProjectResponse>
+                    {
+                        Success = false,
+                        Message = "Start date cannot be in the past"
+                    };
+                }
+
+                // ❌ End date before start date
+                if (request.EndDate.HasValue && request.EndDate.Value < startDate)
+                {
+                    return new ApiResponse<ProjectResponse>
+                    {
+                        Success = false,
+                        Message = "End date cannot be before start date"
+                    };
+                }
+
+                // ❌ Optional: prevent past end date
+                if (request.EndDate.HasValue && request.EndDate.Value.Date < today)
+                {
+                    return new ApiResponse<ProjectResponse>
+                    {
+                        Success = false,
+                        Message = "End date cannot be in the past"
+                    };
+                }
+
+                // ---------------- MANAGER VALIDATION ----------------
+
                 User? manager = null;
                 if (request.ManagerId.HasValue)
                 {
@@ -47,7 +86,6 @@ namespace TimeSheetAppWeb.Services
                         };
                     }
 
-                    // Ensure the user is a Manager
                     if (manager.Role != UserRole.Manager)
                     {
                         _logger.LogWarning("User ID {ManagerId} is not a Manager", request.ManagerId);
@@ -59,16 +97,19 @@ namespace TimeSheetAppWeb.Services
                     }
                 }
 
+                // ---------------- CREATE PROJECT ----------------
+
                 var project = new Project
                 {
                     ProjectName = request.ProjectName,
                     Description = request.Description,
                     ManagerId = request.ManagerId,
-                    StartDate = request.StartDate ?? DateTime.Now,
+                    StartDate = startDate,
                     EndDate = request.EndDate
                 };
 
                 await _projectRepository.AddAsync(project);
+
                 _logger.LogInformation("Project created successfully with ID {ProjectId}", project.Id);
 
                 return new ApiResponse<ProjectResponse>

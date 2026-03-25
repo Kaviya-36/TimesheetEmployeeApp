@@ -405,6 +405,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ── Leave ─────────────────────────────────────────────────────────────────
+  
   validateLeaveDates(): boolean {
     const from = new Date(this.leaveForm.value.fromDate!);
     const to   = new Date(this.leaveForm.value.toDate!);
@@ -429,35 +430,46 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
 
     return true;
   }
- submitLeave(): void {
-    if (this.leaveForm.invalid) {
-      this.leaveForm.markAllAsTouched();
-      return;
-    }
-
-    // 🔥 ADD THIS
-    if (!this.validateLeaveDates()) return;
-
-    const v   = this.leaveForm.value;
-    const uid = this.auth.currentUser();
-    if (!uid) return;
-
-    this.lvSvc.apply(uid, {
-      leaveTypeId: +v.leaveTypeId!,
-      fromDate:    v.fromDate!,
-      toDate:      v.toDate!,
-      reason:      v.reason ?? ''
-    }).subscribe({
-      next: () => {
-        this.toast.success('Leave Applied', 'Your leave request is pending approval.');
-        this.showLeaveModal.set(false);
-        this.leaveForm.reset();
-        this.lvSvc.getMyLeaves(uid).subscribe(r => this.leaves.set(this.toArr<Leave>(r)));
-      },
-      error: (e: any) => this.toast.error('Application Failed', e?.error?.message ?? '')
-    });
+submitLeave(): void {
+  if (this.leaveForm.invalid) {
+    this.leaveForm.markAllAsTouched();
+    return;
   }
 
+  if (!this.validateLeaveDates()) return;
+
+  const v   = this.leaveForm.value;
+  const uid = this.auth.currentUser();
+  if (!uid) return;
+
+  this.lvSvc.apply(uid, {
+    leaveTypeId: +v.leaveTypeId!,
+    fromDate:    v.fromDate!,
+    toDate:      v.toDate!,
+    reason:      v.reason ?? ''
+  }).subscribe({
+    next: (res: any) => {
+
+      const remaining = res?.data?.remainingLeaves;
+
+      const finalMsg = remaining !== undefined
+        ? `Leave applied successfully. Remaining leave: ${remaining} day(s)`
+        : 'Leave applied successfully';
+
+      this.toast.success('Leave Applied', finalMsg);
+
+      this.showLeaveModal.set(false);
+      this.leaveForm.reset();
+
+      this.lvSvc.getMyLeaves(uid).subscribe(r =>
+        this.leaves.set(this.toArr<Leave>(r))
+      );
+    },
+
+    error: (e: any) =>
+      this.toast.error('Application Failed', e?.error?.message ?? '')
+  });
+}
   // ── Helpers ───────────────────────────────────────────────────────────────
   private fmt(t: string): string { return t?.length === 5 ? t + ':00' : t ?? '00:00:00'; }
 

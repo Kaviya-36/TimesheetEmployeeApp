@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TimeSheetAppWeb")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2088f74d9ec7a525aca939c5d910d14e91966b65")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+082c971b57238040c78d6992a62a07b2a5b825d3")]
 [assembly: System.Reflection.AssemblyProductAttribute("TimeSheetAppWeb")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TimeSheetAppWeb")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

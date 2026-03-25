@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Text.Json;
 using TimeSheetAppWeb.Model;
 
 namespace TimeSheetAppWeb.Contexts
@@ -23,21 +25,24 @@ namespace TimeSheetAppWeb.Contexts
         public DbSet<InternTask> InternTasks { get; set; }
         public DbSet<InternDetails> InternDetails { get; set; }
 
+        // ✅ NEW
+        public DbSet<AuditLog> AuditLogs { get; set; }
+
+        // -------------------- MODEL CONFIG --------------------
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // -------------------- USER --------------------
+            // USER
             modelBuilder.Entity<User>()
-                .HasIndex(u => u.Email)
-                .IsUnique();
+                .HasIndex(u => u.Email).IsUnique();
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.EmployeeId).IsUnique();
+
             modelBuilder.Entity<User>()
                 .Property(u => u.Role)
                 .HasConversion<string>();
-
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.EmployeeId)
-                .IsUnique();
 
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Timesheets)
@@ -63,13 +68,13 @@ namespace TimeSheetAppWeb.Contexts
                 .HasForeignKey(pa => pa.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // -------------------- DEPARTMENT --------------------
+            // DEPARTMENT
             modelBuilder.Entity<Department>()
                 .HasMany(d => d.Users)
                 .WithOne(u => u.Department)
                 .HasForeignKey(u => u.DepartmentId);
 
-            // -------------------- PROJECT --------------------
+            // PROJECT
             modelBuilder.Entity<Project>()
                 .HasOne(p => p.Manager)
                 .WithMany()
@@ -88,28 +93,28 @@ namespace TimeSheetAppWeb.Contexts
                 .HasForeignKey(t => t.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // -------------------- TIMESHEET --------------------
+            // TIMESHEET
             modelBuilder.Entity<Timesheet>()
                 .HasOne(t => t.ApprovedBy)
                 .WithMany()
                 .HasForeignKey(t => t.ApprovedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // -------------------- LEAVE REQUEST --------------------
+            // LEAVE REQUEST
             modelBuilder.Entity<LeaveRequest>()
                 .HasOne(l => l.ApprovedBy)
                 .WithMany()
                 .HasForeignKey(l => l.ApprovedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // -------------------- INTERN TASK --------------------
+            // INTERN TASK
             modelBuilder.Entity<InternTask>()
                 .HasOne(it => it.Intern)
                 .WithMany()
                 .HasForeignKey(it => it.InternId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // -------------------- PAYROLL --------------------
+            // PAYROLL
             modelBuilder.Entity<Payroll>(entity =>
             {
                 entity.Property(p => p.BasicSalary).HasPrecision(18, 2);
@@ -118,20 +123,90 @@ namespace TimeSheetAppWeb.Contexts
                 entity.Property(p => p.NetSalary).HasPrecision(18, 2);
             });
 
+            // INTERN DETAILS
             modelBuilder.Entity<InternDetails>(entity =>
             {
-                entity.HasKey(e => e.Id);
-
                 entity.HasOne(e => e.User)
-                      .WithMany() // or .WithMany(i => i.Interns)
+                      .WithMany()
                       .HasForeignKey(e => e.UserId)
-                      .OnDelete(DeleteBehavior.Cascade); // keep cascade here
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(e => e.Mentor)
-                      .WithMany() // or .WithMany(m => m.Mentees)
+                      .WithMany()
                       .HasForeignKey(e => e.MentorId)
-                      .OnDelete(DeleteBehavior.NoAction); // change this line
+                      .OnDelete(DeleteBehavior.NoAction);
             });
+        }
+
+        // -------------------- AUDIT LOGIC 🔥 --------------------
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var auditEntries = new List<AuditLog>();
+
+            foreach (var entry in ChangeTracker.Entries())
+            {
+                if (entry.Entity is AuditLog ||
+                    entry.State == EntityState.Detached ||
+                    entry.State == EntityState.Unchanged)
+                    continue;
+
+                var audit = new AuditLog
+                {
+                    TableName = entry.Entity.GetType().Name,
+                    Action = entry.State.ToString(),
+                    ChangedAt = DateTime.UtcNow
+                };
+
+                // Primary Key
+                var keyValues = new Dictionary<string, object?>();
+                foreach (var prop in entry.Properties.Where(p => p.Metadata.IsPrimaryKey()))
+                {
+                    keyValues[prop.Metadata.Name] = prop.CurrentValue;
+                }
+                audit.KeyValues = JsonSerializer.Serialize(keyValues);
+
+                var oldValues = new Dictionary<string, object?>();
+                var newValues = new Dictionary<string, object?>();
+
+                foreach (var prop in entry.Properties)
+                {
+                    // 🔥 Ignore sensitive fields
+                    if (prop.Metadata.Name == "PasswordHash")
+                        continue;
+
+                    if (entry.State == EntityState.Modified)
+                    {
+                        if (!Equals(prop.OriginalValue, prop.CurrentValue))
+                        {
+                            oldValues[prop.Metadata.Name] = prop.OriginalValue;
+                            newValues[prop.Metadata.Name] = prop.CurrentValue;
+                        }
+                    }
+                    else if (entry.State == EntityState.Added)
+                    {
+                        newValues[prop.Metadata.Name] = prop.CurrentValue;
+                    }
+                    else if (entry.State == EntityState.Deleted)
+                    {
+                        oldValues[prop.Metadata.Name] = prop.OriginalValue;
+                    }
+                }
+
+                audit.OldValues = oldValues.Count > 0 ? JsonSerializer.Serialize(oldValues) : null;
+                audit.NewValues = newValues.Count > 0 ? JsonSerializer.Serialize(newValues) : null;
+
+                auditEntries.Add(audit);
+            }
+
+            var result = await base.SaveChangesAsync(cancellationToken);
+
+            if (auditEntries.Any())
+            {
+                AuditLogs.AddRange(auditEntries);
+                await base.SaveChangesAsync(cancellationToken);
+            }
+
+            return result;
         }
     }
 }

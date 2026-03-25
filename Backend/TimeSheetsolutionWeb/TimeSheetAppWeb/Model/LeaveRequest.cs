@@ -1,4 +1,8 @@
-﻿namespace TimeSheetAppWeb.Model
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+
+namespace TimeSheetAppWeb.Model
 {
     public enum LeaveStatus
     {
@@ -7,45 +11,43 @@
         Rejected
     }
 
-    public class LeaveRequest : IComparable<LeaveRequest>, IEquatable<LeaveRequest>
+    public class LeaveRequest
     {
+        [Key]
         public int Id { get; set; }
 
+        [Required]
         public int UserId { get; set; }
+
         public User? User { get; set; }
 
+        [Required]
         public int LeaveTypeId { get; set; }
+
         public LeaveType? LeaveType { get; set; }
 
+        [Required(ErrorMessage = "From date is required")]
         public DateTime FromDate { get; set; }
-        public DateTime ToDate { get; set; }
-        public string? Reason { get; set; }
 
+        [Required(ErrorMessage = "To date is required")]
+        public DateTime ToDate { get; set; }
+
+        [Required(ErrorMessage = "Reason is required")]
+        public string Reason { get; set; } = string.Empty;
+
+        [Required]
         public LeaveStatus Status { get; set; } = LeaveStatus.Pending;
 
         public int? ApprovedById { get; set; }
+
+        [ForeignKey("ApprovedById")]
         public User? ApprovedBy { get; set; }
 
+        [StringLength(500)]
         public string? ManagerComment { get; set; }
-        public DateTime AppliedDate { get; set; } = DateTime.Now;
+
+        public DateTime AppliedDate { get; set; } = DateTime.UtcNow;
+
         public DateTime? ApprovedDate { get; set; }
-        public int CompareTo(LeaveRequest? other)
-        {
-            if (other == null) return 1;
-
-            int fromComparison = this.FromDate.CompareTo(other.FromDate);
-            if (fromComparison != 0) return fromComparison;
-
-            int toComparison = this.ToDate.CompareTo(other.ToDate);
-            if (toComparison != 0) return toComparison;
-
-            return this.AppliedDate.CompareTo(other.AppliedDate);
-        }
-
-        public bool Equals(LeaveRequest? other)
-        {
-            if (other == null) return false;
-            return this.Id == other.Id;
-        }
     }
 }

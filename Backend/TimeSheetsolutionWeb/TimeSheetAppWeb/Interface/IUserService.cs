@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using TimeSheetAppWeb.Model;
 using TimeSheetAppWeb.Model.DTOs;
@@ -14,6 +15,7 @@ namespace TimeSheetAppWeb.Interfaces
         Task<IEnumerable<UserResponse>> GetAllUsersAsync(int pageNumber = 1, int pageSize = 10);
         Task<UserResponse> UpdateUserAsync(int userId, UserUpdateRequest request);
         Task<bool> DeleteUserAsync(int userId);
-        
+        Task<UserResponse> GetMyProfileAsync(ClaimsPrincipal userClaims);
+
     }
 }

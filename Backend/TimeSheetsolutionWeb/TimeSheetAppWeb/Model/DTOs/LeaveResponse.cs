@@ -12,5 +12,6 @@
         public int? ApprovedById { get; set; }
         public DateTime? ApprovedDate { get; set; }
         public string? ManagerComment { get; set; }
+        public int RemainingLeaves { get; set; }
     }
 }

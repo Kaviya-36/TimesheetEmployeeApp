@@ -18,18 +18,8 @@ var configuration = builder.Configuration;
 builder.Services.AddDbContext<TimeSheetContext>(options =>
     options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-// ================= GENERIC REPOSITORIES =================
-builder.Services.AddScoped<IRepository<int, User>, Repository<int, User>>();
-builder.Services.AddScoped<IRepository<int, Department>, Repository<int, Department>>();
-builder.Services.AddScoped<IRepository<int, Project>, Repository<int, Project>>();
-builder.Services.AddScoped<IRepository<int, ProjectAssignment>, Repository<int, ProjectAssignment>>();
-builder.Services.AddScoped<IRepository<int, Timesheet>, Repository<int, Timesheet>>();
-builder.Services.AddScoped<IRepository<int, LeaveType>, Repository<int, LeaveType>>();
-builder.Services.AddScoped<IRepository<int, LeaveRequest>, Repository<int, LeaveRequest>>();
-builder.Services.AddScoped<IRepository<int, Attendance>, Repository<int, Attendance>>();
-builder.Services.AddScoped<IRepository<int, Payroll>, Repository<int, Payroll>>();
-builder.Services.AddScoped<IRepository<int, InternTask>, Repository<int, InternTask>>();
-builder.Services.AddScoped<IRepository<int, InternDetails>, Repository<int, InternDetails>>();
+// ================= GENERIC REPOSITORY (BEST PRACTICE 🔥) =================
+builder.Services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
 
 // ================= SERVICES =================
 builder.Services.AddScoped<IUserService, UserService>();
@@ -44,11 +34,12 @@ builder.Services.AddScoped<IPayrollService, PayrollService>();
 builder.Services.AddScoped<IInternDetailsService, InternDetailsService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IAuditService, AuditService>(); // ✅ FIXED
 
 // ================= SIGNALR =================
 builder.Services.AddSignalR();
 
-// ================= CORS (IMPORTANT FOR ANGULAR + SIGNALR) =================
+// ================= CORS =================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
@@ -56,7 +47,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:4200")
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials(); // REQUIRED for SignalR
+              .AllowCredentials();
     });
 });
 
@@ -64,7 +55,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 
 // ================= JWT AUTH =================
-var secretKey = builder.Configuration["Keys:Jwt"];
+var secretKey = configuration["Keys:Jwt"];
 if (string.IsNullOrEmpty(secretKey))
     throw new InvalidOperationException("JWT secret not configured properly.");
 
@@ -79,22 +70,25 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false,
             ValidateIssuerSigningKey = true,
             ValidateLifetime = true,
-            IssuerSigningKey = key
+            IssuerSigningKey = key,
+
+            ClockSkew = TimeSpan.Zero // 🔥 important (no extra expiry time)
         };
 
-        // 🔥 IMPORTANT FOR SIGNALR AUTH (optional but recommended)
+        // ✅ SignalR Token Support
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
             {
                 var accessToken = context.Request.Query["access_token"];
-
                 var path = context.HttpContext.Request.Path;
+
                 if (!string.IsNullOrEmpty(accessToken) &&
                     path.StartsWithSegments("/notificationHub"))
                 {
                     context.Token = accessToken;
                 }
+
                 return Task.CompletedTask;
             }
         };
@@ -153,7 +147,6 @@ app.MapControllers();
 app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();
-
 
 // ================= HUB CLASS =================
 public class NotificationHub : Hub

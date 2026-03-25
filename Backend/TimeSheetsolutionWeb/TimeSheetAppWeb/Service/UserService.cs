@@ -1,4 +1,5 @@
-﻿using TimeSheetAppWeb.Exceptions;
+﻿using System.Security.Claims;
+using TimeSheetAppWeb.Exceptions;
 using TimeSheetAppWeb.Interface;
 using TimeSheetAppWeb.Interfaces;
 using TimeSheetAppWeb.Model;
@@ -59,10 +60,7 @@ namespace TimeSheetAppWeb.Services
 
             return new CheckUserResponseDto
             {
-                Token = token,
-                UserId = user.Id,
-                Username = user.Name,
-                Role = user.Role.ToString()
+                Token = token
             };
         }
 
@@ -191,6 +189,30 @@ namespace TimeSheetAppWeb.Services
             {
                 _logger.LogError(ex, "Error occurred while updating user with ID {UserId}", userId);
                 throw new Exception($"An error occurred while updating user with ID {userId}.", ex);
+            }
+        }
+        public async Task<UserResponse> GetMyProfileAsync(ClaimsPrincipal userClaims)
+        {
+            try
+            {
+                var userIdClaim = userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrEmpty(userIdClaim))
+                    throw new UnAuthorizedException("Invalid token");
+
+                var userId = int.Parse(userIdClaim);
+
+                var user = await _userRepository.GetByIdAsync(userId)
+                           ?? throw new KeyNotFoundException("User not found");
+
+                _logger.LogInformation("Fetched profile for user {UserId}", userId);
+
+                return MapToDto(user);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching profile");
+                throw;
             }
         }
 

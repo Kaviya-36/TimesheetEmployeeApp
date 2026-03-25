@@ -13,6 +13,10 @@ namespace TimeSheetAppWeb.Repositories
         {
             _context = context;
         }
+        public Task<IQueryable<T>> GetQueryableAsync()
+        {
+            return Task.FromResult(_context.Set<T>().AsQueryable());
+        }
 
         public async Task<T?> AddAsync(T entity)
         {
