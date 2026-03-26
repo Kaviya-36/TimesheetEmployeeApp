@@ -11,17 +11,20 @@ namespace TimeSheetAppWeb.Services
     public class UserService : IUserService
     {
         private readonly IRepository<int, User> _userRepository;
+        private readonly IRepository<int, Department> _departmentRepository;
         private readonly IPasswordService _passwordService;
         private readonly ITokenService _tokenService;
         private readonly ILogger<UserService> _logger;
 
         public UserService(
             IRepository<int, User> userRepository,
+            IRepository<int, Department> departmentRepository,
             IPasswordService passwordService,
             ITokenService tokenService,
             ILogger<UserService> logger)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _departmentRepository = departmentRepository ?? throw new ArgumentNullException(nameof(departmentRepository));
             _passwordService = passwordService ?? throw new ArgumentNullException(nameof(passwordService));
             _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -106,7 +109,8 @@ namespace TimeSheetAppWeb.Services
                 _logger.LogInformation("User {Username} registered successfully with ID {UserId}",
                     user.Name, addedUser?.Id);
 
-                return MapToDto(addedUser!);
+                var deptName = await ResolveDepartmentNameAsync(addedUser!.DepartmentId);
+                return MapToDto(addedUser!, deptName);
             }
             catch (Exception ex)
             {
@@ -127,7 +131,8 @@ namespace TimeSheetAppWeb.Services
 
                 _logger.LogInformation("User {Username} retrieved successfully", user.Name);
 
-                return MapToDto(user);
+                var deptName = await ResolveDepartmentNameAsync(user.DepartmentId);
+                return MapToDto(user, deptName);
             }
             catch (Exception ex)
             {
@@ -152,7 +157,10 @@ namespace TimeSheetAppWeb.Services
 
                 _logger.LogInformation("Retrieved {Count} users", pagedUsers.Count());
 
-                return pagedUsers.Select(MapToDto);
+                var depts = await _departmentRepository.GetAllAsync() ?? Enumerable.Empty<Department>();
+                var deptMap = depts.ToDictionary(d => d.Id, d => d.Name);
+
+                return pagedUsers.Select(u => MapToDto(u, u.DepartmentId.HasValue && deptMap.TryGetValue(u.DepartmentId.Value, out var n) ? n : null));
             }
             catch (Exception ex)
             {
@@ -183,7 +191,8 @@ namespace TimeSheetAppWeb.Services
 
                 _logger.LogInformation("User with ID {UserId} updated successfully", userId);
 
-                return MapToDto(updatedUser!);
+                var deptName = await ResolveDepartmentNameAsync(updatedUser!.DepartmentId);
+                return MapToDto(updatedUser!, deptName);
             }
             catch (Exception ex)
             {
@@ -207,7 +216,8 @@ namespace TimeSheetAppWeb.Services
 
                 _logger.LogInformation("Fetched profile for user {UserId}", userId);
 
-                return MapToDto(user);
+                var deptName = await ResolveDepartmentNameAsync(user.DepartmentId);
+                return MapToDto(user, deptName);
             }
             catch (Exception ex)
             {
@@ -244,7 +254,7 @@ namespace TimeSheetAppWeb.Services
         }
 
         // ---------------- HELPER: MAP USER TO DTO ----------------
-        private UserResponse MapToDto(User user)
+        private UserResponse MapToDto(User user, string? departmentName = null)
         {
             return new UserResponse
             {
@@ -252,11 +262,19 @@ namespace TimeSheetAppWeb.Services
                 EmployeeId = user.EmployeeId,
                 Name = user.Name,
                 Email = user.Email,
-                Phone = user.Phone,
+                Phone = user.Phone ?? string.Empty,
                 Role = user.Role.ToString(),
                 Status = user.IsActive ? "Active" : "Inactive",
-                JoiningDate = user.JoiningDate
+                JoiningDate = user.JoiningDate,
+                DepartmentName = departmentName
             };
+        }
+
+        private async Task<string?> ResolveDepartmentNameAsync(int? departmentId)
+        {
+            if (departmentId == null) return null;
+            var dept = await _departmentRepository.GetByIdAsync(departmentId.Value);
+            return dept?.Name;
         }
     }
 }

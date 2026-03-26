@@ -6,13 +6,15 @@ import {
   DashboardSummary,
   Leave, LeaveType,
   ProjectAssignment,
-  Timesheet
+  Timesheet,
+  UserProfile
 } from '../../models';
 import {
   AnalyticsService,
   AttendanceService,
   LeaveService, ProjectService,
-  TimesheetService
+  TimesheetService,
+  UserService
 } from '../../services/api.services';
 import { AuthService } from '../../services/auth.service';
 import { BreadcrumbService } from '../../services/breadcrumb.service';
@@ -43,6 +45,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   private  lvSvc  = inject(LeaveService);
   private  prjSvc = inject(ProjectService);
   private  anlSvc = inject(AnalyticsService);
+  private  usrSvc = inject(UserService);
   private  fb     = inject(FormBuilder);
 
   // ── Tabs ─────────────────────────────────────────────────────────────────
@@ -63,6 +66,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   leaveTypes         = signal<LeaveType[]>([]);
   summary            = signal<DashboardSummary | null>(null);
   todayAtt           = signal<Attendance | null>(null);
+  userProfile        = signal<UserProfile | null>(null);
 
   // ── Timesheet filters / sort / page ─────────────────────────────────────
   tsSearch  = signal('');
@@ -180,6 +184,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     this.loadAll(uid);
     this.refreshToday();
     this.anlSvc.getDashboard(uid).subscribe({ next: r => this.summary.set(r), error: () => {} });
+    this.usrSvc.getProfile().subscribe({ next: (r: any) => this.userProfile.set(r?.data ?? r), error: () => {} });
   }
 
   ngOnDestroy(): void { this.stopTimer(); }

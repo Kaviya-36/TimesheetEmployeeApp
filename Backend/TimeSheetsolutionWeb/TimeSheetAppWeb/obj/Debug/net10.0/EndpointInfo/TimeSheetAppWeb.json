@@ -909,7 +909,7 @@
         }
       }
     },
-    "/api/Payroll": {
+    "/api/payroll": {
       "post": {
         "tags": [
           "Payroll"
@@ -1010,7 +1010,7 @@
         }
       }
     },
-    "/api/Payroll/{id}": {
+    "/api/payroll/{id}": {
       "get": {
         "tags": [
           "Payroll"
@@ -1033,7 +1033,7 @@
         }
       }
     },
-    "/api/Payroll/user/{userId}": {
+    "/api/payroll/user/{userId}": {
       "get": {
         "tags": [
           "Payroll"
@@ -1777,7 +1777,7 @@
         }
       }
     },
-    "/api/User/me": {
+    "/api/User/profile": {
       "get": {
         "tags": [
           "User"

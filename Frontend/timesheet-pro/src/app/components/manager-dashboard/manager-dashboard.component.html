@@ -11,6 +11,33 @@
   </div>
 
   @if (activeTab()==='dashboard') {
+    <div class="zatt-hero">
+      <div class="zatt-hero-left">
+        <div class="zatt-hero-title">My Attendance Today</div>
+        <div class="zatt-hero-date">{{ todayDate | date:'EEEE, MMMM d, y' }}</div>
+        @if (todayAtt()?.checkIn && !todayAtt()?.checkOut) {
+          <div class="zlive-timer-wrap"><span class="zlive-dot"></span><span class="zlive-label">LIVE</span><span class="zlive-time">{{ liveTimer() }}</span></div>
+        }
+        <div class="zatt-stats-row">
+          <div class="zatt-stat"><span class="zatt-stat-label">Check In</span><span class="zatt-stat-value">{{ todayAtt()?.checkIn || '—' }}</span></div>
+          <div class="zatt-stat"><span class="zatt-stat-label">Check Out</span><span class="zatt-stat-value">{{ todayAtt()?.checkOut || '—' }}</span></div>
+          <div class="zatt-stat"><span class="zatt-stat-label">Total Hours</span><span class="zatt-stat-value">{{ todayAtt()?.totalHours || '—' }}</span></div>
+          <div class="zatt-stat"><span class="zatt-stat-label">Status</span><span class="zatt-stat-value" [class.zlate]="todayAtt()?.isLate">@if (todayAtt()?.isLate) { ⚠ Late } @else { ✅ On Time }</span></div>
+        </div>
+      </div>
+      <div class="zatt-hero-right">
+        @if (!todayAtt()?.checkIn) {
+          <div class="zatt-status-badge zatt-not-started">● Not Started</div>
+          <button class="zbtn zbtn-primary zbtn-lg zatt-btn" (click)="checkIn()" [disabled]="attLoading()">@if (attLoading()) { <span class="zbtn-spin"></span> } 📍 Check In</button>
+        } @else if (!todayAtt()?.checkOut) {
+          <div class="zatt-status-badge zatt-active">● Active</div>
+          <button class="zbtn zbtn-warning zbtn-lg zatt-btn" (click)="checkOut()" [disabled]="attLoading()">@if (attLoading()) { <span class="zbtn-spin"></span> } ⏏ Check Out</button>
+        } @else {
+          <div class="zatt-status-badge zatt-done">● Completed</div>
+          <button class="zbtn zbtn-outline zbtn-lg zatt-btn" disabled>✔ Day Done</button>
+        }
+      </div>
+    </div>
     <div class="stat-grid">
       <div class="stat-card sc-warning"><div class="stat-icon-wrap">⏳</div><div class="stat-body"><div class="stat-value">{{ pendingTs().length }}</div><div class="stat-label">Pending Timesheets</div></div></div>
       <div class="stat-card sc-warning"><div class="stat-icon-wrap">🌴</div><div class="stat-body"><div class="stat-value">{{ pendingLv().length }}</div><div class="stat-label">Pending Leaves</div></div></div>
@@ -37,7 +64,7 @@
 
   @if (activeTab()==='timesheets') {
     <div class="zcard">
-      <div class="zcard-header"><span class="zcard-title">Team Timesheets</span></div>
+      <div class="zcard-header"><span class="zcard-title">Team Timesheets</span><button class="zbtn zbtn-primary zbtn-sm" (click)="showAddTimesheetModal.set(true)">+ My Timesheet</button></div>
       <div class="zfilter-bar">
         <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="tsSearch()" (ngModelChange)="tsSearch.set($event);tsPage.set(1)" placeholder="Search employee or project..." /></div>
         <select class="zfilter-select" [ngModel]="tsStatus()" (ngModelChange)="tsStatus.set($event);tsPage.set(1)">
@@ -94,7 +121,7 @@
 
   @if (activeTab()==='leaves') {
     <div class="zcard">
-      <div class="zcard-header"><span class="zcard-title">Leave Requests</span></div>
+      <div class="zcard-header"><span class="zcard-title">Leave Requests</span><button class="zbtn zbtn-primary zbtn-sm" (click)="showAddLeaveModal.set(true)">+ My Leave</button></div>
       <div class="zfilter-bar">
         <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="lvSearch()" (ngModelChange)="lvSearch.set($event);lvPage.set(1)" placeholder="Search employee..." /></div>
         <select class="zfilter-select" [ngModel]="lvStatus()" (ngModelChange)="lvStatus.set($event);lvPage.set(1)">
@@ -271,5 +298,25 @@
   </div>
 }
   
+  @if (activeTab()==='profile') {
+    <div class="zprofile-card">
+      <div class="zprofile-banner"></div>
+      <div class="zprofile-body">
+        <div class="zprofile-avatar-lg">{{ (userProfile()?.name ?? auth.username() ?? 'U')[0].toUpperCase() }}</div>
+        <h2 class="zprofile-name">{{ userProfile()?.name ?? auth.username() }}</h2>
+        <span class="zbadge zbadge-role">{{ userProfile()?.role ?? auth.currentRole() }}</span>
+        <div class="zprofile-info-grid">
+          <div class="zprofile-info-item"><span class="zprofile-info-label">Employee ID</span><span class="zprofile-info-value">{{ userProfile()?.employeeId ?? '—' }}</span></div>
+          <div class="zprofile-info-item"><span class="zprofile-info-label">Email</span><span class="zprofile-info-value">{{ userProfile()?.email ?? '—' }}</span></div>
+          <div class="zprofile-info-item"><span class="zprofile-info-label">Phone</span><span class="zprofile-info-value">{{ userProfile()?.phone ?? '—' }}</span></div>
+          <div class="zprofile-info-item"><span class="zprofile-info-label">Department</span><span class="zprofile-info-value">{{ userProfile()?.departmentName ?? '—' }}</span></div>
+          <div class="zprofile-info-item"><span class="zprofile-info-label">Status</span><span class="zprofile-info-value">{{ userProfile()?.status ?? '—' }}</span></div>
+          <div class="zprofile-info-item"><span class="zprofile-info-label">Joined</span><span class="zprofile-info-value">{{ userProfile()?.joiningDate | date:'dd MMM yyyy' }}</span></div>
+        </div>
+        <button class="zbtn zbtn-danger" style="margin-top:24px" (click)="auth.logout()">⎋ Sign Out</button>
+      </div>
+    </div>
+  }
+
 </div></div></div>
 <app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()" [type]="cfgType()" (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />

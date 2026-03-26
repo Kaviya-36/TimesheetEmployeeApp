@@ -1,9 +1,10 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DashboardSummary, Leave, Project, Timesheet, User } from '../../models';
+import { Attendance, AuditLog, DashboardSummary, Leave, LeaveType, Project, Timesheet, User, UserProfile } from '../../models';
 import {
-  AnalyticsService, LeaveService,
+  AnalyticsService, AttendanceService, AuditLogService,
+  LeaveService,
   ProjectService, TimesheetService,
   UserService
 } from '../../services/api.services';
@@ -15,7 +16,7 @@ import { ConfirmComponent } from '../confirm-dialog/confirm.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 
-export type AdminTab = 'overview' | 'users' | 'projects' | 'timesheets' | 'leaves' | 'settings';
+export type AdminTab = 'overview' | 'users' | 'projects' | 'timesheets' | 'leaves' | 'attendance' | 'auditlogs' | 'settings' | 'profile';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -24,7 +25,7 @@ export type AdminTab = 'overview' | 'users' | 'projects' | 'timesheets' | 'leave
   templateUrl: './admin-dashboard.component.html',
   styleUrl:    './admin-dashboard.component.css'
 })
-export class AdminDashboardComponent implements OnInit {
+export class AdminDashboardComponent implements OnInit, OnDestroy {
   readonly auth  = inject(AuthService);
   private  toast = inject(ToastService);
   private  bc    = inject(BreadcrumbService);
@@ -34,6 +35,8 @@ export class AdminDashboardComponent implements OnInit {
   private  tsSvc   = inject(TimesheetService);
   private  anlSvc  = inject(AnalyticsService);
   private  lvSvc   = inject(LeaveService);
+  private  attSvc  = inject(AttendanceService);
+  private  auditSvc = inject(AuditLogService);
   private  fb      = inject(FormBuilder);
 
   activeTab = signal<AdminTab>('overview');
@@ -43,14 +46,61 @@ export class AdminDashboardComponent implements OnInit {
     { key: 'projects',   label: 'Projects',   icon: '🗂' },
     { key: 'timesheets', label: 'Timesheets', icon: '📋' },
     { key: 'leaves',     label: 'Leaves',     icon: '🌴' },
+    { key: 'attendance', label: 'Attendance', icon: '⏰' },
+    { key: 'auditlogs',  label: 'Audit Logs', icon: '🔍' },
     { key: 'settings',   label: 'Settings',   icon: '⚙' },
+    { key: 'profile',    label: 'Profile',    icon: '👤' },
   ];
 
   allUsers      = signal<User[]>([]);
   allProjects   = signal<Project[]>([]);
   allTimesheets = signal<Timesheet[]>([]);
   allLeaves     = signal<Leave[]>([]);
+  allAttendances = signal<Attendance[]>([]);
   summary       = signal<DashboardSummary | null>(null);
+  userProfile   = signal<UserProfile | null>(null);
+
+  // ── Audit Logs ────────────────────────────────────────────────────────────
+  allAuditLogs    = signal<AuditLog[]>([]);
+  auditSearch     = signal('');
+  auditAction     = signal('all');
+  auditTable      = signal('all');
+  auditPage       = signal(1);
+  auditPS = 10;
+  filteredAudit = computed(() => {
+    let d = this.allAuditLogs();
+    const q = this.auditSearch().toLowerCase();
+    if (q) d = d.filter(a => a.tableName.toLowerCase().includes(q) || a.action.toLowerCase().includes(q) || (a.keyValues ?? '').toLowerCase().includes(q));
+    if (this.auditAction() !== 'all') d = d.filter(a => a.action.toUpperCase() === this.auditAction());
+    if (this.auditTable()  !== 'all') d = d.filter(a => a.tableName.toLowerCase() === this.auditTable().toLowerCase());
+    return d;
+  });
+  auditTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredAudit().length / this.auditPS)));
+  pagedAudit      = computed(() => { const s = (this.auditPage()-1)*this.auditPS; return this.filteredAudit().slice(s, s+this.auditPS); });
+  auditTables     = computed(() => [...new Set(this.allAuditLogs().map(a => a.tableName))].sort());
+
+  // ── Admin own check-in/out ────────────────────────────────────────────────
+  todayAtt    = signal<Attendance | null>(null);
+  attLoading  = signal(false);
+  liveTimer   = signal('00:00:00');
+  private timerInterval: any;
+  readonly todayDate = new Date().toISOString().split('T')[0];
+
+  // ── Attendance list filters ───────────────────────────────────────────────
+  attSearch = signal('');
+  attPage   = signal(1);
+  attPS = 8;
+  attTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredAtt().length / this.attPS)));
+  filteredAtt = computed(() => {
+    const q = this.attSearch().toLowerCase();
+    let d = this.allAttendances();
+    if (q) d = d.filter(a => (a.employeeName ?? '').toLowerCase().includes(q));
+    return d;
+  });
+  pagedAtt = computed(() => {
+    const s = (this.attPage() - 1) * this.attPS;
+    return this.filteredAtt().slice(s, s + this.attPS);
+  });
 
   uSearch   = signal('');  uRole = signal('all');  uStatus = signal('all');
   uPage     = signal(1);   uSort = signal<'name'|'role'|'status'|'joined'>('name');
@@ -68,6 +118,9 @@ export class AdminDashboardComponent implements OnInit {
 
   showAddUser = signal(false);  showAddProject = signal(false);
   editUser    = signal<User | null>(null);  newRole = '';
+  showAddTimesheetModal = signal(false);
+  showAddLeaveModal     = signal(false);
+  leaveTypes            = signal<LeaveType[]>([]);
 
   cfgVisible = signal(false);  cfgTitle = signal('');  cfgMsg = signal('');
   cfgType    = signal<'danger'|'warning'|'info'>('danger');
@@ -93,6 +146,22 @@ export class AdminDashboardComponent implements OnInit {
     managerId:   [''],
     startDate:   ['', Validators.required],
     endDate:     [''],
+  });
+
+  addTimesheetForm = this.fb.group({
+    projectId:       ['', Validators.required],
+    workDate:        [new Date().toISOString().split('T')[0], Validators.required],
+    startTime:       ['09:00', Validators.required],
+    endTime:         ['18:00', Validators.required],
+    breakTime:       ['01:00'],
+    taskDescription: [''],
+  });
+
+  addLeaveForm = this.fb.group({
+    leaveTypeId: ['', Validators.required],
+    fromDate:    ['', Validators.required],
+    toDate:      ['', Validators.required],
+    reason:      [''],
   });
 
   filteredUsers = computed(() => {
@@ -161,9 +230,13 @@ export class AdminDashboardComponent implements OnInit {
   ngOnInit() {
     this.bc.set([{ label:'Admin Dashboard' }]);
     this.loadAll();
+    this.refreshToday();
+    this.userSvc.getProfile().subscribe({ next:(r:any)=>this.userProfile.set(r?.data??r), error:()=>{} });
     const saved = localStorage.getItem('admin_settings');
     if (saved) try { this.settings = JSON.parse(saved); } catch {}
   }
+
+  ngOnDestroy() { if (this.timerInterval) clearInterval(this.timerInterval); }
 
   private toArr<T>(r:any): T[] {
     if (Array.isArray(r)) return r;
@@ -184,7 +257,16 @@ export class AdminDashboardComponent implements OnInit {
       }, error:()=>{}
     });
     this.lvSvc.getAll().subscribe({ next:r=>this.allLeaves.set(this.toArr<Leave>(r)), error:()=>{} });
+    this.lvSvc.getLeaveTypes().subscribe({ next:r=>this.leaveTypes.set(this.toArr<LeaveType>(r)), error:()=>{} });
     this.anlSvc.getDashboard().subscribe({ next:r=>this.summary.set(r), error:()=>{} });
+    this.attSvc.getAll(1, 200).subscribe({
+      next:(r:any)=>this.allAttendances.set(this.toArr<Attendance>(r)),
+      error:()=>{}
+    });
+    this.auditSvc.getAll().subscribe({
+      next:(r:any)=>this.allAuditLogs.set(this.toArr<AuditLog>(r)),
+      error:()=>{}
+    });
   }
 
   sortU(col:'name'|'role'|'status'|'joined') {
@@ -273,6 +355,53 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
+  addTimesheetForUser() {
+    if (this.addTimesheetForm.invalid) return;
+    const uid = this.auth.currentUser();
+    if (!uid) return;
+    const v = this.addTimesheetForm.getRawValue();
+    const proj = this.allProjects().find(p => p.id === +v.projectId!);
+    const fmt = (t: string) => t?.length === 5 ? t + ':00' : t ?? '00:00:00';
+    this.tsSvc.create(uid, {
+      projectId:       +v.projectId!,
+      projectName:     proj?.projectName ?? '',
+      workDate:        v.workDate!,
+      startTime:       fmt(v.startTime!),
+      endTime:         fmt(v.endTime!),
+      breakTime:       fmt(v.breakTime || '00:00'),
+      taskDescription: v.taskDescription ?? ''
+    }).subscribe({
+      next: () => {
+        this.toast.success('Timesheet Added', 'Your timesheet has been submitted.');
+        this.showAddTimesheetModal.set(false);
+        this.addTimesheetForm.reset({ workDate: new Date().toISOString().split('T')[0], startTime: '09:00', endTime: '18:00', breakTime: '01:00' });
+        this.loadAll();
+      },
+      error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Could not create timesheet.')
+    });
+  }
+
+  addLeaveForUser() {
+    if (this.addLeaveForm.invalid) return;
+    const uid = this.auth.currentUser();
+    if (!uid) return;
+    const v = this.addLeaveForm.getRawValue();
+    this.lvSvc.apply(uid, {
+      leaveTypeId: +v.leaveTypeId!,
+      fromDate:    v.fromDate!,
+      toDate:      v.toDate!,
+      reason:      v.reason ?? ''
+    }).subscribe({
+      next: () => {
+        this.toast.success('Leave Applied', 'Your leave request has been submitted.');
+        this.showAddLeaveModal.set(false);
+        this.addLeaveForm.reset();
+        this.loadAll();
+      },
+      error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Could not apply leave.')
+    });
+  }
+
   approveLeave(l:Leave) {
     const uid=this.auth.currentUser()!;
     this.lvSvc.approveOrReject({leaveId:l.id,approvedById:uid,isApproved:true,managerComment:'Approved by Admin'}).subscribe({
@@ -287,6 +416,68 @@ export class AdminDashboardComponent implements OnInit {
       error:()=>this.toast.error('Error','Failed.')
     });
   }
+
+  private refreshToday(): void {
+    const uid = this.auth.currentUser();
+    if (!uid) return;
+    this.attSvc.getTodayStatus(uid).subscribe({
+      next:(res:any)=>{
+        const d = res?.data ?? res;
+        this.todayAtt.set(d);
+        if (d?.checkIn && !d?.checkOut) this.startTimer(d.checkIn);
+      },
+      error:()=>this.todayAtt.set(null)
+    });
+  }
+
+  checkIn(): void {
+    if (this.todayAtt()?.checkIn) { this.toast.warning('Already checked in',''); return; }
+    this.attLoading.set(true);
+    this.attSvc.checkIn().subscribe({
+      next:(res:any)=>{
+        const d = res?.data ?? res;
+        this.todayAtt.set(d);
+        if (d?.checkIn && !d?.checkOut) this.startTimer(d.checkIn);
+        this.attSvc.getAll(1,200).subscribe({next:(r:any)=>this.allAttendances.set(this.toArr<Attendance>(r)),error:()=>{}});
+        this.toast.success('Checked In',`Welcome! Time: ${d?.checkIn}`);
+        this.notif.pushLocal('Attendance','Admin checked in successfully.');
+        this.attLoading.set(false);
+      },
+      error:(err:any)=>{ this.toast.error('Check-In Failed',err?.error?.message??'Please try again.'); this.attLoading.set(false); }
+    });
+  }
+
+  checkOut(): void {
+    if (!this.todayAtt()?.checkIn) { this.toast.warning('Not checked in',''); return; }
+    if (this.todayAtt()?.checkOut) { this.toast.warning('Already checked out',''); return; }
+    this.attLoading.set(true);
+    this.attSvc.checkOut().subscribe({
+      next:(res:any)=>{
+        const d = res?.data ?? res;
+        this.todayAtt.set(d);
+        this.stopTimer();
+        this.attSvc.getAll(1,200).subscribe({next:(r:any)=>this.allAttendances.set(this.toArr<Attendance>(r)),error:()=>{}});
+        this.toast.success('Checked Out',`Total: ${d?.totalHours ?? '—'}`);
+        this.notif.pushLocal('Attendance','Admin checked out successfully.');
+        this.attLoading.set(false);
+      },
+      error:(err:any)=>{ this.toast.error('Check-Out Failed',err?.error?.message??'Please try again.'); this.attLoading.set(false); }
+    });
+  }
+
+  private startTimer(t:string): void {
+    if (!t) return;
+    const [h,m] = t.split(':').map(Number);
+    const base = new Date(); base.setHours(h,m,0,0);
+    this.stopTimer();
+    this.timerInterval = setInterval(()=>{
+      const diff = Date.now()-base.getTime();
+      const hh=Math.floor(diff/3600000), mm=Math.floor((diff%3600000)/60000), ss=Math.floor((diff%60000)/1000);
+      this.liveTimer.set(`${this.pad(hh)}:${this.pad(mm)}:${this.pad(ss)}`);
+    },1000);
+  }
+  private stopTimer(): void { if (this.timerInterval) clearInterval(this.timerInterval); }
+  private pad(n:number): string { return n<10?'0'+n:''+n; }
 
   saveSettings() {
     localStorage.setItem('admin_settings',JSON.stringify(this.settings));

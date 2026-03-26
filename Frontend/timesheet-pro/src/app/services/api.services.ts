@@ -3,14 +3,14 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
-  DashboardSummary,
-  InternTaskCreateRequest,
-  LeaveCreateRequest,
-  PayrollCreateRequest,
-  ProjectCreateRequest,
-  TimesheetApprovalRequest,
-  TimesheetCreateRequest, TimesheetUpdateRequest,
-  UserUpdateRequest
+    DashboardSummary,
+    InternTaskCreateRequest,
+    LeaveCreateRequest,
+    PayrollCreateRequest,
+    ProjectCreateRequest,
+    TimesheetApprovalRequest,
+    TimesheetCreateRequest, TimesheetUpdateRequest,
+    UserUpdateRequest
 } from '../models';
 
 // ── Timesheet ──────────────────────────────────────────────────────────────
@@ -120,6 +120,7 @@ export class UserService {
 
   getAll(): Observable<any>                           { return this.http.get<any>(`${this.api}?pageNumber=1&pageSize=1000`); }
   getById(id: number): Observable<any>               { return this.http.get<any>(`${this.api}/${id}`); }
+  getProfile(): Observable<any>                      { return this.http.get<any>(`${this.api}/profile`); }
   update(id: number, req: UserUpdateRequest): Observable<any> { return this.http.put<any>(`${this.api}/${id}`, req); }
   delete(id: number): Observable<any>                { return this.http.delete<any>(`${this.api}/${id}`); }
   activate(id: number): Observable<any>              { return this.http.patch<any>(`${this.api}/${id}/activate`, {}); }
@@ -184,6 +185,19 @@ export class InternService {
   deleteTask(taskId: number): Observable<any> {
     return this.http.delete<any>(`${this.api}/delete/${taskId}`);
   }
+}
+
+// ── AuditLog ───────────────────────────────────────────────────────────────
+@Injectable({ providedIn: 'root' })
+export class AuditLogService {
+  private readonly api = `${environment.apiUrl}/AuditLog`;
+  constructor(private http: HttpClient) {}
+
+  getAll(): Observable<any>                          { return this.http.get<any>(this.api); }
+  getByTable(tableName: string): Observable<any>     { return this.http.get<any>(`${this.api}/table/${tableName}`); }
+  getByAction(action: string): Observable<any>       { return this.http.get<any>(`${this.api}/action/${action}`); }
+  getByUser(userId: number): Observable<any>         { return this.http.get<any>(`${this.api}/user/${userId}`); }
+  getPaged(page = 1, pageSize = 10): Observable<any> { return this.http.get<any>(`${this.api}/paged?page=${page}&pageSize=${pageSize}`); }
 }
 
 // ── Analytics ──────────────────────────────────────────────────────────────

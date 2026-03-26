@@ -38,12 +38,19 @@ namespace TimeSheetAppWeb.Controllers
                 return StatusCode(500, new { Success = false, Message = "Error fetching user.", Details = ex.Message });
             }
         }
-        [Authorize]
-        [HttpGet("me")]
+        [Authorize] // 🔥 Requires JWT token
+        [HttpGet("profile")]
         public async Task<IActionResult> GetMyProfile()
         {
-            var result = await _userService.GetMyProfileAsync(User);
-            return Ok(result);
+            try
+            {
+                var result = await _userService.GetMyProfileAsync(User);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
         // ---------------- GET ALL USERS ----------------
         [HttpGet]

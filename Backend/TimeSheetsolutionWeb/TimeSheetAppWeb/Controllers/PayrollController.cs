@@ -5,9 +5,9 @@ using TimeSheetAppWeb.Model.DTOs;
 
 namespace TimeSheetAppWeb.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/payroll")] // ✅ lowercase FIX
     [ApiController]
-    [Authorize] // Require JWT authentication
+    [Authorize]
     public class PayrollController : ControllerBase
     {
         private readonly IPayrollService _payrollService;
@@ -27,26 +27,20 @@ namespace TimeSheetAppWeb.Controllers
 
             var result = await _payrollService.CreatePayrollAsync(request);
 
-            if (!result.Success)
-                return BadRequest(result);
-
-            return Ok(result);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
         // ---------------- GET PAYROLL BY ID ----------------
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetPayrollById(int id)
         {
             var result = await _payrollService.GetPayrollByIdAsync(id);
 
-            if (!result.Success)
-                return NotFound(result);
-
-            return Ok(result);
+            return result.Success ? Ok(result) : NotFound(result);
         }
 
         // ---------------- GET USER PAYROLLS ----------------
-        [HttpGet("user/{userId}")]
+        [HttpGet("user/{userId:int}")]
         public async Task<IActionResult> GetUserPayrolls(
             int userId,
             [FromQuery] int pageNumber = 1,
@@ -56,13 +50,14 @@ namespace TimeSheetAppWeb.Controllers
             [FromQuery] decimal? minSalary = null,
             [FromQuery] decimal? maxSalary = null)
         {
-            var result = await _payrollService.GetUserPayrollsAsync(userId, pageNumber, pageSize, fromMonth, toMonth, minSalary, maxSalary);
-            if (result.Success)
-                return Ok(result);
-            return NotFound(result);
+            var result = await _payrollService.GetUserPayrollsAsync(
+                userId, pageNumber, pageSize, fromMonth, toMonth, minSalary, maxSalary);
+
+            // ✅ Always return 200 for lists
+            return Ok(result);
         }
 
-        // ---------------- GET ALL PAYROLLS WITH FILTERS & PAGINATION ----------------
+        // ---------------- GET ALL PAYROLLS ----------------
         [HttpGet]
         public async Task<IActionResult> GetAllPayrolls(
             [FromQuery] int pageNumber = 1,
@@ -73,10 +68,11 @@ namespace TimeSheetAppWeb.Controllers
             [FromQuery] decimal? minSalary = null,
             [FromQuery] decimal? maxSalary = null)
         {
-            var result = await _payrollService.GetAllPayrollsAsync(pageNumber, pageSize, userId, fromMonth, toMonth, minSalary, maxSalary);
-            if (result.Success)
-                return Ok(result);
-            return NotFound(result);
+            var result = await _payrollService.GetAllPayrollsAsync(
+                pageNumber, pageSize, userId, fromMonth, toMonth, minSalary, maxSalary);
+
+            // ✅ Return OK even if empty
+            return Ok(result);
         }
     }
 }

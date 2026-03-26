@@ -1,8 +1,8 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Attendance, DashboardSummary, InternTask, Leave, LeaveType, ProjectAssignment, Timesheet } from '../../models';
-import { AnalyticsService, AttendanceService, InternService, LeaveService, ProjectService, TimesheetService } from '../../services/api.services';
+import { Attendance, DashboardSummary, InternTask, Leave, LeaveType, ProjectAssignment, Timesheet, UserProfile } from '../../models';
+import { AnalyticsService, AttendanceService, InternService, LeaveService, ProjectService, TimesheetService, UserService } from '../../services/api.services';
 import { AuthService } from '../../services/auth.service';
 import { BreadcrumbService } from '../../services/breadcrumb.service';
 import { ToastService } from '../../services/toast.service';
@@ -10,7 +10,7 @@ import { ConfirmComponent } from '../confirm-dialog/confirm.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 
-export type InternTab = 'dashboard' | 'timesheet' | 'attendance' | 'leave' | 'tasks';
+export type InternTab = 'dashboard' | 'timesheet' | 'attendance' | 'leave' | 'tasks' | 'profile';
 
 @Component({
   selector: 'app-intern-dashboard',
@@ -29,6 +29,7 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
   private  prjSvc = inject(ProjectService);
   private  anlSvc = inject(AnalyticsService);
   private  intSvc = inject(InternService);
+  private  usrSvc = inject(UserService);
   private  fb     = inject(FormBuilder);
 
   activeTab = signal<InternTab>('dashboard');
@@ -38,6 +39,7 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
     { key:'attendance', label:'Attendance', icon:'⏰' },
     { key:'leave', label:'Leave', icon:'🌴' },
     { key:'tasks', label:'Tasks', icon:'📝' },
+    { key:'profile', label:'Profile', icon:'👤' },
   ];
 
   timesheets  = signal<Timesheet[]>([]);
@@ -49,6 +51,7 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
   summary     = signal<DashboardSummary|null>(null);
   todayAtt    = signal<Attendance|null>(null);
   attLoading  = signal(false);
+  userProfile = signal<UserProfile | null>(null);
 
   tsPage = signal(1); tsPS = 6;
   pagedTs = computed(()=>{const s=(this.tsPage()-1)*this.tsPS;return this.timesheets().slice(s,s+this.tsPS);});
@@ -58,9 +61,15 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
   pagedAtt = computed(()=>{const s=(this.attPage()-1)*this.attPS;return this.attendances().slice(s,s+this.attPS);});
   attTotalPages = computed(()=>Math.max(1,Math.ceil(this.attendances().length/this.attPS)));
 
-  approvedTs = computed(()=>this.timesheets().filter(t=>t.status===1).length);
-  pendingTs  = computed(()=>this.timesheets().filter(t=>t.status===0).length);
-  totalHours = computed(()=>this.timesheets().reduce((s,t)=>s+(t.hoursWorked??0),0).toFixed(1));
+  approvedTs = computed(()=>this.timesheets().filter(t=>Number(t.status)===1).length);
+  pendingTs  = computed(()=>this.timesheets().filter(t=>Number(t.status)===0).length);
+  totalHours = computed(() => {
+    const total = this.timesheets().reduce((s, t) => {
+      const h = Number(t?.hoursWorked);
+      return s + (isNaN(h) ? 0 : h);
+    }, 0);
+    return total.toFixed(1);
+  });
 
   showTsModal    = signal(false);
   showLeaveModal = signal(false);
@@ -71,7 +80,15 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
   private timerInterval: any;
   readonly todayDate = new Date().toISOString().split('T')[0];
 
-  tsForm = this.fb.group({ projectId:['',Validators.required], workDate:[this.todayDate,Validators.required], startTime:['09:00',Validators.required], endTime:['18:00',Validators.required], breakTime:['01:00'], taskDescription:[''] });
+  tsForm = this.fb.group({
+    projectId:       [''],
+    taskId:          ['', Validators.required],
+    workDate:        [this.todayDate, Validators.required],
+    startTime:       ['09:00', Validators.required],
+    endTime:         ['18:00', Validators.required],
+    breakTime:       ['01:00'],
+    taskDescription: ['']
+  });
   leaveForm = this.fb.group({ leaveTypeId:['',Validators.required], fromDate:['',Validators.required], toDate:['',Validators.required], reason:[''] });
 
   ngOnInit() {
@@ -79,6 +96,7 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
     const uid = this.auth.currentUser(); if(!uid) return;
     this.loadAll(uid); this.refreshToday();
     this.anlSvc.getDashboard(uid).subscribe({next:r=>this.summary.set(r),error:()=>{}});
+    this.usrSvc.getProfile().subscribe({ next:(r:any)=>this.userProfile.set(r?.data??r), error:()=>{} });
   }
   ngOnDestroy() { if(this.timerInterval) clearInterval(this.timerInterval); }
 
@@ -90,7 +108,9 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
     this.lvSvc.getMyLeaves(uid).subscribe(r=>this.leaves.set(this.toArr<Leave>(r)));
     this.lvSvc.getLeaveTypes().subscribe(r=>this.leaveTypes.set(this.toArr<LeaveType>(r)));
     this.prjSvc.getUserAssignments(uid,1,50).subscribe(r=>this.projects.set(this.toArr<ProjectAssignment>(r)));
-    this.intSvc.getTasks(uid).subscribe(r=>this.tasks.set(this.toArr<InternTask>(r)));
+    this.intSvc.getTasks(uid).subscribe(r => {
+      this.tasks.set(this.toArr<InternTask>(r));
+    });
   }
 
   private refreshToday() {
@@ -126,14 +146,48 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
   }
   private p(n:number){return n<10?'0'+n:''+n;}
 
+  taskLabel(t: any): string {
+    return t?.description || t?.taskTitle || t?.title || t?.task_title || t?.name || `Task #${t?.id}`;
+  }
+
+  onTaskSelect(): void {
+    const id = +this.tsForm.value.taskId!;
+    const t  = this.tasks().find(x => x.id === id);
+    if (!t) return;
+    const raw = t as any;
+    // API returns content in 'description', title is empty
+    this.tsForm.patchValue({ taskDescription: raw.description || raw.taskTitle || raw.title || '' });
+    if (this.projects().length > 0) {
+      this.tsForm.patchValue({ projectId: String(this.projects()[0].id) });
+    }
+  }
+
   submitTimesheet() {
-    if(this.tsForm.invalid){this.tsForm.markAllAsTouched();return;}
-    const v=this.tsForm.value; const uid=this.auth.currentUser(); if(!uid)return;
-    const asgn=this.projects().find(p=>p.id===+v.projectId!);
-    if(!asgn){this.toast.error('Invalid Project','');return;}
-    this.tsSvc.create(uid,{projectId:asgn.projectId,projectName:asgn.projectName,workDate:v.workDate!,startTime:this.fmt(v.startTime!),endTime:this.fmt(v.endTime!),breakTime:this.fmt(v.breakTime||'00:00'),taskDescription:v.taskDescription??''}).subscribe({
-      next:()=>{this.toast.success('Submitted','Timesheet pending approval.');this.showTsModal.set(false);this.tsForm.reset({workDate:this.todayDate,breakTime:'01:00'});this.tsSvc.getByUser(uid).subscribe(r=>this.timesheets.set(this.toArr<Timesheet>(r)));},
-      error:(e:any)=>this.toast.error('Failed',e?.error?.message??'')
+    if (this.tsForm.invalid) { this.tsForm.markAllAsTouched(); return; }
+    const v   = this.tsForm.value;
+    const uid = this.auth.currentUser(); if (!uid) return;
+
+    // resolve project — use auto-selected or first available
+    const pid  = v.projectId ? +v.projectId : (this.projects()[0]?.id ?? 0);
+    const asgn = this.projects().find(p => p.id === pid) ?? this.projects()[0];
+    if (!asgn) { this.toast.error('No Project', 'No project assigned. Contact your mentor.'); return; }
+
+    this.tsSvc.create(uid, {
+      projectId:       asgn.projectId,
+      projectName:     asgn.projectName,
+      workDate:        v.workDate!,
+      startTime:       this.fmt(v.startTime!),
+      endTime:         this.fmt(v.endTime!),
+      breakTime:       this.fmt(v.breakTime || '00:00'),
+      taskDescription: v.taskDescription ?? ''
+    }).subscribe({
+      next: () => {
+        this.toast.success('Submitted', 'Timesheet pending approval.');
+        this.showTsModal.set(false);
+        this.tsForm.reset({ workDate: this.todayDate, breakTime: '01:00' });
+        this.tsSvc.getByUser(uid).subscribe(r => this.timesheets.set(this.toArr<Timesheet>(r)));
+      },
+      error: (e: any) => this.toast.error('Failed', e?.error?.message ?? '')
     });
   }
 
@@ -188,8 +242,12 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
       toDate:      v.toDate!,
       reason:      v.reason ?? ''
     }).subscribe({
-      next: () => {
-        this.toast.success('Leave Applied', 'Your leave request is pending approval.');
+      next: (res: any) => {
+        const remaining = res?.data?.remainingLeaves;
+        const msg = remaining !== undefined
+          ? `Leave applied successfully. Remaining leave: ${remaining} day(s)`
+          : 'Your leave request is pending approval.';
+        this.toast.success('Leave Applied', msg);
         this.showLeaveModal.set(false);
         this.leaveForm.reset();
         this.lvSvc.getMyLeaves(uid).subscribe(r => this.leaves.set(this.toArr<Leave>(r)));
@@ -201,6 +259,21 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
   private fmt(t:string):string{return t?.length===5?t+':00':t??'00:00:00';}
   stText(s:any){return s==0?'Pending':s==1?'Approved':'Rejected';}
   stClass(s:any){return s==0?'zbadge-pending':s==1?'zbadge-approved':'zbadge-rejected';}
+
+  taskStatusText(s:any){return s==0?'Pending':s==1?'In Progress':'Completed';}
+  taskStatusClass(s:any){return s==2?'zbadge-approved':s==1?'zbadge-info':'zbadge-pending';}
+
+  markTaskComplete(t:InternTask){
+    this.cfgTitle.set('Complete Task');
+    this.cfgMsg.set(`Mark "${t.taskTitle}" as completed?`);
+    this.cfgAction=()=>{
+      this.intSvc.updateTask(t.id,{taskTitle:t.taskTitle,description:t.description,dueDate:t.dueDate,status:2}).subscribe({
+        next:()=>{this.toast.success('Task Completed','');const uid=this.auth.currentUser()!;this.intSvc.getTasks(uid).subscribe(r=>this.tasks.set(this.toArr<InternTask>(r)));},
+        error:(e:any)=>this.toast.error('Failed',e?.error?.message??'')
+      });
+    };
+    this.cfgVisible.set(true);
+  }
   leaveDays(l:Leave){return Math.ceil((new Date(l.toDate).getTime()-new Date(l.fromDate).getTime())/86400000)+1;}
   setTab(t:InternTab){this.activeTab.set(t);this.bc.set([{label:'Intern Hub'},{label:this.tabs.find(x=>x.key===t)?.label??''}]);}
   pages(n:number){return Array.from({length:n},(_,i)=>i+1);}

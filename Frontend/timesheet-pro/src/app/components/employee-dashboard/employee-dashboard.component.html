@@ -255,15 +255,18 @@
         <div class="zprofile-card">
           <div class="zprofile-banner"></div>
           <div class="zprofile-body">
-            <div class="zprofile-avatar-lg">{{ (auth.username()?? 'U')[0].toUpperCase() }}</div>
-            <h2 class="zprofile-name">{{ auth.username() }}</h2>
-            <span class="zbadge zbadge-role">{{ auth.currentRole() }}</span>
-            <div class="zprofile-stats">
-              <div class="zpstat"><span class="zpstat-val">{{ timesheets().length }}</span><span class="zpstat-lbl">Timesheets</span></div>
-              <div class="zpstat"><span class="zpstat-val">{{ approvedCount() }}</span><span class="zpstat-lbl">Approved</span></div>
-              <div class="zpstat"><span class="zpstat-val">{{ leaves().length }}</span><span class="zpstat-lbl">Leaves</span></div>
+            <div class="zprofile-avatar-lg">{{ (userProfile()?.name ?? auth.username() ?? 'U')[0].toUpperCase() }}</div>
+            <h2 class="zprofile-name">{{ userProfile()?.name ?? auth.username() }}</h2>
+            <span class="zbadge zbadge-role">{{ userProfile()?.role ?? auth.currentRole() }}</span>
+            <div class="zprofile-info-grid">
+              <div class="zprofile-info-item"><span class="zprofile-info-label">Employee ID</span><span class="zprofile-info-value">{{ userProfile()?.employeeId ?? '—' }}</span></div>
+              <div class="zprofile-info-item"><span class="zprofile-info-label">Email</span><span class="zprofile-info-value">{{ userProfile()?.email ?? '—' }}</span></div>
+              <div class="zprofile-info-item"><span class="zprofile-info-label">Phone</span><span class="zprofile-info-value">{{ userProfile()?.phone ?? '—' }}</span></div>
+              <div class="zprofile-info-item"><span class="zprofile-info-label">Department</span><span class="zprofile-info-value">{{ userProfile()?.departmentName ?? '—' }}</span></div>
+              <div class="zprofile-info-item"><span class="zprofile-info-label">Status</span><span class="zprofile-info-value">{{ userProfile()?.status ?? '—' }}</span></div>
+              <div class="zprofile-info-item"><span class="zprofile-info-label">Joined</span><span class="zprofile-info-value">{{ userProfile()?.joiningDate | date:'dd MMM yyyy' }}</span></div>
             </div>
-            <button class="zbtn zbtn-danger" (click)="auth.logout()">⎋ Sign Out</button>
+            <button class="zbtn zbtn-danger" style="margin-top:24px" (click)="auth.logout()">⎋ Sign Out</button>
           </div>
         </div>
       }

@@ -16,6 +16,10 @@ export interface User {
   id: number; employeeId: string; name: string; email: string; phone: string;
   role: UserRole; status: 'Active' | 'Inactive'; joiningDate: string;
 }
+export interface UserProfile {
+  id: number; employeeId: string; name: string; email: string; phone: string;
+  role: UserRole; status: string; joiningDate: string; departmentName?: string;
+}
 export interface UserUpdateRequest {
   name?: string; email?: string; phone?: string;
   departmentId?: number; role?: string; isActive?: boolean;
@@ -71,7 +75,7 @@ export interface ProjectAssignment { id: number; projectId: number; projectName:
 
 // Payroll
 export interface PayrollCreateRequest {
-  userId: number; basicSalary: number; overtimeHours: number; deductions: number; salaryMonth: string;
+  userId: number; basicSalary: number; overtimeAmount: number; deductions: number; salaryMonth: string;
 }
 export interface Payroll {
   payrollId: number; employeeName: string; employeeId: string;
@@ -91,6 +95,13 @@ export interface DashboardSummary {
 
 // Notification
 export interface Notification { type: string; message: string; time: string; read: boolean; }
+
+// AuditLog
+export interface AuditLog {
+  id: number; tableName: string; action: string;
+  keyValues: string; oldValues?: string; newValues?: string;
+  userId?: number; changedAt: string;
+}
 
 // Generic
 export interface ApiResponse<T> { success: boolean; message: string; data: T; }

@@ -577,7 +577,7 @@
   {
     "ContainingType": "TimeSheetAppWeb.Controllers.PayrollController",
     "Method": "CreatePayroll",
-    "RelativePath": "api/Payroll",
+    "RelativePath": "api/payroll",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -593,7 +593,7 @@
   {
     "ContainingType": "TimeSheetAppWeb.Controllers.PayrollController",
     "Method": "GetAllPayrolls",
-    "RelativePath": "api/Payroll",
+    "RelativePath": "api/payroll",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -639,7 +639,7 @@
   {
     "ContainingType": "TimeSheetAppWeb.Controllers.PayrollController",
     "Method": "GetPayrollById",
-    "RelativePath": "api/Payroll/{id}",
+    "RelativePath": "api/payroll/{id}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -655,7 +655,7 @@
   {
     "ContainingType": "TimeSheetAppWeb.Controllers.PayrollController",
     "Method": "GetUserPayrolls",
-    "RelativePath": "api/Payroll/user/{userId}",
+    "RelativePath": "api/payroll/user/{userId}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -1137,7 +1137,7 @@
   {
     "ContainingType": "TimeSheetAppWeb.Controllers.UserController",
     "Method": "GetMyProfile",
-    "RelativePath": "api/User/me",
+    "RelativePath": "api/User/profile",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,

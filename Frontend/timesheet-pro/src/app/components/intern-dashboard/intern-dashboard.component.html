@@ -7,10 +7,9 @@
 
   @if (activeTab()==='dashboard') {
     <div class="stat-grid">
-      <div class="stat-card"><div class="stat-icon-wrap">📋</div><div class="stat-body"><div class="stat-value">{{ timesheets().length }}</div><div class="stat-label">Timesheets</div></div></div>
+      <div class="stat-card"><div class="stat-icon-wrap">📋</div><div class="stat-body"><div class="stat-value">{{ timesheets().length }}</div><div class="stat-label">Total Timesheets</div></div></div>
       <div class="stat-card sc-success"><div class="stat-icon-wrap">✅</div><div class="stat-body"><div class="stat-value">{{ approvedTs() }}</div><div class="stat-label">Approved</div></div></div>
       <div class="stat-card sc-warning"><div class="stat-icon-wrap">⏳</div><div class="stat-body"><div class="stat-value">{{ pendingTs() }}</div><div class="stat-label">Pending</div></div></div>
-      <div class="stat-card sc-info"><div class="stat-icon-wrap">⏱</div><div class="stat-body"><div class="stat-value">{{ totalHours() }}h</div><div class="stat-label">Total Hours</div></div></div>
     </div>
     <div class="zintern-att-card">
       <div class="zintern-att-header">
@@ -114,15 +113,38 @@
           @for(t of tasks();track t.id){
             <div class="ztask-item">
               <div class="ztask-icon">📌</div>
-              <div class="ztask-info"><div class="ztask-title">{{ t.taskTitle }}</div><div class="ztask-desc ztext-muted">{{ t.description||'' }}</div></div>
+              <div class="ztask-info"><div class="ztask-title">{{ taskLabel(t) }}</div><div class="ztask-desc ztext-muted">{{ t.description||'' }}</div></div>
               <div class="ztask-meta">
                 @if(t.dueDate){<span class="ztask-due">📅 {{ t.dueDate|date:'dd MMM' }}</span>}
-                <span class="zbadge" [class]="t.status==='Completed'?'zbadge-approved':'zbadge-pending'">{{ t.status }}</span>
+                <span class="zbadge" [class]="taskStatusClass(t.status)">{{ taskStatusText(t.status) }}</span>
+                @if(t.status != 2){
+                  <button class="zbtn zbtn-success zbtn-sm" (click)="markTaskComplete(t)">✅ Complete</button>
+                }
               </div>
             </div>
           }
         </div>
       }
+    </div>
+  }
+
+  @if (activeTab()==='profile') {
+    <div class="zprofile-card">
+      <div class="zprofile-banner"></div>
+      <div class="zprofile-body">
+        <div class="zprofile-avatar-lg">{{ (userProfile()?.name ?? auth.username() ?? 'U')[0].toUpperCase() }}</div>
+        <h2 class="zprofile-name">{{ userProfile()?.name ?? auth.username() }}</h2>
+        <span class="zbadge zbadge-role">{{ userProfile()?.role ?? auth.currentRole() }}</span>
+        <div class="zprofile-info-grid">
+          <div class="zprofile-info-item"><span class="zprofile-info-label">Employee ID</span><span class="zprofile-info-value">{{ userProfile()?.employeeId ?? '—' }}</span></div>
+          <div class="zprofile-info-item"><span class="zprofile-info-label">Email</span><span class="zprofile-info-value">{{ userProfile()?.email ?? '—' }}</span></div>
+          <div class="zprofile-info-item"><span class="zprofile-info-label">Phone</span><span class="zprofile-info-value">{{ userProfile()?.phone ?? '—' }}</span></div>
+          <div class="zprofile-info-item"><span class="zprofile-info-label">Department</span><span class="zprofile-info-value">{{ userProfile()?.departmentName ?? '—' }}</span></div>
+          <div class="zprofile-info-item"><span class="zprofile-info-label">Status</span><span class="zprofile-info-value">{{ userProfile()?.status ?? '—' }}</span></div>
+          <div class="zprofile-info-item"><span class="zprofile-info-label">Joined</span><span class="zprofile-info-value">{{ userProfile()?.joiningDate | date:'dd MMM yyyy' }}</span></div>
+        </div>
+        <button class="zbtn zbtn-danger" style="margin-top:24px" (click)="auth.logout()">⎋ Sign Out</button>
+      </div>
     </div>
   }
 </div></div></div>
@@ -131,16 +153,26 @@
   <div class="zmodal-overlay" (click)="showTsModal.set(false)"><div class="zmodal" (click)="$event.stopPropagation()">
     <div class="zmodal-header"><span class="zmodal-title">📋 Add Timesheet</span><button class="zmodal-close" (click)="showTsModal.set(false)">✕</button></div>
     <div class="zmodal-body"><form [formGroup]="tsForm" novalidate>
-      <div class="zform-group"><label class="zform-label">Project *</label>
-        <select formControlName="projectId" class="zform-control"><option value="">— Select —</option>@for(p of projects();track p.id){<option [value]="p.id">{{ p.projectName }}</option>}</select>
+      <div class="zform-group"><label class="zform-label">Task <span class="req">*</span></label>
+        <select formControlName="taskId" class="zform-control" (change)="onTaskSelect()">
+          <option value="">— Select Task —</option>
+          @for(t of tasks(); track t.id) {
+            @if(+$any(t).status !== 2) {
+              <option [value]="t.id">{{ taskLabel(t) }}</option>
+            }
+          }
+        </select>
+        @if(tasks().length === 0) {
+          <span class="zform-error">No tasks assigned. Contact your mentor.</span>
+        }
       </div>
-      <div class="zform-group"><label class="zform-label">Work Date *</label><input formControlName="workDate" type="date" class="zform-control" [max]="todayDate" /></div>
+      <div class="zform-group"><label class="zform-label">Work Date <span class="req">*</span></label><input formControlName="workDate" type="date" class="zform-control" [max]="todayDate" /></div>
       <div class="zgrid-3">
         <div class="zform-group"><label class="zform-label">Start</label><input formControlName="startTime" type="time" class="zform-control" /></div>
         <div class="zform-group"><label class="zform-label">End</label><input formControlName="endTime" type="time" class="zform-control" /></div>
         <div class="zform-group"><label class="zform-label">Break</label><input formControlName="breakTime" type="time" class="zform-control" /></div>
       </div>
-      <div class="zform-group"><label class="zform-label">Description</label><textarea formControlName="taskDescription" class="zform-control" rows="2"></textarea></div>
+      <div class="zform-group"><label class="zform-label">Description</label><textarea formControlName="taskDescription" class="zform-control" rows="2" placeholder="Auto-filled from task, or add notes..."></textarea></div>
     </form></div>
     <div class="zmodal-footer"><button class="zbtn zbtn-outline" (click)="showTsModal.set(false)">Cancel</button><button class="zbtn zbtn-primary" [disabled]="tsForm.invalid" (click)="submitTimesheet()">Submit</button></div>
   </div></div>

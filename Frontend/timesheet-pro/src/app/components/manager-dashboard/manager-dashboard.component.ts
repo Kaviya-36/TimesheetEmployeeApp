@@ -1,12 +1,12 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Leave, Project, Timesheet, User } from '../../models';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Attendance, Leave, LeaveType, Project, Timesheet, User, UserProfile } from '../../models';
 import {
-  LeaveService,
-  ProjectService,
-  TimesheetService,
-  UserService
+    AttendanceService, LeaveService,
+    ProjectService,
+    TimesheetService,
+    UserService
 } from '../../services/api.services';
 import { AuthService } from '../../services/auth.service';
 import { BreadcrumbService } from '../../services/breadcrumb.service';
@@ -16,7 +16,7 @@ import { ConfirmComponent } from '../confirm-dialog/confirm.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 
-export type ManagerTab = 'dashboard' | 'timesheets' | 'leaves' | 'team' | 'projects';
+export type ManagerTab = 'dashboard' | 'timesheets' | 'leaves' | 'team' | 'projects' | 'profile';
 
 @Component({
   selector: 'app-manager-dashboard',
@@ -26,7 +26,7 @@ export type ManagerTab = 'dashboard' | 'timesheets' | 'leaves' | 'team' | 'proje
   templateUrl: './manager-dashboard.component.html',
   styleUrl:    './manager-dashboard.component.css'
 })
-export class ManagerDashboardComponent implements OnInit {
+export class ManagerDashboardComponent implements OnInit, OnDestroy {
 
   readonly auth  = inject(AuthService);
   private  toast = inject(ToastService);
@@ -36,6 +36,8 @@ export class ManagerDashboardComponent implements OnInit {
   private  lvSvc  = inject(LeaveService);
   private  usrSvc = inject(UserService);
   private  prjSvc = inject(ProjectService);
+  private  attSvc = inject(AttendanceService);
+  private  fb     = inject(FormBuilder);
 
   activeTab = signal<ManagerTab>('dashboard');
   readonly tabs = [
@@ -44,6 +46,7 @@ export class ManagerDashboardComponent implements OnInit {
     { key: 'leaves'     as ManagerTab, label: 'Leaves',     icon: '🌴' },
     { key: 'team'       as ManagerTab, label: 'My Team',    icon: '👥' },
     { key: 'projects'   as ManagerTab, label: 'Projects',   icon: '🗂' },
+    { key: 'profile'    as ManagerTab, label: 'Profile',    icon: '👤' },
   ];
 
   allTimesheets = signal<Timesheet[]>([]);
@@ -51,6 +54,7 @@ export class ManagerDashboardComponent implements OnInit {
   teamMembers   = signal<User[]>([]);
   projects      = signal<Project[]>([]);
   projectAssignments = signal<{ [projectId: number]: any[] }>({});
+  userProfile   = signal<UserProfile | null>(null);
 
   // ── TS filter/sort/page ────────────────────────────────────────────────────
   tsSearch  = signal('');
@@ -138,10 +142,43 @@ export class ManagerDashboardComponent implements OnInit {
   cfgType    = signal<'danger'|'warning'|'info'>('info');
   private cfgAction: (() => void) | null = null;
 
+  // ── Own check-in/out ──────────────────────────────────────────────────────
+  todayAtt   = signal<Attendance | null>(null);
+  attLoading = signal(false);
+  liveTimer  = signal('00:00:00');
+  private timerInterval: any;
+  readonly todayDate = new Date().toISOString().split('T')[0];
+
+  // ── Self timesheet / leave ────────────────────────────────────────────────
+  showAddTimesheetModal = signal(false);
+  showAddLeaveModal     = signal(false);
+  leaveTypes            = signal<LeaveType[]>([]);
+
+  addTimesheetForm = this.fb.group({
+    projectId:       ['', Validators.required],
+    workDate:        [new Date().toISOString().split('T')[0], Validators.required],
+    startTime:       ['09:00', Validators.required],
+    endTime:         ['18:00', Validators.required],
+    breakTime:       ['01:00'],
+    taskDescription: [''],
+  });
+
+  addLeaveForm = this.fb.group({
+    leaveTypeId: ['', Validators.required],
+    fromDate:    ['', Validators.required],
+    toDate:      ['', Validators.required],
+    reason:      [''],
+  });
+
   ngOnInit() {
     this.bc.set([{ label: 'Manager Dashboard' }]);
     this.loadAll();
+    this.refreshToday();
+    this.usrSvc.getProfile().subscribe({ next:(r:any)=>this.userProfile.set(r?.data??r), error:()=>{} });
+    this.lvSvc.getLeaveTypes().subscribe({ next:(r:any)=>this.leaveTypes.set(this.toArr<LeaveType>(r)), error:()=>{} });
   }
+
+  ngOnDestroy() { if (this.timerInterval) clearInterval(this.timerInterval); }
 
   private toArr<T>(r: any): T[] {
     if (Array.isArray(r)) return r;
@@ -166,7 +203,7 @@ export class ManagerDashboardComponent implements OnInit {
     this.usrSvc.getAll().subscribe({
       next: (r: any) => {
         const d = this.toArr<User>(r);
-        this.teamMembers.set(d.filter(u => ['Employee','Intern','Mentor'].includes(u.role)));
+        this.teamMembers.set(d.filter(u => ['Employee'].includes(u.role)));
       }, error: () => {}
     });
    this.prjSvc.getAll().subscribe({
@@ -180,8 +217,42 @@ export class ManagerDashboardComponent implements OnInit {
 });
   }
 
-  sortTs(col: 'date'|'hours'|'employee') {
-    if (this.tsSortCol() === col) this.tsSortDir.update(d => d==='asc'?'desc':'asc');
+  private refreshToday(): void {
+    const uid = this.auth.currentUser(); if (!uid) return;
+    this.attSvc.getTodayStatus(uid).subscribe({
+      next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); if(d?.checkIn&&!d?.checkOut) this.startTimer(d.checkIn); },
+      error:()=>this.todayAtt.set(null)
+    });
+  }
+
+  checkIn(): void {
+    if (this.todayAtt()?.checkIn) { this.toast.warning('Already checked in',''); return; }
+    this.attLoading.set(true);
+    this.attSvc.checkIn().subscribe({
+      next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); if(d?.checkIn&&!d?.checkOut) this.startTimer(d.checkIn); this.toast.success('Checked In',`Time: ${d?.checkIn}`); this.attLoading.set(false); },
+      error:(e:any)=>{ this.toast.error('Failed',e?.error?.message??''); this.attLoading.set(false); }
+    });
+  }
+
+  checkOut(): void {
+    if (!this.todayAtt()?.checkIn) { this.toast.warning('Not checked in',''); return; }
+    if (this.todayAtt()?.checkOut) { this.toast.warning('Already checked out',''); return; }
+    this.attLoading.set(true);
+    this.attSvc.checkOut().subscribe({
+      next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); this.stopTimer(); this.toast.success('Checked Out',`Total: ${d?.totalHours??'—'}`); this.attLoading.set(false); },
+      error:(e:any)=>{ this.toast.error('Failed',e?.error?.message??''); this.attLoading.set(false); }
+    });
+  }
+
+  private startTimer(t:string): void {
+    const [h,m]=t.split(':').map(Number); const base=new Date(); base.setHours(h,m,0,0);
+    this.stopTimer();
+    this.timerInterval=setInterval(()=>{ const diff=Date.now()-base.getTime(); const hh=Math.floor(diff/3600000),mm=Math.floor((diff%3600000)/60000),ss=Math.floor((diff%60000)/1000); this.liveTimer.set(`${this.pad(hh)}:${this.pad(mm)}:${this.pad(ss)}`); },1000);
+  }
+  private stopTimer(): void { if(this.timerInterval) clearInterval(this.timerInterval); }
+  private pad(n:number): string { return n<10?'0'+n:''+n; }
+
+  sortTs(col: 'date'|'hours'|'employee') {    if (this.tsSortCol() === col) this.tsSortDir.update(d => d==='asc'?'desc':'asc');
     else { this.tsSortCol.set(col); this.tsSortDir.set('asc'); }
     this.tsPage.set(1);
   }
@@ -274,6 +345,32 @@ export class ManagerDashboardComponent implements OnInit {
 
   stText(s: any)  { return s==0?'Pending':s==1?'Approved':'Rejected'; }
   stClass(s: any) { return s==0?'zbadge-pending':s==1?'zbadge-approved':'zbadge-rejected'; }
+
+  addTimesheetForSelf() {
+    if (this.addTimesheetForm.invalid) return;
+    const uid = this.auth.currentUser(); if (!uid) return;
+    const v = this.addTimesheetForm.getRawValue();
+    const proj = this.projects().find(p => p.id === +v.projectId!);
+    const fmt = (t: string) => t?.length === 5 ? t + ':00' : t ?? '00:00:00';
+    this.tsSvc.create(uid, {
+      projectId: +v.projectId!, projectName: proj?.projectName ?? '',
+      workDate: v.workDate!, startTime: fmt(v.startTime!), endTime: fmt(v.endTime!),
+      breakTime: fmt(v.breakTime || '00:00'), taskDescription: v.taskDescription ?? ''
+    }).subscribe({
+      next: () => { this.toast.success('Timesheet Added', 'Your timesheet has been submitted.'); this.showAddTimesheetModal.set(false); this.addTimesheetForm.reset({ workDate: new Date().toISOString().split('T')[0], startTime: '09:00', endTime: '18:00', breakTime: '01:00' }); this.loadAll(); },
+      error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Could not create timesheet.')
+    });
+  }
+
+  addLeaveForSelf() {
+    if (this.addLeaveForm.invalid) return;
+    const uid = this.auth.currentUser(); if (!uid) return;
+    const v = this.addLeaveForm.getRawValue();
+    this.lvSvc.apply(uid, { leaveTypeId: +v.leaveTypeId!, fromDate: v.fromDate!, toDate: v.toDate!, reason: v.reason ?? '' }).subscribe({
+      next: () => { this.toast.success('Leave Applied', 'Your leave request has been submitted.'); this.showAddLeaveModal.set(false); this.addLeaveForm.reset(); this.loadAll(); },
+      error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Could not apply leave.')
+    });
+  }
 
   setTab(t: ManagerTab) {
     this.activeTab.set(t);

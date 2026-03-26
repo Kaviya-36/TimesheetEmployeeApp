@@ -2,158 +2,163 @@
   <app-sidebar />
   <div class="app-main">
     <app-navbar />
-
     <div class="app-content">
 
-      <!-- HEADER -->
+      <!-- Page Header -->
       <div class="zpage-header">
-        <h2>Mentor Dashboard</h2>
+        <div>
+          <h1 class="zpage-title">Mentor Dashboard</h1>
+          <p class="zpage-sub">Manage your interns and tasks</p>
+        </div>
+        <span class="zmentor-pill">🎓 Mentor</span>
       </div>
 
-      <!-- SEARCH -->
-      <input
-        class="zfilter-input"
-        placeholder="Search interns..."
-        [ngModel]="search()"
-        (ngModelChange)="search.set($event)"
-      />
+      <!-- Tab Bar -->
+      <div class="ztab-bar">
+        @for (t of tabs; track t.key) {
+          <button class="ztab-btn" [class.active]="activeTab()===t.key" (click)="setTab(t.key)">
+            {{ t.icon }} {{ t.label }}
+          </button>
+        }
+      </div>
 
-      <div class="grid">
+      <!-- ═══ INTERNS TAB ═══ -->
+      @if (activeTab()==='interns') {
 
-        <!-- =========================
-             INTERN LIST
-        ========================== -->
-        <div class="zcard">
-          <div class="zcard-header">Interns</div>
-
-          <table class="ztable">
-            @for (i of filteredInterns(); track i.id) {
-              <tr>
-                <td>
-                  <strong>{{ i.name }}</strong><br>
-                  <span class="ztext-muted">{{ i.email }}</span>
-                </td>
-
-                <td>
-                  <button class="zbtn zbtn-primary"
-                          (click)="selectIntern(i)">
-                    Select
-                  </button>
-                </td>
-              </tr>
+        <!-- Attendance Hero -->
+        <div class="zatt-hero">
+          <div class="zatt-hero-left">
+            <div class="zatt-hero-title">My Attendance Today</div>
+            <div class="zatt-hero-date">{{ todayDate | date:'EEEE, MMMM d, y' }}</div>
+            @if (todayAtt()?.checkIn && !todayAtt()?.checkOut) {
+              <div class="zlive-timer-wrap">
+                <span class="zlive-dot"></span>
+                <span class="zlive-label">LIVE</span>
+                <span class="zlive-time">{{ liveTimer() }}</span>
+              </div>
             }
-
-            @if (filteredInterns().length === 0) {
-              <tr>
-                <td colspan="2">No interns found</td>
-              </tr>
+            <div class="zatt-stats-row">
+              <div class="zatt-stat"><span class="zatt-stat-label">Check In</span><span class="zatt-stat-value">{{ todayAtt()?.checkIn || '—' }}</span></div>
+              <div class="zatt-stat"><span class="zatt-stat-label">Check Out</span><span class="zatt-stat-value">{{ todayAtt()?.checkOut || '—' }}</span></div>
+              <div class="zatt-stat"><span class="zatt-stat-label">Total Hours</span><span class="zatt-stat-value">{{ todayAtt()?.totalHours || '—' }}</span></div>
+              <div class="zatt-stat">
+                <span class="zatt-stat-label">Status</span>
+                <span class="zatt-stat-value" [class.zlate]="todayAtt()?.isLate">
+                  @if (todayAtt()?.isLate) { ⚠ Late } @else { ✅ On Time }
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="zatt-hero-right">
+            @if (!todayAtt()?.checkIn) {
+              <div class="zatt-status-badge zatt-not-started">● Not Started</div>
+              <button class="zbtn zbtn-primary zbtn-lg zatt-btn" (click)="checkIn()" [disabled]="attLoading()">
+                @if (attLoading()) { <span class="zbtn-spin"></span> } 📍 Check In
+              </button>
+            } @else if (!todayAtt()?.checkOut) {
+              <div class="zatt-status-badge zatt-active">● Active</div>
+              <button class="zbtn zbtn-warning zbtn-lg zatt-btn" (click)="checkOut()" [disabled]="attLoading()">
+                @if (attLoading()) { <span class="zbtn-spin"></span> } ⏏ Check Out
+              </button>
+            } @else {
+              <div class="zatt-status-badge zatt-done">● Completed</div>
+              <button class="zbtn zbtn-outline zbtn-lg zatt-btn" disabled>✔ Day Done</button>
             }
-          </table>
+          </div>
         </div>
 
-        <!-- =========================
-             TASK PANEL
-        ========================== -->
-        @if (selectedIntern()) {
-          <div class="zcard">
+        <!-- Interns + Tasks Layout -->
+        <div class="zinterns-layout">
+
+          <!-- Intern List -->
+          <div class="zcard zintern-list-card">
             <div class="zcard-header">
-              Tasks - {{ selectedIntern()?.name }}
-
-              <button class="zbtn zbtn-success"
-                      (click)="openAssign()">
-                + Assign Task
-              </button>
+              <span class="zcard-title">Interns</span>
+              <span class="zresult-count">{{ filteredInterns().length }}</span>
             </div>
-
-            <table class="ztable">
-
-              @for (t of tasks(); track t.id) {
-                <tr>
-                  <td>
-                    <strong>{{ t.taskTitle }}</strong><br>
-                    <span class="ztext-muted">{{ t.description }}</span>
-                  </td>
-
-                  <td>
-                    {{ t.dueDate | date:'dd MMM yyyy' }}
-                  </td>
-
-                  <td>
-                    <span class="zbadge"
-                          [class]="statusClass(t.status)">
-                      {{ t.status }}
-                    </span>
-                  </td>
-
-                  <td>
-                    <button class="zbtn zbtn-danger"
-                            (click)="deleteTask(t)">
-                      ✖
-                    </button>
-                  </td>
-                </tr>
+            <div class="zcard-body" style="padding:8px 12px">
+              <input class="zfilter-input" style="margin-bottom:10px" placeholder="Search interns..."
+                [ngModel]="search()" (ngModelChange)="search.set($event)" />
+            </div>
+            <div class="zintern-cards">
+              @for (i of filteredInterns(); track i.id) {
+                <div class="zintern-card" [class.selected]="selectedIntern()?.id===i.id" (click)="selectIntern(i)">
+                  <div class="zintern-avatar">{{ (i.name??'I')[0].toUpperCase() }}</div>
+                  <div class="zintern-info">
+                    <div class="zintern-name">{{ i.name }}</div>
+                    <div class="zintern-email ztext-muted">{{ i.email }}</div>
+                    <code class="zemp-id">{{ i.employeeId }}</code>
+                  </div>
+                </div>
               }
-
-              @if (tasks().length === 0) {
-                <tr>
-                  <td colspan="4">No tasks assigned</td>
-                </tr>
+              @if (filteredInterns().length === 0) {
+                <div class="zempty"><span class="zempty-icon">🎓</span><span class="zempty-title">No interns found</span></div>
               }
-
-            </table>
+            </div>
           </div>
-        }
 
-      </div>
-
-      <!-- =========================
-           ASSIGN TASK MODAL
-      ========================== -->
-      @if (showModal()) {
-        <div class="modal">
-          <div class="modal-content">
-
-            <h3>Assign Task</h3>
-
-            <form [formGroup]="taskForm">
-
-              <!-- Title -->
-              <label>Task Title</label>
-              <input
-                type="text"
-                formControlName="taskTitle"
-                placeholder="Enter task title"
-              />
-
-              <!-- Description -->
-              <label>Description</label>
-              <textarea
-                formControlName="description"
-                placeholder="Enter description">
-              </textarea>
-
-              <!-- Due Date -->
-              <label>Due Date</label>
-              <input
-                type="date"
-                formControlName="dueDate"
-              />
-
-              <!-- Buttons -->
-              <div class="modal-actions">
-                <button type="button"
-                        (click)="assignTask()">
-                  Assign
-                </button>
-
-                <button type="button"
-                        (click)="showModal.set(false)">
-                  Cancel
-                </button>
+          <!-- Task Panel -->
+          <div class="zcard zintern-task-card">
+            @if (selectedIntern()) {
+              <div class="zcard-header">
+                <span class="zcard-title">Tasks — {{ selectedIntern()?.name }}</span>
+                <button class="zbtn zbtn-success zbtn-sm" (click)="openAssign()">+ Assign Task</button>
               </div>
+              <div class="zintern-task-list">
+                @for (t of tasks(); track t.id) {
+                  <div class="zintern-task-item">
+                    <div class="ztask-left">
+                      <span class="ztask-icon">📌</span>
+                      <div>
+                        <div class="ztask-title">{{ t.taskTitle }}</div>
+                        <div class="ztask-desc ztext-muted">{{ t.description || '—' }}</div>
+                        <div class="ztask-due">📅 {{ t.dueDate ? (t.dueDate | date:'dd MMM yyyy') : 'No due date' }}</div>
+                      </div>
+                    </div>
+                    <div class="ztask-right">
+                      <span class="zbadge" [class]="statusClass(t.status)">{{ statusText(t.status) }}</span>
+                      <button class="zbtn zbtn-outline zbtn-sm" (click)="openEdit(t)">✏</button>
+                      <button class="zbtn zbtn-danger zbtn-sm" (click)="confirmDeleteTask(t)">🗑</button>
+                    </div>
+                  </div>
+                }
+                @if (tasks().length === 0) {
+                  <div class="zempty">
+                    <span class="zempty-icon">📋</span>
+                    <span class="zempty-title">No tasks assigned</span>
+                    <span class="zempty-sub">Click "+ Assign Task" to get started</span>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="zempty" style="height:100%;min-height:300px">
+                <span class="zempty-icon">👈</span>
+                <span class="zempty-title">Select an intern</span>
+                <span class="zempty-sub">Choose an intern from the list to view their tasks</span>
+              </div>
+            }
+          </div>
 
-            </form>
+        </div>
+      }
 
+      <!-- ═══ PROFILE TAB ═══ -->
+      @if (activeTab()==='profile') {
+        <div class="zprofile-card">
+          <div class="zprofile-banner"></div>
+          <div class="zprofile-body">
+            <div class="zprofile-avatar-lg">{{ (userProfile()?.name ?? auth.username() ?? 'M')[0].toUpperCase() }}</div>
+            <h2 class="zprofile-name">{{ userProfile()?.name ?? auth.username() }}</h2>
+            <span class="zbadge zbadge-role">{{ userProfile()?.role ?? auth.currentRole() }}</span>
+            <div class="zprofile-info-grid">
+              <div class="zprofile-info-item"><span class="zprofile-info-label">Employee ID</span><span class="zprofile-info-value">{{ userProfile()?.employeeId ?? '—' }}</span></div>
+              <div class="zprofile-info-item"><span class="zprofile-info-label">Email</span><span class="zprofile-info-value">{{ userProfile()?.email ?? '—' }}</span></div>
+              <div class="zprofile-info-item"><span class="zprofile-info-label">Phone</span><span class="zprofile-info-value">{{ userProfile()?.phone ?? '—' }}</span></div>
+              <div class="zprofile-info-item"><span class="zprofile-info-label">Department</span><span class="zprofile-info-value">{{ userProfile()?.departmentName ?? '—' }}</span></div>
+              <div class="zprofile-info-item"><span class="zprofile-info-label">Status</span><span class="zprofile-info-value">{{ userProfile()?.status ?? '—' }}</span></div>
+              <div class="zprofile-info-item"><span class="zprofile-info-label">Joined</span><span class="zprofile-info-value">{{ userProfile()?.joiningDate | date:'dd MMM yyyy' }}</span></div>
+            </div>
+            <button class="zbtn zbtn-danger" style="margin-top:24px" (click)="auth.logout()">⎋ Sign Out</button>
           </div>
         </div>
       }
@@ -161,3 +166,53 @@
     </div>
   </div>
 </div>
+
+<!-- Assign Task Modal -->
+@if (showModal()) {
+  <div class="zmodal-overlay" (click)="showModal.set(false)">
+    <div class="zmodal zmodal-sm" (click)="$event.stopPropagation()">
+      <div class="zmodal-header">
+        <span class="zmodal-title">📝 Assign Task — {{ selectedIntern()?.name }}</span>
+        <button class="zmodal-close" (click)="showModal.set(false)">✕</button>
+      </div>
+      <div class="zmodal-body">
+        <form [formGroup]="taskForm" novalidate>
+          <div class="zform-group"><label class="zform-label">Task Title <span class="req">*</span></label><input formControlName="taskTitle" class="zform-control" placeholder="Enter task title" /></div>
+          <div class="zform-group"><label class="zform-label">Description</label><textarea formControlName="description" class="zform-control" rows="3" placeholder="Enter description"></textarea></div>
+          <div class="zform-group"><label class="zform-label">Due Date</label><input formControlName="dueDate" type="date" class="zform-control" /></div>
+        </form>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="showModal.set(false)">Cancel</button>
+        <button class="zbtn zbtn-primary" [disabled]="taskForm.invalid" (click)="assignTask()">Assign</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Edit Task Modal -->
+@if (showEditModal()) {
+  <div class="zmodal-overlay" (click)="showEditModal.set(false)">
+    <div class="zmodal zmodal-sm" (click)="$event.stopPropagation()">
+      <div class="zmodal-header">
+        <span class="zmodal-title">✏ Edit — {{ editTask()?.taskTitle }}</span>
+        <button class="zmodal-close" (click)="showEditModal.set(false)">✕</button>
+      </div>
+      <div class="zmodal-body">
+        <form [formGroup]="editTaskForm" novalidate>
+          <div class="zform-group"><label class="zform-label">Task Title <span class="req">*</span></label><input formControlName="taskTitle" class="zform-control" /></div>
+          <div class="zform-group"><label class="zform-label">Description</label><textarea formControlName="description" class="zform-control" rows="3"></textarea></div>
+          <div class="zform-group"><label class="zform-label">Due Date</label><input formControlName="dueDate" type="date" class="zform-control" /></div>
+        </form>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="showEditModal.set(false)">Cancel</button>
+        <button class="zbtn zbtn-primary" [disabled]="editTaskForm.invalid" (click)="saveEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Confirm Dialog -->
+<app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()"
+  (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />

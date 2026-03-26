@@ -70,3 +70,67 @@
   background: #DC2626;
   color: white;
 }
+
+/* ── Attendance Hero Card ─────────────────────────────────────────────────── */
+.zatt-hero {
+  background: linear-gradient(135deg, #1A1F2E 0%, #065F46 100%);
+  border-radius: 16px; padding: 28px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 24px; margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(26,31,46,.3);
+}
+.zatt-hero-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+.zatt-hero-date  { font-size: 13px; color: rgba(255,255,255,.5); margin-bottom: 20px; }
+.zlive-timer-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+.zlive-dot { width: 8px; height: 8px; background: #10B981; border-radius: 50%; animation: pulse 1.5s infinite; flex-shrink: 0; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.3)} }
+.zlive-label { font-size: 10px; font-weight: 800; color: #10B981; text-transform: uppercase; letter-spacing: 1px; }
+.zlive-time  { font-family: 'Roboto Mono', monospace; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: 2px; }
+.zatt-stats-row { display: flex; gap: 24px; flex-wrap: wrap; }
+.zatt-stat { display: flex; flex-direction: column; }
+.zatt-stat-label { font-size: 10px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 3px; }
+.zatt-stat-value { font-size: 15px; font-weight: 700; color: #fff; }
+.zatt-stat-value.zlate { color: #FCD34D; }
+.zatt-hero-right { display: flex; flex-direction: column; align-items: center; gap: 12px; flex-shrink: 0; }
+.zatt-status-badge { font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 20px; }
+.zatt-not-started { background: rgba(255,255,255,.1); color: rgba(255,255,255,.6); }
+.zatt-active { background: rgba(16,185,129,.2); color: #10B981; border: 1px solid rgba(16,185,129,.3); }
+.zatt-done   { background: rgba(255,255,255,.1); color: rgba(255,255,255,.6); }
+.zatt-btn    { min-width: 140px; }
+.zbtn-spin { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Profile card ────────────────────────── */
+.zprofile-card  { max-width: 520px; margin: 0 auto; }
+.zprofile-banner {
+  height: 130px; border-radius: 16px 16px 0 0;
+  background: linear-gradient(135deg, #1A1F2E 0%, #065F46 100%);
+}
+.zprofile-body {
+  background: #fff; border-radius: 0 0 16px 16px;
+  border: 1px solid #E5E7EB; border-top: none;
+  padding: 0 32px 36px; text-align: center;
+  display: flex; flex-direction: column; align-items: center;
+}
+.zprofile-avatar-lg {
+  width: 84px; height: 84px; border-radius: 50%;
+  background: linear-gradient(135deg, #059669, #10B981);
+  color: #fff; font-size: 32px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  margin: -42px auto 18px; border: 4px solid #fff;
+  box-shadow: 0 4px 20px rgba(5,150,105,.25);
+}
+.zprofile-name { font-size: 22px; font-weight: 800; color: #111827; margin: 0 0 8px; }
+.zprofile-info-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; margin-top: 24px; width: 100%; text-align: left;
+}
+.zprofile-info-item {
+  background: #F9FAFB; border: 1px solid #E5E7EB;
+  border-radius: 10px; padding: 12px 14px;
+}
+.zprofile-info-label {
+  display: block; font-size: 10px; font-weight: 700;
+  color: #9CA3AF; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px;
+}
+.zprofile-info-value { display: block; font-size: 14px; font-weight: 600; color: #111827; }
