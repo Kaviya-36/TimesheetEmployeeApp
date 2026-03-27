@@ -1,11 +1,12 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Attendance, InternTask, LeaveType, Project, User, UserProfile } from '../../models';
 import { AttendanceService, InternService, LeaveService, ProjectService, TimesheetService, UserService } from '../../services/api.services';
 import { AuthService } from '../../services/auth.service';
 import { BreadcrumbService } from '../../services/breadcrumb.service';
 import { NotificationService } from '../../services/notification.service';
+import { TabService } from '../../services/tab.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmComponent } from '../confirm-dialog/confirm.component';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -33,6 +34,14 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
   private  lvSvc   = inject(LeaveService);
   private  prjSvc  = inject(ProjectService);
   private  fb      = inject(FormBuilder);
+  private  tabSvc  = inject(TabService);
+
+  constructor() {
+    effect(() => {
+      const t = this.tabSvc.activeTab();
+      if (t && t !== this.activeTab()) this.setTab(t as MentorTab);
+    });
+  }
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
   activeTab = signal<MentorTab>('interns');
@@ -116,7 +125,8 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
-    this.bc.set([{ label: 'Mentor Dashboard' }]);
+    this.bc.set([{ label: 'Mentor Dashboard' }, { label: 'Interns' }]);
+    this.tabSvc.setTab('interns');
     this.loadInterns();
     this.refreshToday();
     this.usrSvc.getProfile().subscribe({ next: (r: any) => this.userProfile.set(r?.data ?? r), error: () => {} });
@@ -218,6 +228,9 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
       next: (res: any) => {
         const d = res?.data ?? res;
         this.todayAtt.set(d);
+        if (d?.missedCheckout) {
+          this.toast.warning('Missed Check-Out', 'You forgot to check out yesterday. Attendance auto-calculated as check-in + 8 hours.');
+        }
         if (d?.checkIn && !d?.checkOut) this.startTimer(d.checkIn);
       },
       error: () => this.todayAtt.set(null)
@@ -308,6 +321,7 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
 
   setTab(t: MentorTab): void {
     this.activeTab.set(t);
+    this.tabSvc.setTab(t);
     this.bc.set([{ label: 'Mentor Dashboard' }, { label: this.tabs.find(x => x.key === t)?.label ?? '' }]);
   }
 }

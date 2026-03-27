@@ -40,7 +40,7 @@
       <div class="stat-card sc-info"><div class="stat-icon-wrap">🌴</div><div class="stat-body"><div class="stat-value">{{ pendingLv() }}</div><div class="stat-label">Pending Leaves</div></div></div>
     </div>
     <div class="zcard">
-      <div class="zcard-header"><span class="zcard-title">Employee Directory</span></div>
+      <div class="zcard-header"><span class="zcard-title">Employee Directory</span><div class="zaction-row"><button class="zbtn zbtn-primary zbtn-sm" (click)="showAddTimesheetModal.set(true)">+ My Timesheet</button></div></div>
       <div class="zfilter-bar">
         <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="empSearch()" (ngModelChange)="empSearch.set($event);empPage.set(1)" placeholder="Search name, email, ID..." /></div>
         <select class="zfilter-select" [ngModel]="empRoleF()" (ngModelChange)="empRoleF.set($event);empPage.set(1)">
@@ -106,6 +106,18 @@
       <div class="zcard-header"><span class="zcard-title">Attendance Records</span></div>
       <div class="zfilter-bar">
         <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="attSearch()" (ngModelChange)="attSearch.set($event);attPage.set(1)" placeholder="Search employee..." /></div>
+        <div class="zview-toggle">
+          <button class="zview-btn" [class.active]="attViewMode()==='all'"     (click)="attViewMode.set('all');attPeriodOffset.set(0);attPage.set(1)">All</button>
+          <button class="zview-btn" [class.active]="attViewMode()==='weekly'"  (click)="attViewMode.set('weekly');attPeriodOffset.set(0);attPage.set(1)">Week</button>
+          <button class="zview-btn" [class.active]="attViewMode()==='monthly'" (click)="attViewMode.set('monthly');attPeriodOffset.set(0);attPage.set(1)">Month</button>
+        </div>
+        @if (attViewMode() !== 'all') {
+          <div class="zperiod-nav">
+            <button class="zpg-btn" (click)="attPeriodOffset.update(o=>o-1);attPage.set(1)">‹</button>
+            <span class="zperiod-label">{{ attPeriodLabel() }}</span>
+            <button class="zpg-btn" (click)="attPeriodOffset.update(o=>o+1);attPage.set(1)" [disabled]="attPeriodOffset()>=0">›</button>
+          </div>
+        }
         <span class="zresult-count">{{ filteredAtt().length }} records</span>
       </div>
       <div class="ztable-wrap"><table class="ztable">
@@ -323,3 +335,67 @@
 
 </div></div></div>
 <app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()" [type]="cfgType()" (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />
+
+<!-- Add My Timesheet Modal -->
+@if (showAddTimesheetModal()) {
+  <div class="zmodal-overlay" (click)="showAddTimesheetModal.set(false)">
+    <div class="zmodal" (click)="$event.stopPropagation()">
+      <div class="zmodal-header">
+        <span class="zmodal-title">📋 Add My Timesheet</span>
+        <button class="zmodal-close" (click)="showAddTimesheetModal.set(false)">✕</button>
+      </div>
+      <div class="zmodal-body">
+        <form [formGroup]="addTimesheetForm" novalidate>
+          <div class="zform-group"><label class="zform-label">Project <span class="req">*</span></label>
+            <select formControlName="projectId" class="zform-control">
+              <option value="">— Select Project —</option>
+              @for (p of projects(); track p.id) { <option [value]="p.id">{{ p.projectName }}</option> }
+            </select>
+          </div>
+          <div class="zform-group"><label class="zform-label">Work Date <span class="req">*</span></label><input formControlName="workDate" type="date" class="zform-control" /></div>
+          <div class="zgrid-3">
+            <div class="zform-group"><label class="zform-label">Start <span class="req">*</span></label><input formControlName="startTime" type="time" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">End <span class="req">*</span></label><input formControlName="endTime" type="time" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">Break</label><input formControlName="breakTime" type="time" class="zform-control" /></div>
+          </div>
+          <div class="zform-group"><label class="zform-label">Description</label><textarea formControlName="taskDescription" class="zform-control" rows="2"></textarea></div>
+        </form>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="showAddTimesheetModal.set(false)">Cancel</button>
+        <button class="zbtn zbtn-primary" [disabled]="addTimesheetForm.invalid" (click)="addTimesheetForSelf()">Submit</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Apply My Leave Modal -->
+@if (showAddLeaveModal()) {
+  <div class="zmodal-overlay" (click)="showAddLeaveModal.set(false)">
+    <div class="zmodal zmodal-sm" (click)="$event.stopPropagation()">
+      <div class="zmodal-header">
+        <span class="zmodal-title">🌴 Apply My Leave</span>
+        <button class="zmodal-close" (click)="showAddLeaveModal.set(false)">✕</button>
+      </div>
+      <div class="zmodal-body">
+        <form [formGroup]="addLeaveForm" novalidate>
+          <div class="zform-group"><label class="zform-label">Leave Type <span class="req">*</span></label>
+            <select formControlName="leaveTypeId" class="zform-control">
+              <option value="">— Select Type —</option>
+              @for (lt of leaveTypes(); track lt.id) { <option [value]="lt.id">{{ lt.name }}</option> }
+            </select>
+          </div>
+          <div class="zgrid-2">
+            <div class="zform-group"><label class="zform-label">From <span class="req">*</span></label><input formControlName="fromDate" type="date" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">To <span class="req">*</span></label><input formControlName="toDate" type="date" class="zform-control" /></div>
+          </div>
+          <div class="zform-group"><label class="zform-label">Reason</label><textarea formControlName="reason" class="zform-control" rows="2"></textarea></div>
+        </form>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="showAddLeaveModal.set(false)">Cancel</button>
+        <button class="zbtn zbtn-primary" [disabled]="addLeaveForm.invalid" (click)="addLeaveForSelf()">Apply</button>
+      </div>
+    </div>
+  </div>
+}

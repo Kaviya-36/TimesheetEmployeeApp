@@ -25,17 +25,20 @@ export class NotificationService {
         .withUrl('http://localhost:5117/notificationHub', {
           accessTokenFactory: () => this.auth.token() ?? ''
         })
-        .withAutomaticReconnect()
-        .configureLogging(signalR.LogLevel.Warning)
+        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000]) // limited retries
+        .configureLogging(signalR.LogLevel.None)
         .build();
 
-      this.hub.on('ReceiveNotification', (data: Omit<Notification, 'read'>) => {
-        this.push({ ...data, read: false });
+      this.hub.on('ReceiveNotification', (type: string, message: string, time: string) => {
+        this.push({ type, message, time, read: false });
       });
+
+      this.hub.onreconnected(() => this.connected.set(true));
+      this.hub.onclose(() => this.connected.set(false));
 
       this.hub.start()
         .then(() => this.connected.set(true))
-        .catch(() => {});
+        .catch(() => this.connected.set(false));
     }).catch(() => {});
   }
 

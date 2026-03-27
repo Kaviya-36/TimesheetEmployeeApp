@@ -50,6 +50,7 @@ export interface TimesheetApprovalRequest {
 export interface Attendance {
   id: number; userId: number; employeeName: string; date: string;
   checkIn?: string; checkOut?: string; isLate: boolean; totalHours?: string;
+  missedCheckout?: boolean;
 }
 
 // Leave

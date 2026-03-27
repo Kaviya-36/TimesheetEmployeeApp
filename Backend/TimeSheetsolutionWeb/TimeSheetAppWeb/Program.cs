@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -34,7 +35,8 @@ builder.Services.AddScoped<IPayrollService, PayrollService>();
 builder.Services.AddScoped<IInternDetailsService, InternDetailsService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
-builder.Services.AddScoped<IAuditService, AuditService>(); // ✅ FIXED
+builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddSingleton<INotificationService, NotificationService>();
 
 // ================= SIGNALR =================
 builder.Services.AddSignalR();
@@ -151,4 +153,71 @@ app.Run();
 // ================= HUB CLASS =================
 public class NotificationHub : Hub
 {
+    public override async Task OnConnectedAsync()
+    {
+        // Parse JWT directly from query string — Context.User may be null without [Authorize]
+        var token = Context.GetHttpContext()?.Request.Query["access_token"].ToString();
+        string? userId = null;
+        string? role   = null;
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            try
+            {
+                var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                var jwt     = handler.ReadJwtToken(token);
+                userId = jwt.Claims.FirstOrDefault(c =>
+                    c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" ||
+                    c.Type == "nameid" || c.Type == "sub")?.Value;
+                role   = jwt.Claims.FirstOrDefault(c =>
+                    c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" ||
+                    c.Type == "role")?.Value;
+            }
+            catch { }
+        }
+
+        // Fallback to Context.User
+        userId ??= Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        role   ??= Context.User?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+        if (!string.IsNullOrEmpty(userId))
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
+        if (!string.IsNullOrEmpty(role))
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"role_{role}");
+
+        await base.OnConnectedAsync();
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        var token = Context.GetHttpContext()?.Request.Query["access_token"].ToString();
+        string? userId = null;
+        string? role   = null;
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            try
+            {
+                var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                var jwt     = handler.ReadJwtToken(token);
+                userId = jwt.Claims.FirstOrDefault(c =>
+                    c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" ||
+                    c.Type == "nameid" || c.Type == "sub")?.Value;
+                role   = jwt.Claims.FirstOrDefault(c =>
+                    c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" ||
+                    c.Type == "role")?.Value;
+            }
+            catch { }
+        }
+
+        userId ??= Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        role   ??= Context.User?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+        if (!string.IsNullOrEmpty(userId))
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user_{userId}");
+        if (!string.IsNullOrEmpty(role))
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"role_{role}");
+
+        await base.OnDisconnectedAsync(exception);
+    }
 }

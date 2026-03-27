@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Attendance, AuditLog, DashboardSummary, Leave, LeaveType, Project, Timesheet, User, UserProfile } from '../../models';
 import {
@@ -11,6 +11,7 @@ import {
 import { AuthService } from '../../services/auth.service';
 import { BreadcrumbService } from '../../services/breadcrumb.service';
 import { NotificationService } from '../../services/notification.service';
+import { TabService } from '../../services/tab.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmComponent } from '../confirm-dialog/confirm.component';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -38,6 +39,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   private  attSvc  = inject(AttendanceService);
   private  auditSvc = inject(AuditLogService);
   private  fb      = inject(FormBuilder);
+  private  tabSvc  = inject(TabService);
+
+  constructor() {
+    effect(() => {
+      const t = this.tabSvc.activeTab();
+      if (t && t !== this.activeTab()) this.setTab(t as AdminTab);
+    });
+  }
 
   activeTab = signal<AdminTab>('overview');
   readonly tabs: { key: AdminTab; label: string; icon: string }[] = [
@@ -71,7 +80,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     let d = this.allAuditLogs();
     const q = this.auditSearch().toLowerCase();
     if (q) d = d.filter(a => a.tableName.toLowerCase().includes(q) || a.action.toLowerCase().includes(q) || (a.keyValues ?? '').toLowerCase().includes(q));
-    if (this.auditAction() !== 'all') d = d.filter(a => a.action.toUpperCase() === this.auditAction());
+    if (this.auditAction() !== 'all') d = d.filter(a => a.action === this.auditAction());
     if (this.auditTable()  !== 'all') d = d.filter(a => a.tableName.toLowerCase() === this.auditTable().toLowerCase());
     return d;
   });
@@ -95,6 +104,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     const q = this.attSearch().toLowerCase();
     let d = this.allAttendances();
     if (q) d = d.filter(a => (a.employeeName ?? '').toLowerCase().includes(q));
+    d = d.filter(a => this._inPeriod(a.date, this.attViewMode(), this.attPeriodOffset()));
     return d;
   });
   pagedAtt = computed(() => {
@@ -111,6 +121,39 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   tsSortCol = signal<'date'|'hours'|'employee'>('date');  tsSortDir = signal<'asc'|'desc'>('desc');
   tsPS = 8;
 
+  // ── View mode ─────────────────────────────────────────────────────────────
+  tsViewMode      = signal<'all'|'weekly'|'monthly'>('all');
+  tsPeriodOffset  = signal(0);
+  attViewMode     = signal<'all'|'weekly'|'monthly'>('all');
+  attPeriodOffset = signal(0);
+
+  tsPeriodLabel  = () => this._periodLabel(this.tsViewMode(),  this.tsPeriodOffset());
+  attPeriodLabel = () => this._periodLabel(this.attViewMode(), this.attPeriodOffset());
+
+  private _periodLabel(mode: string, offset: number): string {
+    if (mode === 'all') return '';
+    const now = new Date();
+    if (mode === 'weekly') {
+      const s = new Date(now); s.setDate(now.getDate() - now.getDay() + offset * 7);
+      const e = new Date(s);   e.setDate(s.getDate() + 6);
+      return `${s.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} – ${e.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}`;
+    }
+    return new Date(now.getFullYear(), now.getMonth() + offset, 1).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  }
+
+  private _inPeriod(dateStr: string, mode: string, offset: number): boolean {
+    if (mode === 'all') return true;
+    const d = new Date(dateStr); if (isNaN(d.getTime())) return false;
+    const now = new Date();
+    if (mode === 'weekly') {
+      const s = new Date(now); s.setDate(now.getDate() - now.getDay() + offset * 7); s.setHours(0,0,0,0);
+      const e = new Date(s);   e.setDate(s.getDate() + 6); e.setHours(23,59,59,999);
+      return d >= s && d <= e;
+    }
+    const ref = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
+  }
+
   lvSearch = signal('');  lvStatus = signal('all');  lvPage = signal(1);
   lvPS = 8;
 
@@ -118,6 +161,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   showAddUser = signal(false);  showAddProject = signal(false);
   editUser    = signal<User | null>(null);  newRole = '';
+  editProject = signal<Project | null>(null);
   showAddTimesheetModal = signal(false);
   showAddLeaveModal     = signal(false);
   leaveTypes            = signal<LeaveType[]>([]);
@@ -141,6 +185,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   });
 
   projectForm = this.fb.group({
+    projectName: ['', Validators.required],
+    description: [''],
+    managerId:   [''],
+    startDate:   ['', Validators.required],
+    endDate:     [''],
+  });
+
+  editProjectForm = this.fb.group({
     projectName: ['', Validators.required],
     description: [''],
     managerId:   [''],
@@ -191,6 +243,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       const sv:{[k:string]:number} = {pending:0,approved:1,rejected:2};
       d = d.filter(t => Number(t.status)===sv[this.tsStatus()]);
     }
+    d = d.filter(t => this._inPeriod(t.date, this.tsViewMode(), this.tsPeriodOffset()));
     const col = this.tsSortCol(); const dir = this.tsSortDir();
     d = [...d].sort((a,b)=>{
       const v = col==='date'?new Date(a.date).getTime()-new Date(b.date).getTime()
@@ -228,7 +281,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   roleBreakdown = computed(() => this.roleOptions.map(r => ({ role:r, count:this.allUsers().filter(u=>u.role===r).length })));
 
   ngOnInit() {
-    this.bc.set([{ label:'Admin Dashboard' }]);
+    this.bc.set([{ label: 'Admin Dashboard' }, { label: 'Overview' }]);
+    this.tabSvc.setTab('overview');
     this.loadAll();
     this.refreshToday();
     this.userSvc.getProfile().subscribe({ next:(r:any)=>this.userProfile.set(r?.data??r), error:()=>{} });
@@ -263,7 +317,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       next:(r:any)=>this.allAttendances.set(this.toArr<Attendance>(r)),
       error:()=>{}
     });
-    this.auditSvc.getAll().subscribe({
+    this.auditSvc.getPaged(1, 200).subscribe({
       next:(r:any)=>this.allAuditLogs.set(this.toArr<AuditLog>(r)),
       error:()=>{}
     });
@@ -295,7 +349,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       employeeId:v.employeeId!,name:v.name!,email:v.email!,
       password:v.password!,phone:v.phone??'',role:v.role!,departmentId:Number(v.departmentId!)
     }).subscribe({
-      next:()=>{ this.toast.success('User Created','Account pending admin approval.'); this.notif.pushLocal('Approval','New user registration awaiting approval.'); this.showAddUser.set(false); this.addUserForm.reset({role:'Employee'}); this.loadAll(); },
+      next:()=>{ this.toast.success('User Created','Account pending admin approval.'); this.showAddUser.set(false); this.addUserForm.reset({role:'Employee'}); this.loadAll(); },
       error:(err:any)=>this.toast.error('Failed',err?.error?.message??'Could not create user.')
     });
   }
@@ -355,6 +409,32 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  openEditProject(p: Project) {
+    this.editProject.set(p);
+    this.editProjectForm.patchValue({
+      projectName: p.projectName,
+      description: p.description ?? '',
+      managerId:   p.managerId ? String(p.managerId) : '',
+      startDate:   p.startDate ? (p.startDate as string).split('T')[0] : '',
+      endDate:     p.endDate   ? (p.endDate   as string).split('T')[0] : '',
+    });
+  }
+
+  saveEditProject() {
+    const p = this.editProject(); if (!p || this.editProjectForm.invalid) return;
+    const v = this.editProjectForm.getRawValue();
+    this.prjSvc.update(p.id, {
+      projectName: v.projectName!,
+      description: v.description ?? '',
+      managerId:   v.managerId ? +v.managerId : undefined,
+      startDate:   v.startDate!,
+      endDate:     v.endDate ?? undefined
+    }).subscribe({
+      next: () => { this.toast.success('Project Updated'); this.editProject.set(null); this.loadAll(); },
+      error: (e: any) => this.toast.error('Error', e?.error?.message ?? 'Failed.')
+    });
+  }
+
   addTimesheetForUser() {
     if (this.addTimesheetForm.invalid) return;
     const uid = this.auth.currentUser();
@@ -405,7 +485,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   approveLeave(l:Leave) {
     const uid=this.auth.currentUser()!;
     this.lvSvc.approveOrReject({leaveId:l.id,approvedById:uid,isApproved:true,managerComment:'Approved by Admin'}).subscribe({
-      next:()=>{ this.toast.success('Leave Approved'); this.notif.pushLocal('Leave',`Leave approved for ${l.employeeName}`); this.loadAll(); },
+      next:()=>{ this.toast.success('Leave Approved'); this.loadAll(); },
       error:()=>this.toast.error('Error','Failed.')
     });
   }
@@ -424,6 +504,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       next:(res:any)=>{
         const d = res?.data ?? res;
         this.todayAtt.set(d);
+        if (d?.missedCheckout) this.toast.warning('Missed Check-Out','You forgot to check out yesterday. Attendance auto-calculated as check-in + 8 hours.');
         if (d?.checkIn && !d?.checkOut) this.startTimer(d.checkIn);
       },
       error:()=>this.todayAtt.set(null)
@@ -489,6 +570,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   setTab(t:AdminTab) {
     this.activeTab.set(t);
+    this.tabSvc.setTab(t);
     this.bc.set([{label:'Admin Dashboard'},{label:this.tabs.find(x=>x.key===t)?.label??''}]);
     this.uPage.set(1); this.tsPage.set(1); this.lvPage.set(1); this.prjPage.set(1);
   }

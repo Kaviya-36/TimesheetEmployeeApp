@@ -13,6 +13,15 @@ import {
     UserUpdateRequest
 } from '../models';
 
+// ── Shared param builder ───────────────────────────────────────────────────
+function buildParams(opts: Record<string, any>): HttpParams {
+  let p = new HttpParams();
+  for (const [k, v] of Object.entries(opts)) {
+    if (v !== undefined && v !== null && v !== '') p = p.set(k, String(v));
+  }
+  return p;
+}
+
 // ── Timesheet ──────────────────────────────────────────────────────────────
 @Injectable({ providedIn: 'root' })
 export class TimesheetService {
@@ -28,11 +37,15 @@ export class TimesheetService {
   delete(id: number): Observable<any> {
     return this.http.delete<any>(`${this.api}/${id}`);
   }
-  getByUser(userId: number): Observable<any> {
-    return this.http.get<any>(`${this.api}/user/${userId}`);
+  getByUser(userId: number, page = 1, pageSize = 200, search?: string, status?: string, sortBy = 'date', sortDir = 'desc'): Observable<any> {
+    return this.http.get<any>(`${this.api}/user/${userId}`, {
+      params: buildParams({ pageNumber: page, pageSize, search, status, sortBy, sortDir })
+    });
   }
-  getAll(): Observable<any> {
-    return this.http.get<any>(this.api);
+  getAll(page = 1, pageSize = 200, search?: string, status?: string, sortBy = 'date', sortDir = 'desc'): Observable<any> {
+    return this.http.get<any>(this.api, {
+      params: buildParams({ pageNumber: page, pageSize, search, status, sortBy, sortDir })
+    });
   }
   approveOrReject(req: TimesheetApprovalRequest): Observable<any> {
     return this.http.post<any>(`${this.api}/approve`, req);
@@ -47,9 +60,11 @@ export class AttendanceService {
 
   checkIn(): Observable<any>  { return this.http.post<any>(`${this.api}/checkin`, {}); }
   checkOut(): Observable<any> { return this.http.post<any>(`${this.api}/checkout`, {}); }
-  getMyAttendance(userId: number): Observable<any> { return this.http.get<any>(`${this.api}/me`); }
-  getAll(page = 1, size = 10): Observable<any> {
-    return this.http.get<any>(`${this.api}/all?pageNumber=${page}&pageSize=${size}`);
+  getMyAttendance(userId: number, page = 1, pageSize = 200): Observable<any> {
+    return this.http.get<any>(`${this.api}/me`, { params: buildParams({ pageNumber: page, pageSize }) });
+  }
+  getAll(page = 1, size = 200): Observable<any> {
+    return this.http.get<any>(`${this.api}/all`, { params: buildParams({ pageNumber: page, pageSize: size }) });
   }
   getTodayStatus(userId: number): Observable<any> {
     return this.http.get<any>(`${this.api}/today/${userId}`);
@@ -65,15 +80,22 @@ export class LeaveService {
   apply(userId: number, req: LeaveCreateRequest): Observable<any> {
     return this.http.post<any>(`${this.api}/apply`, req);
   }
-  getMyLeaves(userId: number): Observable<any> {
-    return this.http.get<any>(`${this.api}/user/${userId}`);
+  getMyLeaves(userId: number, page = 1, pageSize = 200, search?: string, status?: string, sortDir = 'desc'): Observable<any> {
+    return this.http.get<any>(`${this.api}/user/${userId}`, {
+      params: buildParams({ pageNumber: page, pageSize, search, status, sortDir })
+    });
   }
-  getPending(): Observable<any>  { return this.http.get<any>(`${this.api}/pending`); }
-  getAll(): Observable<any>      { return this.http.get<any>(`${this.api}/getall`); }
+  getPending(): Observable<any> { return this.http.get<any>(`${this.api}/pending`); }
+  getAll(page = 1, pageSize = 200, search?: string, status?: string, sortDir = 'desc'): Observable<any> {
+    return this.http.get<any>(`${this.api}/getall`, {
+      params: buildParams({ pageNumber: page, pageSize, search, status, sortDir })
+    });
+  }
   approveOrReject(data: { leaveId: number; approvedById: number; isApproved: boolean; managerComment: string; }): Observable<any> {
     return this.http.put<any>(`${this.api}/approve`, data);
   }
   getLeaveTypes(): Observable<any> { return this.http.get<any>(`${this.api}/types`); }
+  deleteLeave(leaveId: number): Observable<any> { return this.http.delete<any>(`${this.api}/${leaveId}`); }
 }
 
 // ── Project ────────────────────────────────────────────────────────────────
@@ -84,7 +106,9 @@ export class ProjectService {
 
   create(req: ProjectCreateRequest): Observable<any> { return this.http.post<any>(this.api, req); }
   assign(data: any): Observable<any> { return this.http.post<any>(`${this.api}/assign`, data); }
-  getAll(): Observable<any> { return this.http.get<any>(this.api); }
+  getAll(page = 1, pageSize = 200): Observable<any> {
+    return this.http.get<any>(this.api, { params: buildParams({ pageNumber: page, pageSize }) });
+  }
   getById(id: number): Observable<any> { return this.http.get<any>(`${this.api}/${id}`); }
   update(id: number, req: Partial<ProjectCreateRequest>): Observable<any> {
     return this.http.put<any>(`${this.api}/${id}`, req);
@@ -94,11 +118,14 @@ export class ProjectService {
     return this.http.post<any>(`${this.api}/assign`, { projectId, userId });
   }
   getUserAssignments(userId: number, pageNumber: number, pageSize: number): Observable<any> {
-    return this.http.get<any>(`${this.api}/user/${userId}/assignments?pageNumber=${pageNumber}&pageSize=${pageSize}`);
+    return this.http.get<any>(`${this.api}/user/${userId}/assignments`, { params: buildParams({ pageNumber, pageSize }) });
   }
   getAssignmentsByProject(projectId: number): Observable<any> {
-  return this.http.get<any>(`${this.api}/${projectId}/assignments`);
-}
+    return this.http.get<any>(`${this.api}/${projectId}/assignments`);
+  }
+  removeAssignment(assignmentId: number): Observable<any> {
+    return this.http.delete<any>(`${this.api}/assignment/${assignmentId}`);
+  }
 }
 
 // ── Payroll ────────────────────────────────────────────────────────────────
@@ -108,8 +135,12 @@ export class PayrollService {
   constructor(private http: HttpClient) {}
 
   generate(req: PayrollCreateRequest): Observable<any> { return this.http.post<any>(this.api, req); }
-  getByUser(userId: number): Observable<any>           { return this.http.get<any>(`${this.api}/user/${userId}`); }
-  getAll(): Observable<any>                            { return this.http.get<any>(this.api); }
+  getByUser(userId: number, page = 1, pageSize = 200): Observable<any> {
+    return this.http.get<any>(`${this.api}/user/${userId}`, { params: buildParams({ pageNumber: page, pageSize }) });
+  }
+  getAll(page = 1, pageSize = 200): Observable<any> {
+    return this.http.get<any>(this.api, { params: buildParams({ pageNumber: page, pageSize }) });
+  }
 }
 
 // ── User ───────────────────────────────────────────────────────────────────
@@ -118,7 +149,11 @@ export class UserService {
   private readonly api = `${environment.apiUrl}/user`;
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<any>                           { return this.http.get<any>(`${this.api}?pageNumber=1&pageSize=1000`); }
+  getAll(page = 1, pageSize = 1000, search?: string, role?: string, status?: string, sortBy = 'name', sortDir = 'asc'): Observable<any> {
+    return this.http.get<any>(this.api, {
+      params: buildParams({ pageNumber: page, pageSize, search, role, status, sortBy, sortDir })
+    });
+  }
   getById(id: number): Observable<any>               { return this.http.get<any>(`${this.api}/${id}`); }
   getProfile(): Observable<any>                      { return this.http.get<any>(`${this.api}/profile`); }
   update(id: number, req: UserUpdateRequest): Observable<any> { return this.http.put<any>(`${this.api}/${id}`, req); }
@@ -135,56 +170,15 @@ export class InternService {
   private readonly api = `${environment.apiUrl}/interntask`;
   constructor(private http: HttpClient) {}
 
-  getInterns(): Observable<any> {
-    return this.http.get<any>(this.api);
-  }
-
-  // Get intern by ID
-  getInternById(id: number): Observable<any> {
-    return this.http.get<any>(`${this.api}/${id}`);
-  }
-
-  // Create intern
-  createIntern(data: any): Observable<any> {
-    return this.http.post<any>(this.api, data);
-  }
-
-  // Update intern
-  updateIntern(id: number, data: any): Observable<any> {
-    return this.http.put<any>(`${this.api}/${id}`, data);
-  }
-
-  // Delete intern
-  deleteIntern(id: number): Observable<any> {
-    return this.http.delete<any>(`${this.api}/${id}`);
-  }
-
-
-  // ===========================
-  // 📋 INTERN TASK APIs
-  // ===========================
-
-  // Get tasks by intern
-  getTasks(internId: number): Observable<any> {
-    return this.http.get<any>(`${this.api}/intern/${internId}`);
-  }
-
-  // Create task
-  createTask(req: InternTaskCreateRequest): Observable<any> {
-    return this.http.post<any>(`${this.api}/create`, req);
-  }
-
-  // Update task
-  updateTask(taskId: number, req: any) {
-  return this.http.put(`${this.api}/update/${taskId}`, {
-    request: req   // 🔥 REQUIRED
-  });
-}
-
-  // Delete task
-  deleteTask(taskId: number): Observable<any> {
-    return this.http.delete<any>(`${this.api}/delete/${taskId}`);
-  }
+  getInterns(): Observable<any>                          { return this.http.get<any>(this.api); }
+  getInternById(id: number): Observable<any>             { return this.http.get<any>(`${this.api}/${id}`); }
+  createIntern(data: any): Observable<any>               { return this.http.post<any>(this.api, data); }
+  updateIntern(id: number, data: any): Observable<any>   { return this.http.put<any>(`${this.api}/${id}`, data); }
+  deleteIntern(id: number): Observable<any>              { return this.http.delete<any>(`${this.api}/${id}`); }
+  getTasks(internId: number): Observable<any>            { return this.http.get<any>(`${this.api}/intern/${internId}`); }
+  createTask(req: InternTaskCreateRequest): Observable<any> { return this.http.post<any>(`${this.api}/create`, req); }
+  updateTask(taskId: number, req: any)                   { return this.http.put(`${this.api}/update/${taskId}`, { request: req }); }
+  deleteTask(taskId: number): Observable<any>            { return this.http.delete<any>(`${this.api}/delete/${taskId}`); }
 }
 
 // ── AuditLog ───────────────────────────────────────────────────────────────
@@ -193,11 +187,16 @@ export class AuditLogService {
   private readonly api = `${environment.apiUrl}/AuditLog`;
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<any>                          { return this.http.get<any>(this.api); }
-  getByTable(tableName: string): Observable<any>     { return this.http.get<any>(`${this.api}/table/${tableName}`); }
-  getByAction(action: string): Observable<any>       { return this.http.get<any>(`${this.api}/action/${action}`); }
-  getByUser(userId: number): Observable<any>         { return this.http.get<any>(`${this.api}/user/${userId}`); }
-  getPaged(page = 1, pageSize = 10): Observable<any> { return this.http.get<any>(`${this.api}/paged?page=${page}&pageSize=${pageSize}`); }
+  getAll(): Observable<any> { return this.http.get<any>(this.api); }
+  getByTable(tableName: string): Observable<any> { return this.http.get<any>(`${this.api}/table/${tableName}`); }
+  getByAction(action: string): Observable<any>   { return this.http.get<any>(`${this.api}/action/${action}`); }
+  getByUser(userId: number): Observable<any>     { return this.http.get<any>(`${this.api}/user/${userId}`); }
+
+  getPaged(page = 1, pageSize = 10, search?: string, action?: string, table?: string, sortDir = 'desc'): Observable<any> {
+    return this.http.get<any>(`${this.api}/paged`, {
+      params: buildParams({ page, pageSize, search, action, table, sortDir })
+    });
+  }
 }
 
 // ── Analytics ──────────────────────────────────────────────────────────────

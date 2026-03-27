@@ -105,10 +105,83 @@
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
             </select>
+            <div class="zview-toggle">
+              <button class="zview-btn" [class.active]="tsViewMode()==='all'"     (click)="tsViewMode.set('all');tsPeriodOffset.set(0);tsPage.set(1)">All</button>
+              <button class="zview-btn" [class.active]="tsViewMode()==='weekly'"  (click)="tsViewMode.set('weekly');tsPeriodOffset.set(0);tsPage.set(1)">Week</button>
+              <button class="zview-btn" [class.active]="tsViewMode()==='monthly'" (click)="tsViewMode.set('monthly');tsPeriodOffset.set(0);tsPage.set(1)">Month</button>
+            </div>
+            @if (tsViewMode() !== 'all' && tsViewMode() !== 'weekly') {
+              <div class="zperiod-nav">
+                <button class="zpg-btn" (click)="tsPeriodOffset.update(o=>o-1);tsPage.set(1)">‹</button>
+                <span class="zperiod-label">{{ tsPeriodLabel() }}</span>
+                <button class="zpg-btn" (click)="tsPeriodOffset.update(o=>o+1);tsPage.set(1)" [disabled]="tsPeriodOffset()>=0">›</button>
+              </div>
+            }
             <span class="zresult-count">{{ filteredTs().length }} records</span>
           </div>
 
           <div class="ztable-wrap">
+            @if (tsViewMode() === 'weekly') {
+              <!-- ── Weekly Grid View ── -->
+              <div class="zts-week-header">
+                <div class="zts-week-nav">
+                  <button class="zpg-btn" (click)="tsPeriodOffset.update(o=>o-1)">‹</button>
+                  <span class="zperiod-label">{{ tsPeriodLabel() }}</span>
+                  <button class="zpg-btn" (click)="tsPeriodOffset.update(o=>o+1)" [disabled]="tsPeriodOffset()>=0">›</button>
+                </div>
+                <button class="zbtn zbtn-primary zbtn-sm" (click)="showTsModal.set(true)">+ Add</button>
+              </div>
+              <table class="ztable zts-week-table">
+                <thead>
+                  <tr>
+                    <th class="zts-project-col">Project</th>
+                    @for (d of weekDates(); track d.getTime()) {
+                      <th class="zts-day-col" [class.zts-today]="d.toDateString()===todayDate">
+                        <div class="zts-day-name">{{ weekDays[$index] }}</div>
+                        <div class="zts-day-date">{{ d | date:'dd MMM' }}</div>
+                      </th>
+                    }
+                    <th class="zts-total-col">Total</th>
+                    <th class="zts-status-col">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of weeklyRows(); track row.ts.projectName) {
+                    <tr>
+                      <td class="zts-project-cell"><strong>{{ row.ts.projectName }}</strong></td>
+                      @for (h of row.hours; track $index) {
+                        <td class="zts-hour-cell" [class.zts-has-hours]="h !== null">
+                          @if (h !== null) { <span class="zts-hours-val">{{ h }}h</span> }
+                          @else { <span class="zts-empty-cell">—</span> }
+                        </td>
+                      }
+                      <td class="zts-total-cell">
+                        <strong>{{ row.hours.reduce((s, h) => s + (h ? +h : 0), 0).toFixed(1) }}h</strong>
+                      </td>
+                      <td><span class="zbadge" [class]="stClass(row.ts.status)">{{ stText(row.ts.status) }}</span></td>
+                    </tr>
+                  }
+                  @if (weeklyRows().length === 0) {
+                    <tr class="empty-row"><td colspan="10">No timesheets this week.</td></tr>
+                  }
+                  <!-- Total row -->
+                  @if (weeklyRows().length > 0) {
+                    <tr class="zts-total-row">
+                      <td><strong>Total</strong></td>
+                      @for (d of weekDates(); track d.getTime(); let i = $index) {
+                        <td class="zts-day-total">
+                          <strong>{{ weeklyRows().reduce((s, r) => s + (r.hours[i] ? +r.hours[i]! : 0), 0).toFixed(1) }}h</strong>
+                        </td>
+                      }
+                      <td class="zts-grand-total">
+                        <strong>{{ weeklyRows().reduce((s, r) => s + r.hours.reduce((a, h) => a + (h ? +h : 0), 0), 0).toFixed(1) }}h</strong>
+                      </td>
+                      <td></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            } @else {
             <table class="ztable">
               <thead>
                 <tr>
@@ -151,6 +224,7 @@
                 }
               </tbody>
             </table>
+            }
           </div>
 
           <div class="zpagination">
@@ -174,6 +248,21 @@
       @if (activeTab() === 'attendance') {
         <div class="zcard">
           <div class="zcard-header"><span class="zcard-title">Attendance History</span></div>
+          <div class="zfilter-bar">
+            <div class="zview-toggle">
+              <button class="zview-btn" [class.active]="attViewMode()==='all'"     (click)="attViewMode.set('all');attPeriodOffset.set(0);attPage.set(1)">All</button>
+              <button class="zview-btn" [class.active]="attViewMode()==='weekly'"  (click)="attViewMode.set('weekly');attPeriodOffset.set(0);attPage.set(1)">Week</button>
+              <button class="zview-btn" [class.active]="attViewMode()==='monthly'" (click)="attViewMode.set('monthly');attPeriodOffset.set(0);attPage.set(1)">Month</button>
+            </div>
+            @if (attViewMode() !== 'all') {
+              <div class="zperiod-nav">
+                <button class="zpg-btn" (click)="attPeriodOffset.update(o=>o-1);attPage.set(1)">‹</button>
+                <span class="zperiod-label">{{ attPeriodLabel() }}</span>
+                <button class="zpg-btn" (click)="attPeriodOffset.update(o=>o+1);attPage.set(1)" [disabled]="attPeriodOffset()>=0">›</button>
+              </div>
+            }
+            <span class="zresult-count">{{ filteredAtt().length }} records</span>
+          </div>
           <div class="ztable-wrap">
             <table class="ztable">
               <thead>
@@ -219,7 +308,7 @@
           <div class="ztable-wrap">
             <table class="ztable">
               <thead>
-                <tr><th>Leave Type</th><th>From</th><th>To</th><th>Days</th><th>Reason</th><th>Status</th><th>Comment</th></tr>
+                <tr><th>Leave Type</th><th>From</th><th>To</th><th>Days</th><th>Reason</th><th>Status</th><th>Comment</th><th>Actions</th></tr>
               </thead>
               <tbody>
                 @for (l of pagedLv(); track l.id) {
@@ -231,10 +320,17 @@
                     <td class="ztext-muted">{{ l.reason || '—' }}</td>
                     <td><span class="zbadge" [class]="stClass(l.status)">{{ stText(l.status) }}</span></td>
                     <td class="ztext-muted">{{ l.managerComment || '—' }}</td>
+                    <td>
+                      @if (+l.status === 0) {
+                        <div class="zaction-row">
+                          <button class="zbtn zbtn-danger zbtn-sm" (click)="confirmDeleteLeave(l)">🗑</button>
+                        </div>
+                      } @else { <span class="ztext-muted">—</span> }
+                    </td>
                   </tr>
                 }
                 @if (pagedLv().length === 0) {
-                  <tr class="empty-row"><td colspan="7">No leave requests. Click "+ Apply Leave" to submit one.</td></tr>
+                  <tr class="empty-row"><td colspan="8">No leave requests. Click "+ Apply Leave" to submit one.</td></tr>
                 }
               </tbody>
             </table>

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Attendance, Leave, LeaveType, Project, Timesheet, User, UserProfile } from '../../models';
 import {
@@ -11,6 +11,7 @@ import {
 import { AuthService } from '../../services/auth.service';
 import { BreadcrumbService } from '../../services/breadcrumb.service';
 import { NotificationService } from '../../services/notification.service';
+import { TabService } from '../../services/tab.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmComponent } from '../confirm-dialog/confirm.component';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -38,6 +39,14 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   private  prjSvc = inject(ProjectService);
   private  attSvc = inject(AttendanceService);
   private  fb     = inject(FormBuilder);
+  private  tabSvc = inject(TabService);
+
+  constructor() {
+    effect(() => {
+      const t = this.tabSvc.activeTab();
+      if (t && t !== this.activeTab()) this.setTab(t as ManagerTab);
+    });
+  }
 
   activeTab = signal<ManagerTab>('dashboard');
   readonly tabs = [
@@ -64,6 +73,36 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   tsPage    = signal(1);
   tsPS = 8;
 
+  // ── View mode ─────────────────────────────────────────────────────────────
+  tsViewMode      = signal<'all'|'weekly'|'monthly'>('all');
+  tsPeriodOffset  = signal(0);
+
+  tsPeriodLabel = () => this._periodLabel(this.tsViewMode(), this.tsPeriodOffset());
+
+  private _periodLabel(mode: string, offset: number): string {
+    if (mode === 'all') return '';
+    const now = new Date();
+    if (mode === 'weekly') {
+      const s = new Date(now); s.setDate(now.getDate() - now.getDay() + offset * 7);
+      const e = new Date(s);   e.setDate(s.getDate() + 6);
+      return `${s.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} – ${e.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}`;
+    }
+    return new Date(now.getFullYear(), now.getMonth() + offset, 1).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  }
+
+  private _inPeriod(dateStr: string, mode: string, offset: number): boolean {
+    if (mode === 'all') return true;
+    const d = new Date(dateStr); if (isNaN(d.getTime())) return false;
+    const now = new Date();
+    if (mode === 'weekly') {
+      const s = new Date(now); s.setDate(now.getDate() - now.getDay() + offset * 7); s.setHours(0,0,0,0);
+      const e = new Date(s);   e.setDate(s.getDate() + 6); e.setHours(23,59,59,999);
+      return d >= s && d <= e;
+    }
+    const ref = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
+  }
+
   filteredTs = computed(() => {
     let d = this.allTimesheets();
     const q = this.tsSearch().toLowerCase();
@@ -73,6 +112,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
       const sv: Record<string, number> = { pending: 0, approved: 1, rejected: 2 };
       d = d.filter(t => Number(t.status) === sv[this.tsStatus()]);
     }
+    d = d.filter(t => this._inPeriod(t.date, this.tsViewMode(), this.tsPeriodOffset()));
     const col = this.tsSortCol(); const dir = this.tsSortDir();
     d = [...d].sort((a, b) => {
       const v = col === 'date'     ? new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -84,6 +124,27 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   });
   tsTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredTs().length / this.tsPS)));
   pagedTs      = computed(() => { const s = (this.tsPage()-1)*this.tsPS; return this.filteredTs().slice(s,s+this.tsPS); });
+
+  weekDays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  weekDates = () => {
+    const now = new Date(); const offset = this.tsPeriodOffset();
+    const monday = new Date(now); const day = now.getDay() || 7;
+    monday.setDate(now.getDate() - day + 1 + offset * 7); monday.setHours(0,0,0,0);
+    return Array.from({length:7}, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d; });
+  };
+  weeklyRows = () => {
+    const dates = this.weekDates(); const all = this.allTimesheets();
+    const map = new Map<string, { ts: any; hours: (number|null)[] }>();
+    for (const ts of all) {
+      const d = new Date(ts.date); d.setHours(0,0,0,0);
+      const idx = dates.findIndex(wd => wd.getTime() === d.getTime());
+      if (idx === -1) continue;
+      const key = `${ts.employeeName}|${ts.projectName}`;
+      if (!map.has(key)) map.set(key, { ts, hours: Array(7).fill(null) });
+      map.get(key)!.hours[idx] = ts.hoursWorked;
+    }
+    return [...map.values()];
+  };
 
   // ── Leave filter/page ──────────────────────────────────────────────────────
   lvSearch  = signal('');
@@ -171,7 +232,8 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
-    this.bc.set([{ label: 'Manager Dashboard' }]);
+    this.bc.set([{ label: 'Manager Dashboard' }, { label: 'Overview' }]);
+    this.tabSvc.setTab('dashboard');
     this.loadAll();
     this.refreshToday();
     this.usrSvc.getProfile().subscribe({ next:(r:any)=>this.userProfile.set(r?.data??r), error:()=>{} });
@@ -220,7 +282,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   private refreshToday(): void {
     const uid = this.auth.currentUser(); if (!uid) return;
     this.attSvc.getTodayStatus(uid).subscribe({
-      next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); if(d?.checkIn&&!d?.checkOut) this.startTimer(d.checkIn); },
+      next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); if(d?.missedCheckout) this.toast.warning('Missed Check-Out','You forgot to check out yesterday. Attendance auto-calculated as check-in + 8 hours.'); if(d?.checkIn&&!d?.checkOut) this.startTimer(d.checkIn); },
       error:()=>this.todayAtt.set(null)
     });
   }
@@ -278,7 +340,6 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
         }).subscribe({
           next: () => {
             this.toast.success(approve ? 'Approved' : 'Rejected', `Timesheet for ${ts.employeeName}.`);
-            this.notif.pushLocal('Timesheet', `Timesheet ${approve?'approved':'rejected'} for ${ts.employeeName}`);
             this.loadAll();
           },
           error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Action failed.')
@@ -343,6 +404,15 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   });
 }
 
+  removeUserFromProject(assignmentId: number, projectId: number) {
+    this.confirm('Remove Member', 'Remove this member from the project?', () => {
+      this.prjSvc.removeAssignment(assignmentId).subscribe({
+        next: () => { this.toast.success('Removed', 'Member removed from project.'); this.loadAssignments(projectId); },
+        error: (e: any) => this.toast.error('Error', e?.error?.message ?? 'Failed.')
+      });
+    }, 'warning');
+  }
+
   stText(s: any)  { return s==0?'Pending':s==1?'Approved':'Rejected'; }
   stClass(s: any) { return s==0?'zbadge-pending':s==1?'zbadge-approved':'zbadge-rejected'; }
 
@@ -374,6 +444,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
 
   setTab(t: ManagerTab) {
     this.activeTab.set(t);
+    this.tabSvc.setTab(t);
     this.bc.set([{label:'Manager Dashboard'},{label:this.tabs.find(x=>x.key===t)?.label??''}]);
     this.tsPage.set(1); this.lvPage.set(1); this.teamPage.set(1);
   }

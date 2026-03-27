@@ -110,6 +110,19 @@ namespace TimeSheetAppWeb.Services
 
                 await _projectRepository.AddAsync(project);
 
+                // Auto-assign the manager to the project if one is set
+                if (project.ManagerId.HasValue)
+                {
+                    var assignment = new ProjectAssignment
+                    {
+                        ProjectId    = project.Id,
+                        UserId       = project.ManagerId.Value,
+                        AssignedDate = DateTime.UtcNow
+                    };
+                    await _assignmentRepository.AddAsync(assignment);
+                    _logger.LogInformation("Manager {ManagerId} auto-assigned to project {ProjectId}", project.ManagerId.Value, project.Id);
+                }
+
                 _logger.LogInformation("Project created successfully with ID {ProjectId}", project.Id);
 
                 return new ApiResponse<ProjectResponse>

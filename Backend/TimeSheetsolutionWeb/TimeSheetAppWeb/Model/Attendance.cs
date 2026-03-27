@@ -21,8 +21,6 @@ namespace TimeSheetAppWeb.Model
 
         public bool IsLate { get; set; } = false;
 
-        [Range(typeof(TimeSpan), "00:00:00", "23:59:59",
-            ErrorMessage = "Total hours must be between 0 and 24 hours")]
         public TimeSpan TotalHours { get; set; } = TimeSpan.Zero;
     }
 }

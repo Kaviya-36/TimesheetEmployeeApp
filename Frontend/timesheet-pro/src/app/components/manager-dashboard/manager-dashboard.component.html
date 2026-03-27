@@ -70,38 +70,114 @@
         <select class="zfilter-select" [ngModel]="tsStatus()" (ngModelChange)="tsStatus.set($event);tsPage.set(1)">
           <option value="all">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option>
         </select>
+        <div class="zview-toggle">
+          <button class="zview-btn" [class.active]="tsViewMode()==='all'"     (click)="tsViewMode.set('all');tsPeriodOffset.set(0);tsPage.set(1)">All</button>
+          <button class="zview-btn" [class.active]="tsViewMode()==='weekly'"  (click)="tsViewMode.set('weekly');tsPeriodOffset.set(0);tsPage.set(1)">Week</button>
+          <button class="zview-btn" [class.active]="tsViewMode()==='monthly'" (click)="tsViewMode.set('monthly');tsPeriodOffset.set(0);tsPage.set(1)">Month</button>
+        </div>
+        @if (tsViewMode() !== 'all' && tsViewMode() !== 'weekly') {
+          <div class="zperiod-nav">
+            <button class="zpg-btn" (click)="tsPeriodOffset.update(o=>o-1);tsPage.set(1)">‹</button>
+            <span class="zperiod-label">{{ tsPeriodLabel() }}</span>
+            <button class="zpg-btn" (click)="tsPeriodOffset.update(o=>o+1);tsPage.set(1)" [disabled]="tsPeriodOffset()>=0">›</button>
+          </div>
+        }
         <span class="zresult-count">{{ filteredTs().length }} records</span>
       </div>
-      <div class="ztable-wrap"><table class="ztable">
-        <thead><tr>
-          <th class="sortable" (click)="sortTs('employee')">Employee {{ ico(tsSortCol()==='employee',tsSortDir()) }}</th>
-          <th>Project</th>
-          <th class="sortable" (click)="sortTs('date')">Date {{ ico(tsSortCol()==='date',tsSortDir()) }}</th>
-          <th class="sortable" (click)="sortTs('hours')">Hours {{ ico(tsSortCol()==='hours',tsSortDir()) }}</th>
-          <th>Status</th><th>Comment</th><th>Actions</th>
-        </tr></thead>
-        <tbody>
-          @for (ts of pagedTs(); track ts.id) {
-            <tr>
-              <td><strong>{{ ts.employeeName }}</strong><br><code class="zemp-id">{{ ts.employeeId }}</code></td>
-              <td>{{ ts.projectName }}</td>
-              <td>{{ ts.date | date:'dd MMM yyyy' }}</td>
-              <td><strong class="zhours">{{ ts.hoursWorked }}h</strong></td>
-              <td><span class="zbadge" [class]="stClass(ts.status)">{{ stText(ts.status) }}</span></td>
-              <td class="ztext-muted">{{ ts.managerComment || '—' }}</td>
-              <td>
-                @if (ts.status === 0) {
-                  <div class="zaction-row">
-                    <button class="zbtn zbtn-success zbtn-sm" (click)="reviewTs(ts,true)">✅</button>
-                    <button class="zbtn zbtn-danger zbtn-sm" (click)="reviewTs(ts,false)">❌</button>
-                  </div>
-                } @else { <span class="ztext-muted">—</span> }
-              </td>
-            </tr>
-          }
-          @if (pagedTs().length===0) { <tr class="empty-row"><td colspan="7">No timesheets found.</td></tr> }
-        </tbody>
-      </table></div>
+      <div class="ztable-wrap">
+        @if (tsViewMode() === 'weekly') {
+          <div class="zts-week-header">
+            <div class="zts-week-nav">
+              <button class="zpg-btn" (click)="tsPeriodOffset.update(o=>o-1)">‹</button>
+              <span class="zperiod-label">{{ tsPeriodLabel() }}</span>
+              <button class="zpg-btn" (click)="tsPeriodOffset.update(o=>o+1)" [disabled]="tsPeriodOffset()>=0">›</button>
+            </div>
+            <span class="zresult-count">{{ filteredTs().length }} records</span>
+          </div>
+          <table class="ztable zts-week-table">
+            <thead><tr>
+              <th class="zts-project-col">Employee / Project</th>
+              @for (d of weekDates(); track d.getTime()) {
+                <th class="zts-day-col" [class.zts-today]="d.toDateString()===todayDate">
+                  <div class="zts-day-name">{{ weekDays[$index] }}</div>
+                  <div class="zts-day-date">{{ d | date:'dd MMM' }}</div>
+                </th>
+              }
+              <th class="zts-total-col">Total</th>
+              <th class="zts-status-col">Status</th>
+              <th>Actions</th>
+            </tr></thead>
+            <tbody>
+              @for (row of weeklyRows(); track row.ts.employeeName + row.ts.projectName) {
+                <tr>
+                  <td class="zts-project-cell">
+                    <strong>{{ row.ts.employeeName }}</strong>
+                    <div class="ztext-muted" style="font-size:11px">{{ row.ts.projectName }}</div>
+                  </td>
+                  @for (h of row.hours; track $index) {
+                    <td class="zts-hour-cell" [class.zts-has-hours]="h !== null">
+                      @if (h !== null) { <span class="zts-hours-val">{{ h }}h</span> }
+                      @else { <span class="zts-empty-cell">—</span> }
+                    </td>
+                  }
+                  <td class="zts-total-cell"><strong>{{ row.hours.reduce((s, h) => s + (h ? +h : 0), 0).toFixed(1) }}h</strong></td>
+                  <td><span class="zbadge" [class]="stClass(row.ts.status)">{{ stText(row.ts.status) }}</span></td>
+                  <td>
+                    @if (row.ts.status === 0) {
+                      <div class="zaction-row">
+                        <button class="zbtn zbtn-success zbtn-sm" (click)="reviewTs(row.ts,true)">✅</button>
+                        <button class="zbtn zbtn-danger zbtn-sm" (click)="reviewTs(row.ts,false)">❌</button>
+                      </div>
+                    } @else { <span class="ztext-muted">—</span> }
+                  </td>
+                </tr>
+              }
+              @if (weeklyRows().length === 0) { <tr class="empty-row"><td colspan="11">No timesheets this week.</td></tr> }
+              @if (weeklyRows().length > 0) {
+                <tr class="zts-total-row">
+                  <td><strong>Total</strong></td>
+                  @for (d of weekDates(); track d.getTime(); let i = $index) {
+                    <td class="zts-day-total"><strong>{{ weeklyRows().reduce((s, r) => s + (r.hours[i] ? +r.hours[i]! : 0), 0).toFixed(1) }}h</strong></td>
+                  }
+                  <td class="zts-grand-total"><strong>{{ weeklyRows().reduce((s, r) => s + r.hours.reduce((a, h) => a + (h ? +h : 0), 0), 0).toFixed(1) }}h</strong></td>
+                  <td></td><td></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+        <table class="ztable">
+          <thead><tr>
+            <th class="sortable" (click)="sortTs('employee')">Employee {{ ico(tsSortCol()==='employee',tsSortDir()) }}</th>
+            <th>Project</th>
+            <th class="sortable" (click)="sortTs('date')">Date {{ ico(tsSortCol()==='date',tsSortDir()) }}</th>
+            <th class="sortable" (click)="sortTs('hours')">Hours {{ ico(tsSortCol()==='hours',tsSortDir()) }}</th>
+            <th>Status</th><th>Comment</th><th>Actions</th>
+          </tr></thead>
+          <tbody>
+            @for (ts of pagedTs(); track ts.id) {
+              <tr>
+                <td><strong>{{ ts.employeeName }}</strong><br><code class="zemp-id">{{ ts.employeeId }}</code></td>
+                <td>{{ ts.projectName }}</td>
+                <td>{{ ts.date | date:'dd MMM yyyy' }}</td>
+                <td><strong class="zhours">{{ ts.hoursWorked }}h</strong></td>
+                <td><span class="zbadge" [class]="stClass(ts.status)">{{ stText(ts.status) }}</span></td>
+                <td class="ztext-muted">{{ ts.managerComment || '—' }}</td>
+                <td>
+                  @if (ts.status === 0) {
+                    <div class="zaction-row">
+                      <button class="zbtn zbtn-success zbtn-sm" (click)="reviewTs(ts,true)">✅</button>
+                      <button class="zbtn zbtn-danger zbtn-sm" (click)="reviewTs(ts,false)">❌</button>
+                    </div>
+                  } @else { <span class="ztext-muted">—</span> }
+                </td>
+              </tr>
+            }
+            @if (pagedTs().length===0) { <tr class="empty-row"><td colspan="7">No timesheets found.</td></tr> }
+          </tbody>
+        </table>
+        }
+      </div>
       <div class="zpagination">
         <span class="zpagination-info">{{ filteredTs().length }} records · Page {{ tsPage() }}/{{ tsTotalPages() }}</span>
         <div class="zpagination-btns">
@@ -272,6 +348,7 @@
                     @for (a of projectAssignments()[p.id]; track a.assignmentId ?? $index){
                       <span class="user-chip">
                         👤 {{ a.userName }}
+                        <button class="user-chip-remove" (click)="removeUserFromProject(a.assignmentId ?? a.id, p.id)" title="Remove">✕</button>
                       </span>
                     }
 
@@ -320,3 +397,67 @@
 
 </div></div></div>
 <app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()" [type]="cfgType()" (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />
+
+<!-- Add My Timesheet Modal -->
+@if (showAddTimesheetModal()) {
+  <div class="zmodal-overlay" (click)="showAddTimesheetModal.set(false)">
+    <div class="zmodal" (click)="$event.stopPropagation()">
+      <div class="zmodal-header">
+        <span class="zmodal-title">📋 Add My Timesheet</span>
+        <button class="zmodal-close" (click)="showAddTimesheetModal.set(false)">✕</button>
+      </div>
+      <div class="zmodal-body">
+        <form [formGroup]="addTimesheetForm" novalidate>
+          <div class="zform-group"><label class="zform-label">Project <span class="req">*</span></label>
+            <select formControlName="projectId" class="zform-control">
+              <option value="">— Select Project —</option>
+              @for (p of projects(); track p.id) { <option [value]="p.id">{{ p.projectName }}</option> }
+            </select>
+          </div>
+          <div class="zform-group"><label class="zform-label">Work Date <span class="req">*</span></label><input formControlName="workDate" type="date" class="zform-control" /></div>
+          <div class="zgrid-3">
+            <div class="zform-group"><label class="zform-label">Start <span class="req">*</span></label><input formControlName="startTime" type="time" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">End <span class="req">*</span></label><input formControlName="endTime" type="time" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">Break</label><input formControlName="breakTime" type="time" class="zform-control" /></div>
+          </div>
+          <div class="zform-group"><label class="zform-label">Description</label><textarea formControlName="taskDescription" class="zform-control" rows="2"></textarea></div>
+        </form>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="showAddTimesheetModal.set(false)">Cancel</button>
+        <button class="zbtn zbtn-primary" [disabled]="addTimesheetForm.invalid" (click)="addTimesheetForSelf()">Submit</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Apply My Leave Modal -->
+@if (showAddLeaveModal()) {
+  <div class="zmodal-overlay" (click)="showAddLeaveModal.set(false)">
+    <div class="zmodal zmodal-sm" (click)="$event.stopPropagation()">
+      <div class="zmodal-header">
+        <span class="zmodal-title">🌴 Apply My Leave</span>
+        <button class="zmodal-close" (click)="showAddLeaveModal.set(false)">✕</button>
+      </div>
+      <div class="zmodal-body">
+        <form [formGroup]="addLeaveForm" novalidate>
+          <div class="zform-group"><label class="zform-label">Leave Type <span class="req">*</span></label>
+            <select formControlName="leaveTypeId" class="zform-control">
+              <option value="">— Select Type —</option>
+              @for (lt of leaveTypes(); track lt.id) { <option [value]="lt.id">{{ lt.name }}</option> }
+            </select>
+          </div>
+          <div class="zgrid-2">
+            <div class="zform-group"><label class="zform-label">From <span class="req">*</span></label><input formControlName="fromDate" type="date" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">To <span class="req">*</span></label><input formControlName="toDate" type="date" class="zform-control" /></div>
+          </div>
+          <div class="zform-group"><label class="zform-label">Reason</label><textarea formControlName="reason" class="zform-control" rows="2"></textarea></div>
+        </form>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="showAddLeaveModal.set(false)">Cancel</button>
+        <button class="zbtn zbtn-primary" [disabled]="addLeaveForm.invalid" (click)="addLeaveForSelf()">Apply</button>
+      </div>
+    </div>
+  </div>
+}

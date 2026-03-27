@@ -143,7 +143,7 @@ namespace TimeSheetAppWeb.Contexts
         {
             var auditEntries = new List<AuditLog>();
 
-            foreach (var entry in ChangeTracker.Entries())
+            foreach (var entry in ChangeTracker.Entries().ToList())
             {
                 if (entry.Entity is AuditLog ||
                     entry.State == EntityState.Detached ||
@@ -153,16 +153,13 @@ namespace TimeSheetAppWeb.Contexts
                 var audit = new AuditLog
                 {
                     TableName = entry.Entity.GetType().Name,
-                    Action = entry.State.ToString(),
+                    Action    = entry.State.ToString(),
                     ChangedAt = DateTime.UtcNow
                 };
 
-                // Primary Key
                 var keyValues = new Dictionary<string, object?>();
                 foreach (var prop in entry.Properties.Where(p => p.Metadata.IsPrimaryKey()))
-                {
                     keyValues[prop.Metadata.Name] = prop.CurrentValue;
-                }
                 audit.KeyValues = JsonSerializer.Serialize(keyValues);
 
                 var oldValues = new Dictionary<string, object?>();
@@ -170,9 +167,7 @@ namespace TimeSheetAppWeb.Contexts
 
                 foreach (var prop in entry.Properties)
                 {
-                    // 🔥 Ignore sensitive fields
-                    if (prop.Metadata.Name == "PasswordHash")
-                        continue;
+                    if (prop.Metadata.Name == "PasswordHash") continue;
 
                     if (entry.State == EntityState.Modified)
                     {
@@ -183,13 +178,9 @@ namespace TimeSheetAppWeb.Contexts
                         }
                     }
                     else if (entry.State == EntityState.Added)
-                    {
                         newValues[prop.Metadata.Name] = prop.CurrentValue;
-                    }
                     else if (entry.State == EntityState.Deleted)
-                    {
                         oldValues[prop.Metadata.Name] = prop.OriginalValue;
-                    }
                 }
 
                 audit.OldValues = oldValues.Count > 0 ? JsonSerializer.Serialize(oldValues) : null;
@@ -198,12 +189,25 @@ namespace TimeSheetAppWeb.Contexts
                 auditEntries.Add(audit);
             }
 
+            // Save main changes
             var result = await base.SaveChangesAsync(cancellationToken);
 
+            // Save audit entries in a separate try-catch so audit failures never break main operations
             if (auditEntries.Any())
             {
-                AuditLogs.AddRange(auditEntries);
-                await base.SaveChangesAsync(cancellationToken);
+                try
+                {
+                    foreach (var audit in auditEntries)
+                        AuditLogs.Add(audit);
+                    await base.SaveChangesAsync(cancellationToken);
+                }
+                catch
+                {
+                    // Audit logging failure must never break the main operation
+                    // Detach any failed audit entries to clean up the context
+                    foreach (var entry in ChangeTracker.Entries<AuditLog>().ToList())
+                        entry.State = EntityState.Detached;
+                }
             }
 
             return result;

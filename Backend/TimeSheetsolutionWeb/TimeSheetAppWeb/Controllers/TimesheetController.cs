@@ -84,48 +84,36 @@ namespace TimeSheetAppWeb.Controllers
             }
         }
 
-        // ---------------- GET USER TIMESHEETS (With Pagination) ----------------
+        // ---------------- GET USER TIMESHEETS (With Pagination + Filter + Sort) ----------------
         [HttpGet("user/{userId}")]
         [Authorize(Roles = "Intern,Employee,Manager,HR,Admin")]
-        public async Task<IActionResult> GetUserTimesheets(int userId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetUserTimesheets(int userId,
+            [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null, [FromQuery] string? status = null,
+            [FromQuery] string? sortBy = "date", [FromQuery] string? sortDir = "desc")
         {
-            try
+            var result = await _timesheetService.GetUserTimesheetsAsync(userId, new PaginationParams
             {
-                var paginationParams = new PaginationParams
-                {
-                    PageNumber = pageNumber,
-                    PageSize = pageSize
-                };
-
-                var result = await _timesheetService.GetUserTimesheetsAsync(userId, paginationParams);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Success = false, Message = "An error occurred while retrieving user timesheets.", Details = ex.Message });
-            }
+                PageNumber = pageNumber, PageSize = pageSize,
+                Search = search, Status = status, SortBy = sortBy, SortDir = sortDir
+            });
+            return Ok(result);
         }
 
-        // ---------------- GET ALL TIMESHEETS (With Pagination) ----------------
+        // ---------------- GET ALL TIMESHEETS (With Pagination + Filter + Sort) ----------------
         [HttpGet]
         [Authorize(Roles = "Admin,HR,Manager")]
-        public async Task<IActionResult> GetAllTimesheets([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllTimesheets(
+            [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null, [FromQuery] string? status = null,
+            [FromQuery] string? sortBy = "date", [FromQuery] string? sortDir = "desc")
         {
-            try
+            var result = await _timesheetService.GetAllTimesheetsAsync(new PaginationParams
             {
-                var paginationParams = new PaginationParams
-                {
-                    PageNumber = pageNumber,
-                    PageSize = pageSize
-                };
-
-                var result = await _timesheetService.GetAllTimesheetsAsync(paginationParams);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Success = false, Message = "An error occurred while retrieving all timesheets.", Details = ex.Message });
-            }
+                PageNumber = pageNumber, PageSize = pageSize,
+                Search = search, Status = status, SortBy = sortBy, SortDir = sortDir
+            });
+            return Ok(result);
         }
         //---------------Create Timeshee--------------------
         [Authorize(Roles = "Employee,Intern,Manager,Mentor,HR,Admin")]

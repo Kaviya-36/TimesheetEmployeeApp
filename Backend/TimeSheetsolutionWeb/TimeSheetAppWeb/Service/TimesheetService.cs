@@ -7,7 +7,6 @@ using TimeSheetAppWeb.Interface;
 using TimeSheetAppWeb.Model;
 using TimeSheetAppWeb.Model.common;
 using TimeSheetAppWeb.Model.DTOs;
-
 namespace TimeSheetAppWeb.Services
 {
     public class TimesheetService : ITimesheetService
@@ -17,6 +16,7 @@ namespace TimeSheetAppWeb.Services
         private readonly IRepository<int, Project> _projectRepository;
         private readonly IProjectService _projectService;
         private readonly IAttendanceService _attendanceService;
+        private readonly INotificationService _notifService;
         private readonly ILogger<TimesheetService> _logger;
 
         public TimesheetService(
@@ -25,6 +25,7 @@ namespace TimeSheetAppWeb.Services
             IRepository<int, Project> projectRepository,
             IProjectService projectService,
             IAttendanceService attendanceService,
+            INotificationService notifService,
             ILogger<TimesheetService> logger)
         {
             _timesheetRepository = timesheetRepository;
@@ -32,6 +33,7 @@ namespace TimeSheetAppWeb.Services
             _projectRepository = projectRepository;
             _projectService = projectService;
             _attendanceService = attendanceService;
+            _notifService = notifService;
             _logger = logger;
         }
 
@@ -45,21 +47,7 @@ namespace TimeSheetAppWeb.Services
                 // ✅ Check user
                 var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null)
-                {
-                    return new ApiResponse<TimesheetResponse>
-                    {
-                        Success = false,
-                        Message = "User not found"
-                    };
-                }
-                if (request.WorkDate.Date != DateTime.Today)
-                {
-                    return new ApiResponse<TimesheetResponse>
-                    {
-                        Success = false,
-                        Message = "You can only create timesheet for today"
-                    };
-                }
+                    return new ApiResponse<TimesheetResponse> { Success = false, Message = "User not found" };
 
 
                 // ✅ Check project
@@ -138,6 +126,10 @@ namespace TimeSheetAppWeb.Services
                 };
 
                 await _timesheetRepository.AddAsync(timesheet);
+
+                // Notify managers and HR that a new timesheet needs review
+                await _notifService.SendToRoleAsync("Manager", "Timesheet", $"{user.Name} submitted a timesheet for {project.ProjectName} on {request.WorkDate:dd MMM yyyy}.");
+                await _notifService.SendToRoleAsync("HR",      "Timesheet", $"{user.Name} submitted a timesheet for {project.ProjectName} on {request.WorkDate:dd MMM yyyy}.");
 
                 return new ApiResponse<TimesheetResponse>
                 {
@@ -311,8 +303,12 @@ namespace TimeSheetAppWeb.Services
 
                 await _timesheetRepository.UpdateAsync(timesheet.Id, timesheet);
 
-                _logger.LogInformation("Timesheet ID {TimesheetId} status updated to {Status}", timesheet.Id, timesheet.Status);
+                // Notify the employee who submitted the timesheet
+                var status = request.IsApproved ? "approved" : "rejected";
+                await _notifService.SendToUserAsync(timesheet.UserId, "Timesheet",
+                    $"Your timesheet has been {status}.{(string.IsNullOrEmpty(request.ManagerComment) ? "" : $" Comment: {request.ManagerComment}")}");
 
+                _logger.LogInformation("Timesheet ID {TimesheetId} status updated to {Status}", timesheet.Id, timesheet.Status);
                 return new ApiResponse<bool> { Success = true, Message = "Timesheet status updated", Data = true };
             }
             catch (Exception ex)
@@ -323,35 +319,50 @@ namespace TimeSheetAppWeb.Services
         }
 
         // ---------------- GET ALL TIMESHEETS ----------------
-        public async Task<ApiResponse<PagedResponse<TimesheetResponse>>> GetAllTimesheetsAsync(PaginationParams paginationParams)
+        public async Task<ApiResponse<PagedResponse<TimesheetResponse>>> GetAllTimesheetsAsync(PaginationParams p)
         {
             try
             {
-                _logger.LogInformation("Fetching all timesheets. Page {PageNumber}, PageSize {PageSize}", paginationParams.PageNumber, paginationParams.PageSize);
+                var query = (await _timesheetRepository.GetAllAsync() ?? Enumerable.Empty<Timesheet>()).AsQueryable();
 
-                var query = await _timesheetRepository.GetAllAsync() ?? Enumerable.Empty<Timesheet>();
-                var totalRecords = query.Count();
+                // Filter
+                if (!string.IsNullOrWhiteSpace(p.Search))
+                {
+                    var q = p.Search.ToLower();
+                    var matchingUserIds = (await _userRepository.GetAllAsync() ?? Enumerable.Empty<User>())
+                        .Where(u => u.Name.ToLower().Contains(q) || u.EmployeeId.ToLower().Contains(q))
+                        .Select(u => u.Id).ToHashSet();
+                    query = query.Where(t => matchingUserIds.Contains(t.UserId) || t.ProjectName.ToLower().Contains(q));
+                }
+                if (!string.IsNullOrWhiteSpace(p.Status) && Enum.TryParse<TimesheetStatus>(p.Status, true, out var st))
+                    query = query.Where(t => t.Status == st);
 
-                var data = query.OrderByDescending(t => t.WorkDate)
-                                .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
-                                .Take(paginationParams.PageSize)
-                                .ToList();
+                // Sort
+                query = (p.SortBy?.ToLower(), p.SortDir?.ToLower()) switch
+                {
+                    ("hours", "asc")  => query.OrderBy(t => t.TotalHours),
+                    ("hours", _)      => query.OrderByDescending(t => t.TotalHours),
+                    ("employee", "asc") => query.OrderBy(t => t.UserId),
+                    ("employee", _)   => query.OrderByDescending(t => t.UserId),
+                    (_, "asc")        => query.OrderBy(t => t.WorkDate),
+                    _                 => query.OrderByDescending(t => t.WorkDate)
+                };
+
+                var total = query.Count();
+                var data  = query.Skip((p.PageNumber - 1) * p.PageSize).Take(p.PageSize).ToList();
 
                 var responses = new List<TimesheetResponse>();
                 foreach (var t in data)
                 {
-                    var user = await _userRepository.GetByIdAsync(t.UserId);
+                    var user    = await _userRepository.GetByIdAsync(t.UserId);
                     var project = await _projectRepository.GetByIdAsync(t.ProjectId);
-                    if (user != null && project != null)
-                        responses.Add(MapToDto(t, user, project));
+                    if (user != null && project != null) responses.Add(MapToDto(t, user, project));
                 }
-
-                _logger.LogInformation("Retrieved {Count} timesheets", responses.Count);
 
                 return new ApiResponse<PagedResponse<TimesheetResponse>>
                 {
                     Success = true,
-                    Data = new PagedResponse<TimesheetResponse>(responses, totalRecords, paginationParams.PageNumber, paginationParams.PageSize)
+                    Data = new PagedResponse<TimesheetResponse>(responses, total, p.PageNumber, p.PageSize)
                 };
             }
             catch (Exception ex)
@@ -362,34 +373,44 @@ namespace TimeSheetAppWeb.Services
         }
 
         // ---------------- GET USER TIMESHEETS ----------------
-        public async Task<ApiResponse<PagedResponse<TimesheetResponse>>> GetUserTimesheetsAsync(int userId, PaginationParams paginationParams)
+        public async Task<ApiResponse<PagedResponse<TimesheetResponse>>> GetUserTimesheetsAsync(int userId, PaginationParams p)
         {
             try
             {
-                _logger.LogInformation("Fetching timesheets for UserId {UserId}. Page {PageNumber}, PageSize {PageSize}", userId, paginationParams.PageNumber, paginationParams.PageSize);
-
                 var query = (await _timesheetRepository.GetAllAsync() ?? Enumerable.Empty<Timesheet>())
-                            .Where(t => t.UserId == userId)
-                            .OrderByDescending(t => t.WorkDate);
+                    .Where(t => t.UserId == userId).AsQueryable();
 
-                var totalRecords = query.Count();
-                var data = query.Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
-                                .Take(paginationParams.PageSize)
-                                .ToList();
+                if (!string.IsNullOrWhiteSpace(p.Search))
+                {
+                    var q = p.Search.ToLower();
+                    query = query.Where(t => t.ProjectName.ToLower().Contains(q));
+                }
+                if (!string.IsNullOrWhiteSpace(p.Status) && Enum.TryParse<TimesheetStatus>(p.Status, true, out var st))
+                    query = query.Where(t => t.Status == st);
 
+                query = (p.SortBy?.ToLower(), p.SortDir?.ToLower()) switch
+                {
+                    ("hours", "asc")  => query.OrderBy(t => t.TotalHours),
+                    ("hours", _)      => query.OrderByDescending(t => t.TotalHours),
+                    (_, "asc")        => query.OrderBy(t => t.WorkDate),
+                    _                 => query.OrderByDescending(t => t.WorkDate)
+                };
+
+                var total = query.Count();
+                var data  = query.Skip((p.PageNumber - 1) * p.PageSize).Take(p.PageSize).ToList();
+
+                var user = await _userRepository.GetByIdAsync(userId);
                 var responses = new List<TimesheetResponse>();
                 foreach (var t in data)
                 {
                     var project = await _projectRepository.GetByIdAsync(t.ProjectId);
-                    responses.Add(MapToDto(t, await _userRepository.GetByIdAsync(userId)!, project!));
+                    if (project != null) responses.Add(MapToDto(t, user!, project));
                 }
-
-                _logger.LogInformation("Retrieved {Count} timesheets for UserId {UserId}", responses.Count, userId);
 
                 return new ApiResponse<PagedResponse<TimesheetResponse>>
                 {
                     Success = true,
-                    Data = new PagedResponse<TimesheetResponse>(responses, totalRecords, paginationParams.PageNumber, paginationParams.PageSize)
+                    Data = new PagedResponse<TimesheetResponse>(responses, total, p.PageNumber, p.PageSize)
                 };
             }
             catch (Exception ex)

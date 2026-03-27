@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
   Attendance,
@@ -19,6 +19,7 @@ import {
 import { AuthService } from '../../services/auth.service';
 import { BreadcrumbService } from '../../services/breadcrumb.service';
 import { NotificationService } from '../../services/notification.service';
+import { TabService } from '../../services/tab.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmComponent } from '../confirm-dialog/confirm.component';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -47,6 +48,14 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   private  anlSvc = inject(AnalyticsService);
   private  usrSvc = inject(UserService);
   private  fb     = inject(FormBuilder);
+  private  tabSvc = inject(TabService);
+
+  constructor() {
+    effect(() => {
+      const t = this.tabSvc.activeTab();
+      if (t && t !== this.activeTab()) this.setTab(t as EmployeeTab);
+    });
+  }
 
   // ── Tabs ─────────────────────────────────────────────────────────────────
   activeTab = signal<EmployeeTab>('dashboard');
@@ -76,6 +85,43 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   tsPage    = signal(1);
   tsPS = 6;
 
+  // ── View mode (all / weekly / monthly) ───────────────────────────────────
+  tsViewMode    = signal<'all'|'weekly'|'monthly'>('all');
+  tsPeriodOffset = signal(0);
+  attViewMode    = signal<'all'|'weekly'|'monthly'>('all');
+  attPeriodOffset = signal(0);
+
+  tsPeriodLabel = this._periodLabel(this.tsViewMode, this.tsPeriodOffset);
+  attPeriodLabel = this._periodLabel(this.attViewMode, this.attPeriodOffset);
+
+  private _periodLabel(mode: any, offset: any) {
+    return () => {
+      const m = mode(), o = offset();
+      if (m === 'all') return '';
+      const now = new Date();
+      if (m === 'weekly') {
+        const start = new Date(now); start.setDate(now.getDate() - now.getDay() + o * 7);
+        const end   = new Date(start); end.setDate(start.getDate() + 6);
+        return `${start.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} – ${end.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}`;
+      }
+      const d = new Date(now.getFullYear(), now.getMonth() + o, 1);
+      return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    };
+  }
+
+  private _inPeriod(dateStr: string, mode: string, offset: number): boolean {
+    if (mode === 'all') return true;
+    const d = new Date(dateStr); if (isNaN(d.getTime())) return false;
+    const now = new Date();
+    if (mode === 'weekly') {
+      const start = new Date(now); start.setDate(now.getDate() - now.getDay() + offset * 7); start.setHours(0,0,0,0);
+      const end   = new Date(start); end.setDate(start.getDate() + 6); end.setHours(23,59,59,999);
+      return d >= start && d <= end;
+    }
+    const y = now.getFullYear(), mo = now.getMonth() + offset;
+    return d.getFullYear() === new Date(y, mo, 1).getFullYear() && d.getMonth() === new Date(y, mo, 1).getMonth();
+  }
+
   filteredTs = computed(() => {
     let d = this.timesheets();
     const q = this.tsSearch().toLowerCase();
@@ -85,6 +131,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
       const sv: Record<string, number> = { pending: 0, approved: 1, rejected: 2 };
       d = d.filter(t => Number(t.status) === sv[this.tsStatus()]);
     }
+    d = d.filter(t => this._inPeriod(t.date, this.tsViewMode(), this.tsPeriodOffset()));
     const col = this.tsSortCol(); const dir = this.tsSortDir();
     d = [...d].sort((a, b) => {
       const v = col === 'date'    ? new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -103,11 +150,14 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   // ── Attendance page ───────────────────────────────────────────────────────
   attPage = signal(1);
   attPS = 8;
+  filteredAtt = computed(() =>
+    this.attendances().filter(a => this._inPeriod(a.date, this.attViewMode(), this.attPeriodOffset()))
+  );
   pagedAtt = computed(() => {
     const s = (this.attPage() - 1) * this.attPS;
-    return this.attendances().slice(s, s + this.attPS);
+    return this.filteredAtt().slice(s, s + this.attPS);
   });
-  attTotalPages = computed(() => Math.max(1, Math.ceil(this.attendances().length / this.attPS)));
+  attTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredAtt().length / this.attPS)));
 
   // ── Leave page ────────────────────────────────────────────────────────────
   lvPage = signal(1);
@@ -118,7 +168,35 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   });
   lvTotalPages = computed(() => Math.max(1, Math.ceil(this.leaves().length / this.lvPS)));
 
-  // ── Stats ─────────────────────────────────────────────────────────────────
+  // ── Weekly grid ───────────────────────────────────────────────────────────
+  weekDays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  weekDates = () => {
+    const now = new Date();
+    const offset = this.tsPeriodOffset();
+    const monday = new Date(now);
+    const day = now.getDay() || 7;
+    monday.setDate(now.getDate() - day + 1 + offset * 7);
+    monday.setHours(0,0,0,0);
+    return Array.from({length:7}, (_, i) => {
+      const d = new Date(monday); d.setDate(monday.getDate() + i); return d;
+    });
+  };
+
+  weeklyRows = () => {
+    const dates = this.weekDates();
+    const all   = this.timesheets();
+    const map   = new Map<string, { ts: any; hours: (number|null)[] }>();
+    for (const ts of all) {
+      const d = new Date(ts.date); d.setHours(0,0,0,0);
+      const idx = dates.findIndex(wd => wd.getTime() === d.getTime());
+      if (idx === -1) continue;
+      const key = ts.projectName;
+      if (!map.has(key)) map.set(key, { ts, hours: Array(7).fill(null) });
+      map.get(key)!.hours[idx] = ts.hoursWorked;
+    }
+    return [...map.values()];
+  };
   approvedCount = computed(() => this.timesheets().filter(t => t.status === 1).length);
   pendingCount  = computed(() => this.timesheets().filter(t => t.status === 0).length);
  totalHours = computed(() => {
@@ -178,7 +256,8 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
-    this.bc.set([{ label: 'My Workspace' }]);
+    this.bc.set([{ label: 'My Workspace' }, { label: 'Dashboard' }]);
+    this.tabSvc.setTab('dashboard');
     const uid = this.auth.currentUser();
     if (!uid) return;
     this.loadAll(uid);
@@ -211,6 +290,9 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
       next: (res: any) => {
         const d = res?.data ?? res;
         this.todayAtt.set(d);
+        if (d?.missedCheckout) {
+          this.toast.warning('Missed Check-Out', 'You forgot to check out yesterday. Your attendance was auto-calculated as check-in + 8 hours.');
+        }
         if (d?.checkIn && !d?.checkOut) this.startTimer(d.checkIn);
       },
       error: () => this.todayAtt.set(null)
@@ -349,7 +431,6 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: () => {
         this.toast.success('Timesheet Submitted', 'Your timesheet is pending approval.');
-        this.notif.pushLocal('Timesheet', 'Timesheet submitted and awaiting approval.');
         this.showTsModal.set(false);
         this.tsForm.reset({ workDate: this.todayDate, breakTime: '01:00' });
         this.tsSvc.getByUser(uid).subscribe(r => this.timesheets.set(this.toArr<Timesheet>(r)));
@@ -407,6 +488,19 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
         });
       }
     );
+  }
+
+  confirmDeleteLeave(l: Leave): void {
+    this.confirm('Delete Leave', `Delete this leave request? This cannot be undone.`, () => {
+      this.lvSvc.deleteLeave(l.id).subscribe({
+        next: () => {
+          this.toast.success('Deleted', 'Leave request removed.');
+          const uid = this.auth.currentUser()!;
+          this.lvSvc.getMyLeaves(uid).subscribe(r => this.leaves.set(this.toArr<Leave>(r)));
+        },
+        error: (e: any) => this.toast.error('Delete Failed', e?.error?.message ?? '')
+      });
+    });
   }
 
   // ── Leave ─────────────────────────────────────────────────────────────────
@@ -487,6 +581,7 @@ submitLeave(): void {
 
   setTab(tab: EmployeeTab): void {
     this.activeTab.set(tab);
+    this.tabSvc.setTab(tab);
     this.bc.set([{ label: 'My Workspace' }, { label: this.tabs.find(t => t.key === tab)?.label ?? '' }]);
     this.tsPage.set(1); this.attPage.set(1); this.lvPage.set(1);
   }

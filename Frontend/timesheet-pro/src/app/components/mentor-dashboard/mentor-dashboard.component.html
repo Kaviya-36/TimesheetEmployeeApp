@@ -74,6 +74,9 @@
           <div class="zcard zintern-list-card">
             <div class="zcard-header">
               <span class="zcard-title">Interns</span>
+              <div class="zaction-row">
+                <button class="zbtn zbtn-success zbtn-sm" (click)="showAddLeaveModal.set(true)">+ My Leave</button>
+              </div>
               <span class="zresult-count">{{ filteredInterns().length }}</span>
             </div>
             <div class="zcard-body" style="padding:8px 12px">
@@ -216,3 +219,34 @@
 <!-- Confirm Dialog -->
 <app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()"
   (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />
+
+<!-- Apply My Leave Modal -->
+@if (showAddLeaveModal()) {
+  <div class="zmodal-overlay" (click)="showAddLeaveModal.set(false)">
+    <div class="zmodal zmodal-sm" (click)="$event.stopPropagation()">
+      <div class="zmodal-header">
+        <span class="zmodal-title">🌴 Apply My Leave</span>
+        <button class="zmodal-close" (click)="showAddLeaveModal.set(false)">✕</button>
+      </div>
+      <div class="zmodal-body">
+        <form [formGroup]="addLeaveForm" novalidate>
+          <div class="zform-group"><label class="zform-label">Leave Type <span class="req">*</span></label>
+            <select formControlName="leaveTypeId" class="zform-control">
+              <option value="">— Select Type —</option>
+              @for (lt of leaveTypes(); track lt.id) { <option [value]="lt.id">{{ lt.name }}</option> }
+            </select>
+          </div>
+          <div class="zgrid-2">
+            <div class="zform-group"><label class="zform-label">From <span class="req">*</span></label><input formControlName="fromDate" type="date" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">To <span class="req">*</span></label><input formControlName="toDate" type="date" class="zform-control" /></div>
+          </div>
+          <div class="zform-group"><label class="zform-label">Reason</label><textarea formControlName="reason" class="zform-control" rows="2"></textarea></div>
+        </form>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="showAddLeaveModal.set(false)">Cancel</button>
+        <button class="zbtn zbtn-primary" [disabled]="addLeaveForm.invalid" (click)="addLeaveForSelf()">Apply</button>
+      </div>
+    </div>
+  </div>
+}

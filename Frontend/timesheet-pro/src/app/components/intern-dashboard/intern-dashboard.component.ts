@@ -1,10 +1,11 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Attendance, DashboardSummary, InternTask, Leave, LeaveType, ProjectAssignment, Timesheet, UserProfile } from '../../models';
 import { AnalyticsService, AttendanceService, InternService, LeaveService, ProjectService, TimesheetService, UserService } from '../../services/api.services';
 import { AuthService } from '../../services/auth.service';
 import { BreadcrumbService } from '../../services/breadcrumb.service';
+import { TabService } from '../../services/tab.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmComponent } from '../confirm-dialog/confirm.component';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -31,6 +32,14 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
   private  intSvc = inject(InternService);
   private  usrSvc = inject(UserService);
   private  fb     = inject(FormBuilder);
+  private  tabSvc = inject(TabService);
+
+  constructor() {
+    effect(() => {
+      const t = this.tabSvc.activeTab();
+      if (t && t !== this.activeTab()) this.setTab(t as InternTab);
+    });
+  }
 
   activeTab = signal<InternTab>('dashboard');
   readonly tabs: { key: InternTab; label: string; icon: string }[] = [
@@ -54,12 +63,65 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
   userProfile = signal<UserProfile | null>(null);
 
   tsPage = signal(1); tsPS = 6;
-  pagedTs = computed(()=>{const s=(this.tsPage()-1)*this.tsPS;return this.timesheets().slice(s,s+this.tsPS);});
-  tsTotalPages = computed(()=>Math.max(1,Math.ceil(this.timesheets().length/this.tsPS)));
+  tsViewMode      = signal<'all'|'weekly'|'monthly'>('all');
+  tsPeriodOffset  = signal(0);
+  attViewMode     = signal<'all'|'weekly'|'monthly'>('all');
+  attPeriodOffset = signal(0);
+  tsPeriodLabel  = () => this._periodLabel(this.tsViewMode(),  this.tsPeriodOffset());
+  attPeriodLabel = () => this._periodLabel(this.attViewMode(), this.attPeriodOffset());
+
+  private _periodLabel(mode: string, offset: number): string {
+    if (mode === 'all') return '';
+    const now = new Date();
+    if (mode === 'weekly') {
+      const s = new Date(now); s.setDate(now.getDate() - now.getDay() + offset * 7);
+      const e = new Date(s);   e.setDate(s.getDate() + 6);
+      return `${s.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} – ${e.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}`;
+    }
+    return new Date(now.getFullYear(), now.getMonth() + offset, 1).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  }
+  private _inPeriod(dateStr: string, mode: string, offset: number): boolean {
+    if (mode === 'all') return true;
+    const d = new Date(dateStr); if (isNaN(d.getTime())) return false;
+    const now = new Date();
+    if (mode === 'weekly') {
+      const s = new Date(now); s.setDate(now.getDate() - now.getDay() + offset * 7); s.setHours(0,0,0,0);
+      const e = new Date(s);   e.setDate(s.getDate() + 6); e.setHours(23,59,59,999);
+      return d >= s && d <= e;
+    }
+    const ref = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
+  }
+
+  filteredTs  = computed(() => this.timesheets().filter(t => this._inPeriod(t.date, this.tsViewMode(), this.tsPeriodOffset())));
+  pagedTs     = computed(()=>{const s=(this.tsPage()-1)*this.tsPS; return this.filteredTs().slice(s,s+this.tsPS);});
+  tsTotalPages = computed(()=>Math.max(1,Math.ceil(this.filteredTs().length/this.tsPS)));
+
+  weekDays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  weekDates = () => {
+    const now = new Date(); const offset = this.tsPeriodOffset();
+    const monday = new Date(now); const day = now.getDay() || 7;
+    monday.setDate(now.getDate() - day + 1 + offset * 7); monday.setHours(0,0,0,0);
+    return Array.from({length:7}, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d; });
+  };
+  weeklyRows = () => {
+    const dates = this.weekDates(); const all = this.timesheets();
+    const map = new Map<string, { ts: any; hours: (number|null)[] }>();
+    for (const ts of all) {
+      const d = new Date(ts.date); d.setHours(0,0,0,0);
+      const idx = dates.findIndex(wd => wd.getTime() === d.getTime());
+      if (idx === -1) continue;
+      const key = ts.projectName;
+      if (!map.has(key)) map.set(key, { ts, hours: Array(7).fill(null) });
+      map.get(key)!.hours[idx] = ts.hoursWorked;
+    }
+    return [...map.values()];
+  };
 
   attPage = signal(1); attPS = 8;
-  pagedAtt = computed(()=>{const s=(this.attPage()-1)*this.attPS;return this.attendances().slice(s,s+this.attPS);});
-  attTotalPages = computed(()=>Math.max(1,Math.ceil(this.attendances().length/this.attPS)));
+  filteredAtt  = computed(() => this.attendances().filter(a => this._inPeriod(a.date, this.attViewMode(), this.attPeriodOffset())));
+  pagedAtt     = computed(()=>{const s=(this.attPage()-1)*this.attPS; return this.filteredAtt().slice(s,s+this.attPS);});
+  attTotalPages = computed(()=>Math.max(1,Math.ceil(this.filteredAtt().length/this.attPS)));
 
   approvedTs = computed(()=>this.timesheets().filter(t=>Number(t.status)===1).length);
   pendingTs  = computed(()=>this.timesheets().filter(t=>Number(t.status)===0).length);
@@ -92,7 +154,8 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
   leaveForm = this.fb.group({ leaveTypeId:['',Validators.required], fromDate:['',Validators.required], toDate:['',Validators.required], reason:[''] });
 
   ngOnInit() {
-    this.bc.set([{label:'Intern Hub'}]);
+    this.bc.set([{label:'Intern Hub'}, {label:'Dashboard'}]);
+    this.tabSvc.setTab('dashboard');
     const uid = this.auth.currentUser(); if(!uid) return;
     this.loadAll(uid); this.refreshToday();
     this.anlSvc.getDashboard(uid).subscribe({next:r=>this.summary.set(r),error:()=>{}});
@@ -116,7 +179,7 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
   private refreshToday() {
     const uid=this.auth.currentUser(); if(!uid) return;
     this.attSvc.getTodayStatus(uid).subscribe({
-      next:(res:any)=>{const d=res?.data??res;this.todayAtt.set(d);if(d?.checkIn&&!d?.checkOut)this.startTimer(d.checkIn);},
+      next:(res:any)=>{const d=res?.data??res;this.todayAtt.set(d);if(d?.missedCheckout)this.toast.warning('Missed Check-Out','You forgot to check out yesterday. Attendance auto-calculated as check-in + 8 hours.');if(d?.checkIn&&!d?.checkOut)this.startTimer(d.checkIn);},
       error:()=>this.todayAtt.set(null)
     });
   }
@@ -194,6 +257,17 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
   confirmDeleteTs(ts:Timesheet){
     this.cfgTitle.set('Delete Timesheet');this.cfgMsg.set(`Delete timesheet for "${ts.projectName}"?`);
     this.cfgAction=()=>{this.tsSvc.delete(ts.id).subscribe({next:()=>{this.toast.success('Deleted','');const uid=this.auth.currentUser()!;this.tsSvc.getByUser(uid).subscribe(r=>this.timesheets.set(this.toArr<Timesheet>(r)));},error:(e:any)=>this.toast.error('Error',e?.error?.message??'')});};
+    this.cfgVisible.set(true);
+  }
+
+  confirmDeleteLeave(l: Leave) {
+    this.cfgTitle.set('Delete Leave'); this.cfgMsg.set('Delete this leave request?');
+    this.cfgAction = () => {
+      this.lvSvc.deleteLeave(l.id).subscribe({
+        next: () => { this.toast.success('Deleted', ''); const uid = this.auth.currentUser()!; this.lvSvc.getMyLeaves(uid).subscribe(r => this.leaves.set(this.toArr<Leave>(r))); },
+        error: (e: any) => this.toast.error('Error', e?.error?.message ?? '')
+      });
+    };
     this.cfgVisible.set(true);
   }
   onCfgOk(){this.cfgAction?.();this.cfgVisible.set(false);this.cfgAction=null;}
@@ -275,6 +349,10 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
     this.cfgVisible.set(true);
   }
   leaveDays(l:Leave){return Math.ceil((new Date(l.toDate).getTime()-new Date(l.fromDate).getTime())/86400000)+1;}
-  setTab(t:InternTab){this.activeTab.set(t);this.bc.set([{label:'Intern Hub'},{label:this.tabs.find(x=>x.key===t)?.label??''}]);}
+  setTab(t:InternTab){
+    this.activeTab.set(t);
+    this.tabSvc.setTab(t);
+    this.bc.set([{label:'Intern Hub'},{label:this.tabs.find(x=>x.key===t)?.label??''}]);
+  }
   pages(n:number){return Array.from({length:n},(_,i)=>i+1);}
 }

@@ -1,14 +1,15 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { Attendance, Leave, LeaveType, Payroll, User, UserProfile } from '../../models';
-import { AttendanceService, LeaveService, PayrollService, TimesheetService, UserService } from '../../services/api.services';
+import { Attendance, Leave, LeaveType, Payroll, Project, User, UserProfile } from '../../models';
+import { AttendanceService, LeaveService, PayrollService, ProjectService, TimesheetService, UserService } from '../../services/api.services';
 import { AuthService } from '../../services/auth.service';
 import { BreadcrumbService } from '../../services/breadcrumb.service';
+import { TabService } from '../../services/tab.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmComponent } from '../confirm-dialog/confirm.component';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -32,7 +33,16 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   private  lvSvc  = inject(LeaveService);
   private  paySvc = inject(PayrollService);
   private  tsSvc  = inject(TimesheetService);
+  private  prjSvc = inject(ProjectService);
   private  fb     = inject(FormBuilder);
+  private  tabSvc = inject(TabService);
+
+  constructor() {
+    effect(() => {
+      const t = this.tabSvc.activeTab();
+      if (t && t !== this.activeTab()) this.setTab(t as HrTab);
+    });
+  }
 
   activeTab = signal<HrTab>('employees');
   readonly tabs = [
@@ -63,6 +73,35 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   lvSearch   = signal(''); lvStatusF = signal('all'); lvPage = signal(1); lvPS = 8;
   paySearch  = signal(''); payPage = signal(1); payPS = 8;
 
+  // ── View mode ─────────────────────────────────────────────────────────────
+  attViewMode     = signal<'all'|'weekly'|'monthly'>('all');
+  attPeriodOffset = signal(0);
+  attPeriodLabel  = () => this._periodLabel(this.attViewMode(), this.attPeriodOffset());
+
+  private _periodLabel(mode: string, offset: number): string {
+    if (mode === 'all') return '';
+    const now = new Date();
+    if (mode === 'weekly') {
+      const s = new Date(now); s.setDate(now.getDate() - now.getDay() + offset * 7);
+      const e = new Date(s);   e.setDate(s.getDate() + 6);
+      return `${s.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} – ${e.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}`;
+    }
+    return new Date(now.getFullYear(), now.getMonth() + offset, 1).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  }
+
+  private _inPeriod(dateStr: string, mode: string, offset: number): boolean {
+    if (mode === 'all') return true;
+    const d = new Date(dateStr); if (isNaN(d.getTime())) return false;
+    const now = new Date();
+    if (mode === 'weekly') {
+      const s = new Date(now); s.setDate(now.getDate() - now.getDay() + offset * 7); s.setHours(0,0,0,0);
+      const e = new Date(s);   e.setDate(s.getDate() + 6); e.setHours(23,59,59,999);
+      return d >= s && d <= e;
+    }
+    const ref = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
+  }
+
   filteredEmps = computed(() => {
     let d = this.employees();
     const q = this.empSearch().toLowerCase();
@@ -78,6 +117,7 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
     let d=this.attendance();
     const q=this.attSearch().toLowerCase();
     if(q) d=d.filter(a=>(a.employeeName??'').toLowerCase().includes(q));
+    d = d.filter(a => this._inPeriod(a.date, this.attViewMode(), this.attPeriodOffset()));
     return d;
   });
   attTotalPages = computed(()=>Math.max(1,Math.ceil(this.filteredAtt().length/this.attPS)));
@@ -112,6 +152,7 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   showAddTimesheetModal = signal(false);
   showAddLeaveModal     = signal(false);
   leaveTypes            = signal<LeaveType[]>([]);
+  projects              = signal<Project[]>([]);
   cfgVisible = signal(false); cfgTitle = signal(''); cfgMsg = signal(''); cfgType = signal<'danger'|'warning'|'info'>('danger');
   private cfgAction: (()=>void)|null=null;
 
@@ -135,11 +176,13 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
-    this.bc.set([{label:'HR Dashboard'}]);
+    this.bc.set([{label:'HR Dashboard'}, {label:'Employees'}]);
+    this.tabSvc.setTab('employees');
     this.loadAll();
     this.refreshToday();
     this.usrSvc.getProfile().subscribe({ next:(r:any)=>this.userProfile.set(r?.data??r), error:()=>{} });
     this.lvSvc.getLeaveTypes().subscribe({ next:(r:any)=>this.leaveTypes.set(this.toArr<LeaveType>(r)), error:()=>{} });
+    this.prjSvc.getAll().subscribe({ next:(r:any)=>this.projects.set(this.toArr<Project>(r)), error:()=>{} });
   }
 
   ngOnDestroy() { if (this.timerInterval) clearInterval(this.timerInterval); }
@@ -171,7 +214,7 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   private refreshToday(): void {
     const uid = this.auth.currentUser(); if (!uid) return;
     this.attSvc.getTodayStatus(uid).subscribe({
-      next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); if(d?.checkIn&&!d?.checkOut) this.startTimer(d.checkIn); },
+      next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); if(d?.missedCheckout) this.toast.warning('Missed Check-Out','You forgot to check out yesterday. Attendance auto-calculated as check-in + 8 hours.'); if(d?.checkIn&&!d?.checkOut) this.startTimer(d.checkIn); },
       error:()=>this.todayAtt.set(null)
     });
   }
@@ -397,9 +440,10 @@ exportPayrollPDF() {
     if (this.addTimesheetForm.invalid) return;
     const uid = this.auth.currentUser(); if (!uid) return;
     const v = this.addTimesheetForm.getRawValue();
+    const proj = this.projects().find(p => p.id === +v.projectId!);
     const fmt = (t: string) => t?.length === 5 ? t + ':00' : t ?? '00:00:00';
     this.tsSvc.create(uid, {
-      projectId: +v.projectId!, projectName: '',
+      projectId: +v.projectId!, projectName: proj?.projectName ?? '',
       workDate: v.workDate!, startTime: fmt(v.startTime!), endTime: fmt(v.endTime!),
       breakTime: fmt(v.breakTime || '00:00'), taskDescription: v.taskDescription ?? ''
     }).subscribe({
@@ -420,6 +464,7 @@ exportPayrollPDF() {
 
   setTab(t:HrTab){
     this.activeTab.set(t);
+    this.tabSvc.setTab(t);
     this.bc.set([{label:'HR Dashboard'},{label:this.tabs.find(x=>x.key===t)?.label??''}]);
     this.empPage.set(1);this.attPage.set(1);this.lvPage.set(1);this.payPage.set(1);
   }

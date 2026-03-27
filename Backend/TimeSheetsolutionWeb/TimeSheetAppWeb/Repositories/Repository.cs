@@ -41,32 +41,27 @@ namespace TimeSheetAppWeb.Repositories
         {
             var entities = _context.Set<T>();
             if (entities == null)
-            {
                 throw new InvalidOperationException("No entities found.");
-            }
-            return await entities.ToListAsync();
+            return await entities.AsNoTracking().ToListAsync();
         }
 
         public async Task<T?> GetByIdAsync(K id)
         {
             var entity = await _context.Set<T>().FindAsync(id);
             if (entity == null)
-            {
                 throw new KeyNotFoundException($"Entity with id {id} not found.");
-            }
             return entity;
         }
 
         public async Task<T?> UpdateAsync(K key, T entity)
         {
-            var entry = await GetByIdAsync(key);
-            if (entry == null)
-            {
+            var existing = await _context.Set<T>().FindAsync(key);
+            if (existing == null)
                 throw new KeyNotFoundException($"Entity with id {key} not found.");
-            }
-            _context.Entry(entry).CurrentValues.SetValues(entity);
+
+            _context.Entry(existing).CurrentValues.SetValues(entity);
             await _context.SaveChangesAsync();
-            return entry;
+            return existing;
         }
     }
 }

@@ -11,7 +11,7 @@
   --brand-gradient: linear-gradient(135deg, #E05B2B 0%, #F07A4A 100%);
 
   /* Sidebar */
-  --sidebar-bg:     #1A1F2E;
+  --sidebar-bg:     #b6c1e3;
   --sidebar-hover:  #252B3D;
   --sidebar-active: #E05B2B;
   --sidebar-text:   rgba(255,255,255,.65);
@@ -386,13 +386,11 @@ textarea.zform-control { resize: vertical; min-height: 80px; }
 /* ── Breadcrumb ────────────────────────────────── */
 .zbreadcrumb {
   display: flex; align-items: center; gap: 6px;
-  font-size: 12px; color: var(--text-3);
-  margin-bottom: 16px;
+  font-size: 13px; color: var(--text-3);
 }
-.zbreadcrumb-item { cursor: pointer; transition: color var(--transition); }
-.zbreadcrumb-item:hover { color: var(--brand); }
-.zbreadcrumb-sep { color: var(--text-4); }
-.zbreadcrumb-current { color: var(--text); font-weight: 600; cursor: default; }
+.zbreadcrumb-item { color: var(--text-3); font-weight: 500; }
+.zbreadcrumb-sep  { color: var(--text-4); font-size: 12px; }
+.zbreadcrumb-current { color: var(--text); font-weight: 700; font-size: 14px; }
 
 /* ── Notification panel ────────────────────────── */
 .znotif-panel {
@@ -486,4 +484,28 @@ textarea.zform-control { resize: vertical; min-height: 80px; }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .ztab-bar  { width: 100%; }
   .zfilter-input { width: 100%; }
+}
+
+/* ── View Toggle (Weekly / Monthly) ───────────────────────────────────────── */
+.zview-toggle {
+  display: inline-flex; align-items: center;
+  background: #F3F4F6; border-radius: var(--radius-sm);
+  padding: 3px; gap: 2px;
+}
+.zview-btn {
+  padding: 5px 12px; border: none; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  color: var(--text-3); background: transparent;
+  transition: all var(--transition); font-family: inherit;
+}
+.zview-btn.active { background: #fff; color: var(--brand); box-shadow: var(--shadow-xs); }
+.zview-btn:hover:not(.active) { color: var(--text); }
+
+/* ── Week nav ──────────────────────────────────────────────────────────────── */
+.zperiod-nav {
+  display: flex; align-items: center; gap: 8px;
+}
+.zperiod-label {
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  min-width: 160px; text-align: center;
 }

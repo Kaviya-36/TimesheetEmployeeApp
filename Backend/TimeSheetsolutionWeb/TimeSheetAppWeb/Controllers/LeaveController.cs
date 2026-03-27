@@ -18,6 +18,16 @@ namespace TimeSheetAppWeb.Controllers
             _leaveService = leaveService;
         }
 
+        // ================= DELETE LEAVE =================
+        [HttpDelete("{leaveId}")]
+        [Authorize(Roles = "Employee,Intern,HR,Manager,Admin,Mentor")]
+        public async Task<IActionResult> DeleteLeave(int leaveId)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var response = await _leaveService.DeleteLeaveAsync(leaveId, userId);
+            return response.Success ? Ok(response) : BadRequest(response);
+        }
+
         // ================= GET LEAVE TYPES =================
         [HttpGet("types")]
         [Authorize(Roles = "Employee,Intern,HR,Manager,Admin")]
@@ -81,16 +91,12 @@ namespace TimeSheetAppWeb.Controllers
         [HttpGet("user/{userId}")]
         [Authorize(Roles = "Employee,Intern,HR,Manager,Admin")]
         public async Task<IActionResult> GetMyLeaves(
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null, [FromQuery] string? status = null,
+            [FromQuery] string? sortDir = "desc")
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-
-            var response = await _leaveService.GetUserLeavesAsync(userId, pageNumber, pageSize);
-
-            if (!response.Success)
-                return NotFound(response);
-
+            var response = await _leaveService.GetUserLeavesAsync(userId, pageNumber, pageSize, search, status, sortDir);
             return Ok(response);
         }
 
@@ -98,14 +104,11 @@ namespace TimeSheetAppWeb.Controllers
         [HttpGet("getall")]
         [Authorize(Roles = "Admin,HR,Manager")]
         public async Task<IActionResult> GetAllLeaves(
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null, [FromQuery] string? status = null,
+            [FromQuery] string? sortDir = "desc")
         {
-            var response = await _leaveService.GetAllLeavesAsync(pageNumber, pageSize);
-
-            if (!response.Success)
-                return NotFound(response);
-
+            var response = await _leaveService.GetAllLeavesAsync(pageNumber, pageSize, search, status, sortDir);
             return Ok(response);
         }
     }

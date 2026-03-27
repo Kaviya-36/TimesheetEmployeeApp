@@ -2,9 +2,7 @@
 
   <!-- Logo -->
   <div class="zsidebar-logo">
-    <div class="zlogo-mark">
-      <span>T</span>
-    </div>
+    <div class="zlogo-mark"><span>T</span></div>
     @if (!collapsed()) {
       <div class="zlogo-text">
         <span class="zlogo-name">TimeSheet</span>
@@ -13,7 +11,7 @@
     }
   </div>
 
-  <!-- Role Badge -->
+  <!-- User badge -->
   @if (!collapsed()) {
     <div class="zrole-badge">
       <div class="zavatar">{{ (auth.username() ?? 'U')[0].toUpperCase() }}</div>
@@ -30,27 +28,20 @@
       <p class="znav-section-label">NAVIGATION</p>
     }
 
-    @for (item of visibleNav(); track item.route) {
-      <a [routerLink]="item.route" routerLinkActive="active"
-         class="znav-item" [title]="collapsed() ? item.label : ''">
-        <span class="znav-icon">
-          @switch (item.label) {
-            @case ('Dashboard')  { 🏠 }
-            @case ('HR Portal')  { 👥 }
-            @case ('Team View')  { 📋 }
-            @case ('My Space')   { 💼 }
-            @case ('Intern Hub') { 🎓 }
-            @default             { ◉ }
-          }
-        </span>
+    @for (item of navItems(); track item.tab) {
+      <button class="znav-item"
+              [class.active]="tabSvc.activeTab() === item.tab"
+              (click)="select(item.tab)"
+              [title]="collapsed() ? item.label : ''">
+        <span class="znav-icon">{{ item.icon }}</span>
         @if (!collapsed()) {
           <span class="znav-label">{{ item.label }}</span>
         }
-      </a>
+      </button>
     }
   </nav>
 
-  <!-- Collapse Toggle -->
+  <!-- Collapse toggle -->
   <button class="zcollapse-btn" (click)="collapsed.update(v => !v)"
           [title]="collapsed() ? 'Expand' : 'Collapse'">
     @if (collapsed()) { › } @else { ‹ }

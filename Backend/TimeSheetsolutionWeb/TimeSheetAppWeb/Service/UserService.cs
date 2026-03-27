@@ -142,25 +142,42 @@ namespace TimeSheetAppWeb.Services
         }
 
         // ---------------- GET ALL USERS ----------------
-        public async Task<IEnumerable<UserResponse>> GetAllUsersAsync(int pageNumber = 1, int pageSize = 10)
+        public async Task<object> GetAllUsersAsync(int pageNumber = 1, int pageSize = 10, string? search = null, string? role = null, string? status = null, string? sortBy = "name", string? sortDir = "asc")
         {
             try
             {
-                _logger.LogInformation("Fetching all users. Page: {PageNumber}, PageSize: {PageSize}", pageNumber, pageSize);
-
                 var users = await _userRepository.GetAllAsync() ?? Enumerable.Empty<User>();
-
-                var pagedUsers = users
-                    .OrderBy(u => u.Id)
-                    .Skip((pageNumber - 1) * pageSize)
-                    .Take(pageSize);
-
-                _logger.LogInformation("Retrieved {Count} users", pagedUsers.Count());
-
                 var depts = await _departmentRepository.GetAllAsync() ?? Enumerable.Empty<Department>();
                 var deptMap = depts.ToDictionary(d => d.Id, d => d.Name);
 
-                return pagedUsers.Select(u => MapToDto(u, u.DepartmentId.HasValue && deptMap.TryGetValue(u.DepartmentId.Value, out var n) ? n : null));
+                var filtered = users.AsEnumerable();
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    var q = search.ToLower();
+                    filtered = filtered.Where(u => u.Name.ToLower().Contains(q) || u.Email.ToLower().Contains(q) || u.EmployeeId.ToLower().Contains(q));
+                }
+                if (!string.IsNullOrWhiteSpace(role))
+                    filtered = filtered.Where(u => u.Role.ToString().ToLower() == role.ToLower());
+                if (!string.IsNullOrWhiteSpace(status))
+                    filtered = filtered.Where(u => status.ToLower() == "active" ? u.IsActive : !u.IsActive);
+
+                filtered = (sortBy?.ToLower(), sortDir?.ToLower()) switch
+                {
+                    ("role",   "desc") => filtered.OrderByDescending(u => u.Role.ToString()),
+                    ("role",   _)      => filtered.OrderBy(u => u.Role.ToString()),
+                    ("joined", "desc") => filtered.OrderByDescending(u => u.JoiningDate),
+                    ("joined", _)      => filtered.OrderBy(u => u.JoiningDate),
+                    ("name",   "desc") => filtered.OrderByDescending(u => u.Name),
+                    _                  => filtered.OrderBy(u => u.Name)
+                };
+
+                var total = filtered.Count();
+                var paged = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize)
+                    .Select(u => MapToDto(u, u.DepartmentId.HasValue && deptMap.TryGetValue(u.DepartmentId.Value, out var n) ? n : null))
+                    .ToList();
+
+                _logger.LogInformation("Retrieved {Count} users", paged.Count);
+                return new { success = true, data = new { data = paged, totalRecords = total, pageNumber, pageSize, totalPages = (int)Math.Ceiling(total / (double)pageSize) } };
             }
             catch (Exception ex)
             {

@@ -184,7 +184,12 @@
                     <td>{{ p.managerName || '—' }}</td>
                     <td>{{ p.startDate | date:'dd MMM yyyy' }}</td>
                     <td>{{ p.endDate ? (p.endDate | date:'dd MMM yyyy') : 'Ongoing' }}</td>
-                    <td><button class="zbtn zbtn-danger zbtn-sm" (click)="confirmDeleteProject(p)">🗑 Delete</button></td>
+                    <td>
+                      <div class="zaction-row">
+                        <button class="zbtn zbtn-outline zbtn-sm" (click)="openEditProject(p)">✏ Edit</button>
+                        <button class="zbtn zbtn-danger zbtn-sm" (click)="confirmDeleteProject(p)">🗑 Delete</button>
+                      </div>
+                    </td>
                   </tr>
                 }
                 @if (pagedProjects().length === 0) {
@@ -209,7 +214,6 @@
         <div class="zcard">
           <div class="zcard-header">
             <span class="zcard-title">All Timesheets</span>
-            <button class="zbtn zbtn-primary zbtn-sm" (click)="showAddTimesheetModal.set(true)">+ Add Timesheet</button>
           </div>
           <div class="zfilter-bar">
             <div class="zfilter-wrap">
@@ -219,6 +223,18 @@
               <option value="all">All Status</option><option value="pending">Pending</option>
               <option value="approved">Approved</option><option value="rejected">Rejected</option>
             </select>
+            <div class="zview-toggle">
+              <button class="zview-btn" [class.active]="tsViewMode()==='all'"     (click)="tsViewMode.set('all');tsPeriodOffset.set(0);tsPage.set(1)">All</button>
+              <button class="zview-btn" [class.active]="tsViewMode()==='weekly'"  (click)="tsViewMode.set('weekly');tsPeriodOffset.set(0);tsPage.set(1)">Week</button>
+              <button class="zview-btn" [class.active]="tsViewMode()==='monthly'" (click)="tsViewMode.set('monthly');tsPeriodOffset.set(0);tsPage.set(1)">Month</button>
+            </div>
+            @if (tsViewMode() !== 'all') {
+              <div class="zperiod-nav">
+                <button class="zpg-btn" (click)="tsPeriodOffset.update(o=>o-1);tsPage.set(1)">‹</button>
+                <span class="zperiod-label">{{ tsPeriodLabel() }}</span>
+                <button class="zpg-btn" (click)="tsPeriodOffset.update(o=>o+1);tsPage.set(1)" [disabled]="tsPeriodOffset()>=0">›</button>
+              </div>
+            }
             <span class="zresult-count">{{ filteredTs().length }} records</span>
           </div>
           <div class="ztable-wrap">
@@ -283,7 +299,7 @@
           </div>
           <div class="ztable-wrap">
             <table class="ztable">
-              <thead><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Reason</th><th>Status</th></tr></thead>
               <tbody>
                 @for (l of pagedLv(); track l.id) {
                   <tr>
@@ -293,18 +309,10 @@
                     <td>{{ l.toDate | date:'dd MMM yyyy' }}</td>
                     <td class="ztext-muted">{{ l.reason || '—' }}</td>
                     <td><span class="zbadge" [class]="stClass(l.status)">{{ stText(l.status) }}</span></td>
-                    <td>
-                      @if (+l.status === 0) {
-                        <div class="zaction-row">
-                          <button class="zbtn zbtn-success zbtn-sm" (click)="approveLeave(l)">✅ Approve</button>
-                          <button class="zbtn zbtn-danger zbtn-sm"  (click)="rejectLeave(l)">❌ Reject</button>
-                        </div>
-                      } @else { <span class="ztext-muted">—</span> }
-                    </td>
                   </tr>
                 }
                 @if (pagedLv().length === 0) {
-                  <tr class="empty-row"><td colspan="7">No leave requests found.</td></tr>
+                  <tr class="empty-row"><td colspan="6">No leave requests found.</td></tr>
                 }
               </tbody>
             </table>
@@ -371,6 +379,18 @@
             <div class="zfilter-wrap">
               <input class="zfilter-input" [ngModel]="attSearch()" (ngModelChange)="attSearch.set($event);attPage.set(1)" placeholder="Search employee..." />
             </div>
+            <div class="zview-toggle">
+              <button class="zview-btn" [class.active]="attViewMode()==='all'"     (click)="attViewMode.set('all');attPeriodOffset.set(0);attPage.set(1)">All</button>
+              <button class="zview-btn" [class.active]="attViewMode()==='weekly'"  (click)="attViewMode.set('weekly');attPeriodOffset.set(0);attPage.set(1)">Week</button>
+              <button class="zview-btn" [class.active]="attViewMode()==='monthly'" (click)="attViewMode.set('monthly');attPeriodOffset.set(0);attPage.set(1)">Month</button>
+            </div>
+            @if (attViewMode() !== 'all') {
+              <div class="zperiod-nav">
+                <button class="zpg-btn" (click)="attPeriodOffset.update(o=>o-1);attPage.set(1)">‹</button>
+                <span class="zperiod-label">{{ attPeriodLabel() }}</span>
+                <button class="zpg-btn" (click)="attPeriodOffset.update(o=>o+1);attPage.set(1)" [disabled]="attPeriodOffset()>=0">›</button>
+              </div>
+            }
             <span class="zresult-count">{{ filteredAtt().length }} records</span>
           </div>
           <div class="ztable-wrap">
@@ -417,9 +437,9 @@
             </div>
             <select class="zfilter-select" [ngModel]="auditAction()" (ngModelChange)="auditAction.set($event);auditPage.set(1)">
               <option value="all">All Actions</option>
-              <option value="INSERT">INSERT</option>
-              <option value="UPDATE">UPDATE</option>
-              <option value="DELETE">DELETE</option>
+              <option value="Added">Added</option>
+              <option value="Modified">Modified</option>
+              <option value="Deleted">Deleted</option>
             </select>
             <select class="zfilter-select" [ngModel]="auditTable()" (ngModelChange)="auditTable.set($event);auditPage.set(1)">
               <option value="all">All Tables</option>
@@ -436,8 +456,8 @@
                     <td><code class="zemp-id">{{ log.id }}</code></td>
                     <td><span class="zbadge zbadge-role">{{ log.tableName }}</span></td>
                     <td>
-                      @if (log.action === 'INSERT') { <span class="zbadge zbadge-approved">{{ log.action }}</span> }
-                      @else if (log.action === 'UPDATE') { <span class="zbadge zbadge-pending">{{ log.action }}</span> }
+                      @if (log.action === 'Added')    { <span class="zbadge zbadge-approved">{{ log.action }}</span> }
+                      @else if (log.action === 'Modified') { <span class="zbadge zbadge-pending">{{ log.action }}</span> }
                       @else { <span class="zbadge zbadge-rejected">{{ log.action }}</span> }
                     </td>
                     <td class="ztext-muted"><code style="font-size:11px">{{ log.keyValues }}</code></td>
@@ -479,26 +499,13 @@
             </div>
             <div class="zcard-body">
               <p class="zsetting-desc">Define the standard office hours used for late-arrival detection.</p>
-              <div class="zform-group"><label class="zform-label">Office Start Time</label><input type="time" class="zform-control" [(ngModel)]="settings.startTime" /></div>
-              <div class="zform-group"><label class="zform-label">Office End Time</label><input type="time" class="zform-control" [(ngModel)]="settings.endTime" /></div>
+              <div class="zform-group"><label class="zform-label">Office Start Time</label><input type="time" class="zform-control" [(ngModel)]="settings.startTime" step="60" /></div>
+              <div class="zform-group"><label class="zform-label">Office End Time</label><input type="time" class="zform-control" [(ngModel)]="settings.endTime" step="60" /></div>
               <div class="zsetting-preview">
                 <span class="zsetting-preview-label">Current Hours</span>
                 <span class="zsetting-preview-value">{{ settings.startTime }} — {{ settings.endTime }}</span>
               </div>
               <button class="zbtn zbtn-primary zsetting-btn" (click)="saveSettings()">💾 Save Hours</button>
-            </div>
-          </div>
-
-          <!-- Email / SMTP -->
-          <div class="zcard zsetting-card">
-            <div class="zcard-header">
-              <span class="zcard-title">📧 Email Configuration</span>
-            </div>
-            <div class="zcard-body">
-              <p class="zsetting-desc">Configure outgoing email for notifications and alerts.</p>
-              <div class="zform-group"><label class="zform-label">SMTP Host</label><input class="zform-control" [(ngModel)]="settings.smtp" placeholder="smtp.company.com" /></div>
-              <div class="zform-group"><label class="zform-label">From Email</label><input type="email" class="zform-control" [(ngModel)]="settings.email" placeholder="noreply@company.com" /></div>
-              <button class="zbtn zbtn-primary zsetting-btn" (click)="saveSettings()">💾 Save Email</button>
             </div>
           </div>
 
@@ -516,23 +523,6 @@
                 <div class="zsetting-stat-row"><span>Total Projects</span><strong>{{ allProjects().length }}</strong></div>
                 <div class="zsetting-stat-row"><span>Pending Timesheets</span><strong class="zstat-orange">{{ pendingTs() }}</strong></div>
                 <div class="zsetting-stat-row"><span>Pending Leaves</span><strong class="zstat-orange">{{ pendingLv() }}</strong></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Danger Zone -->
-          <div class="zcard zsetting-card zsetting-danger-card">
-            <div class="zcard-header">
-              <span class="zcard-title">⚠ Danger Zone</span>
-            </div>
-            <div class="zcard-body">
-              <p class="zsetting-desc">Irreversible actions. Proceed with caution.</p>
-              <div class="zsetting-danger-row">
-                <div>
-                  <div class="zsetting-danger-title">Sign Out</div>
-                  <div class="zsetting-danger-sub">End your current admin session.</div>
-                </div>
-                <button class="zbtn zbtn-danger zbtn-sm" (click)="auth.logout()">⎋ Sign Out</button>
               </div>
             </div>
           </div>
@@ -650,43 +640,30 @@
   </div>
 }
 
-<!-- Add Timesheet Modal -->
-@if (showAddTimesheetModal()) {
-  <div class="zmodal-overlay" (click)="showAddTimesheetModal.set(false)">
+<!-- Edit Project Modal -->
+@if (editProject()) {
+  <div class="zmodal-overlay" (click)="editProject.set(null)">
     <div class="zmodal" (click)="$event.stopPropagation()">
-      <div class="zmodal-header">
-        <span class="zmodal-title">📋 Add My Timesheet</span>
-        <button class="zmodal-close" (click)="showAddTimesheetModal.set(false)">✕</button>
-      </div>
+      <div class="zmodal-header"><span class="zmodal-title">✏ Edit Project</span><button class="zmodal-close" (click)="editProject.set(null)">✕</button></div>
       <div class="zmodal-body">
-        <form [formGroup]="addTimesheetForm" novalidate>
-          <div class="zform-group">
-            <label class="zform-label">Project <span class="req">*</span></label>
-            <select formControlName="projectId" class="zform-control">
-              <option value="">— Select Project —</option>
-              @for (p of allProjects(); track p.id) {
-                <option [value]="p.id">{{ p.projectName }}</option>
-              }
+        <form [formGroup]="editProjectForm" novalidate>
+          <div class="zform-group"><label class="zform-label">Project Name <span class="req">*</span></label><input formControlName="projectName" class="zform-control" /></div>
+          <div class="zform-group"><label class="zform-label">Description</label><textarea formControlName="description" class="zform-control" rows="2"></textarea></div>
+          <div class="zform-group"><label class="zform-label">Assign Manager</label>
+            <select formControlName="managerId" class="zform-control">
+              <option value="">— None —</option>
+              @for (m of managers(); track m.id) { <option [value]="m.id">{{ m.name }}</option> }
             </select>
           </div>
-          <div class="zform-group">
-            <label class="zform-label">Work Date <span class="req">*</span></label>
-            <input formControlName="workDate" type="date" class="zform-control" />
-          </div>
-          <div class="zgrid-3">
-            <div class="zform-group"><label class="zform-label">Start Time <span class="req">*</span></label><input formControlName="startTime" type="time" class="zform-control" /></div>
-            <div class="zform-group"><label class="zform-label">End Time <span class="req">*</span></label><input formControlName="endTime" type="time" class="zform-control" /></div>
-            <div class="zform-group"><label class="zform-label">Break Time</label><input formControlName="breakTime" type="time" class="zform-control" /></div>
-          </div>
-          <div class="zform-group">
-            <label class="zform-label">Description</label>
-            <textarea formControlName="taskDescription" class="zform-control" rows="2" placeholder="Task description..."></textarea>
+          <div class="zgrid-2">
+            <div class="zform-group"><label class="zform-label">Start Date <span class="req">*</span></label><input formControlName="startDate" type="date" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">End Date</label><input formControlName="endDate" type="date" class="zform-control" /></div>
           </div>
         </form>
       </div>
       <div class="zmodal-footer">
-        <button class="zbtn zbtn-outline" (click)="showAddTimesheetModal.set(false)">Cancel</button>
-        <button class="zbtn zbtn-primary" [disabled]="addTimesheetForm.invalid" (click)="addTimesheetForUser()">Submit</button>
+        <button class="zbtn zbtn-outline" (click)="editProject.set(null)">Cancel</button>
+        <button class="zbtn zbtn-primary" [disabled]="editProjectForm.invalid" (click)="saveEditProject()">Save Changes</button>
       </div>
     </div>
   </div>

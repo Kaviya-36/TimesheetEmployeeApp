@@ -55,11 +55,15 @@ namespace TimeSheetAppWeb.Controllers
         // ---------------- GET ALL USERS ----------------
         [HttpGet]
         [Authorize(Roles = "Admin,HR,Manager,Mentor")]
-        public async Task<IActionResult> GetAllUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllUsers(
+            [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null, [FromQuery] string? role = null,
+            [FromQuery] string? status = null, [FromQuery] string? sortBy = "name",
+            [FromQuery] string? sortDir = "asc")
         {
             try
             {
-                var result = await _userService.GetAllUsersAsync(pageNumber, pageSize);
+                var result = await _userService.GetAllUsersAsync(pageNumber, pageSize, search, role, status, sortBy, sortDir);
                 return Ok(result);
             }
             catch (Exception ex)

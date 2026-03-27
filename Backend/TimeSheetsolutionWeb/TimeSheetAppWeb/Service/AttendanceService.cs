@@ -26,23 +26,35 @@ namespace TimeSheetAppWeb.Services
 
                 var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null)
-                    return new ApiResponse<AttendanceResponse>
-                    {
-                        Success = false,
-                        Message = "Invalid user. User does not exist."
-                    };
+                    return new ApiResponse<AttendanceResponse> { Success = false, Message = "Invalid user. User does not exist." };
 
-             
                 var allAttendances = await _attendanceRepository.GetAllAsync() ?? Enumerable.Empty<Attendance>();
+
+                // ── Auto-checkout yesterday if missed ──────────────────────────────
+                var yesterday = today.AddDays(-1);
+                var prevRecord = allAttendances.FirstOrDefault(a => a.UserId == userId && a.Date.Date == yesterday);
+                if (prevRecord != null && prevRecord.CheckIn.HasValue && !prevRecord.CheckOut.HasValue)
+                {
+                    var autoCheckout = CalcAutoCheckout(prevRecord.CheckIn.Value);
+                    var tracked = await _attendanceRepository.GetByIdAsync(prevRecord.Id);
+                    if (tracked != null)
+                    {
+                        tracked.CheckOut   = autoCheckout.checkOut;
+                        tracked.TotalHours = autoCheckout.totalHours;
+                        await _attendanceRepository.UpdateAsync(tracked.Id, tracked);
+                    }
+                }
+
                 var attendance = allAttendances.FirstOrDefault(a => a.UserId == userId && a.Date.Date == today);
 
-                // Prevent double check-in
                 if (attendance != null && attendance.CheckIn.HasValue)
                 {
+                    // Already checked in — return the existing record as success so frontend stays in sync
                     return new ApiResponse<AttendanceResponse>
                     {
-                        Success = false,
-                        Message = "User already checked in today."
+                        Success = true,
+                        Message = "Already checked in today.",
+                        Data = await MapToDtoAsync(attendance)
                     };
                 }
 
@@ -75,11 +87,7 @@ namespace TimeSheetAppWeb.Services
             }
             catch (Exception ex)
             {
-                return new ApiResponse<AttendanceResponse>
-                {
-                    Success = false,
-                    Message = $"An error occurred during check-in: {ex.Message}"
-                };
+                return new ApiResponse<AttendanceResponse> { Success = false, Message = $"An error occurred during check-in: {ex.Message} | Inner: {ex.InnerException?.Message ?? "none"}" };
             }
         }
 
@@ -114,8 +122,9 @@ namespace TimeSheetAppWeb.Services
                 {
                     return new ApiResponse<AttendanceResponse>
                     {
-                        Success = false,
-                        Message = "User already checked out today."
+                        Success = true,
+                        Message = "Already checked out today.",
+                        Data = await MapToDtoAsync(attendance)
                     };
                 }
 
@@ -146,48 +155,57 @@ namespace TimeSheetAppWeb.Services
             try
             {
                 var today = DateTime.Today;
+                var yesterday = today.AddDays(-1);
+                var allAttendances = await _attendanceRepository.GetAllAsync() ?? Enumerable.Empty<Attendance>();
 
-                var attendance = (await _attendanceRepository.GetAllAsync() ?? Enumerable.Empty<Attendance>())
-                    .FirstOrDefault(a => a.UserId == userId && a.Date.Date == today);
+                // ── Auto-checkout yesterday if missed, then flag it ────────────────
+                var prevRecord = allAttendances.FirstOrDefault(a => a.UserId == userId && a.Date.Date == yesterday);
+                bool missedCheckout = false;
+                if (prevRecord != null && prevRecord.CheckIn.HasValue && !prevRecord.CheckOut.HasValue)
+                {
+                    missedCheckout = true;
+                    var autoCheckout = CalcAutoCheckout(prevRecord.CheckIn.Value);
+                    var tracked = await _attendanceRepository.GetByIdAsync(prevRecord.Id);
+                    if (tracked != null)
+                    {
+                        tracked.CheckOut   = autoCheckout.checkOut;
+                        tracked.TotalHours = autoCheckout.totalHours;
+                        await _attendanceRepository.UpdateAsync(tracked.Id, tracked);
+                    }
+                }
+
+                var attendance = allAttendances.FirstOrDefault(a => a.UserId == userId && a.Date.Date == today);
 
                 if (attendance == null)
-                {
                     return new ApiResponse<AttendanceResponse>
                     {
                         Success = true,
-                        Message = "No attendance for today",
-                        Data = null
+                        Message = missedCheckout ? "missed_checkout" : "No attendance for today",
+                        Data = missedCheckout ? new AttendanceResponse { MissedCheckout = true } : null
                     };
-                }
 
-                // ✅ AUTO CHECK-OUT AFTER 12 HOURS
+                // ── Auto check-out after 12 hours (same-day safety net) ────────────
                 if (attendance.CheckIn.HasValue && !attendance.CheckOut.HasValue)
                 {
-                    var checkInDateTime = attendance.Date.Add(attendance.CheckIn.Value);
-                    var autoCheckoutTime = checkInDateTime.AddHours(12);
-
+                    var autoCheckoutTime = attendance.Date.Add(attendance.CheckIn.Value).AddHours(12);
                     if (DateTime.Now >= autoCheckoutTime)
                     {
-                        attendance.CheckOut = autoCheckoutTime.TimeOfDay;
+                        var proposed = attendance.CheckIn.Value.Add(TimeSpan.FromHours(12));
+                        var maxTime  = new TimeSpan(23, 59, 59);
+                        attendance.CheckOut   = proposed > maxTime ? maxTime : proposed;
                         attendance.TotalHours = attendance.CheckOut.Value - attendance.CheckIn.Value;
-
                         await _attendanceRepository.UpdateAsync(attendance.Id, attendance);
                     }
                 }
 
-                return new ApiResponse<AttendanceResponse>
-                {
-                    Success = true,
-                    Data = await MapToDtoAsync(attendance)
-                };
+                var dto = await MapToDtoAsync(attendance);
+                dto.MissedCheckout = missedCheckout;
+
+                return new ApiResponse<AttendanceResponse> { Success = true, Data = dto };
             }
             catch (Exception ex)
             {
-                return new ApiResponse<AttendanceResponse>
-                {
-                    Success = false,
-                    Message = ex.Message
-                };
+                return new ApiResponse<AttendanceResponse> { Success = false, Message = ex.Message };
             }
         }
 
@@ -276,7 +294,15 @@ namespace TimeSheetAppWeb.Services
         }
 
 
-        // ---------------- HELPER: MAP TO DTO ----------------
+    private static (TimeSpan checkOut, TimeSpan totalHours) CalcAutoCheckout(TimeSpan checkIn)
+    {
+        var proposed = checkIn.Add(TimeSpan.FromHours(8));
+        // SQL time column max is 23:59:59 — cap if overflow
+        var maxTime = new TimeSpan(23, 59, 59);
+        var checkOut   = proposed > maxTime ? maxTime : proposed;
+        var totalHours = checkOut - checkIn;
+        return (checkOut, totalHours);
+    }
         private async Task<AttendanceResponse> MapToDtoAsync(Attendance attendance)
         {
             string employeeName = "Unknown";

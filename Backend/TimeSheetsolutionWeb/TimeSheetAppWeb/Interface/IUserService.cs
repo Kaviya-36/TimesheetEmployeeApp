@@ -12,7 +12,7 @@ namespace TimeSheetAppWeb.Interfaces
         Task<CheckUserResponseDto> LoginAsync(CheckUserRequestDto request);
         Task<UserResponse> RegisterUserAsync(UserCreateRequest request);
         Task<UserResponse> GetUserByIdAsync(int userId);
-        Task<IEnumerable<UserResponse>> GetAllUsersAsync(int pageNumber = 1, int pageSize = 10);
+        Task<object> GetAllUsersAsync(int pageNumber = 1, int pageSize = 10, string? search = null, string? role = null, string? status = null, string? sortBy = "name", string? sortDir = "asc");
         Task<UserResponse> UpdateUserAsync(int userId, UserUpdateRequest request);
         Task<bool> DeleteUserAsync(int userId);
         Task<UserResponse> GetMyProfileAsync(ClaimsPrincipal userClaims);

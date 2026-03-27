@@ -7,9 +7,8 @@ import { BreadcrumbService } from '../../services/breadcrumb.service';
   template: `
     @if (bc.crumbs().length > 0) {
       <nav class="zbreadcrumb" aria-label="Breadcrumb">
-        <span class="zbreadcrumb-item" style="opacity:.5">🏠 Home</span>
-        @for (crumb of bc.crumbs(); track $index; let last = $last) {
-          <span class="zbreadcrumb-sep">›</span>
+        @for (crumb of bc.crumbs(); track $index; let last = $last; let first = $first) {
+          @if (!first) { <span class="zbreadcrumb-sep">›</span> }
           @if (last) {
             <span class="zbreadcrumb-current">{{ crumb.label }}</span>
           } @else {

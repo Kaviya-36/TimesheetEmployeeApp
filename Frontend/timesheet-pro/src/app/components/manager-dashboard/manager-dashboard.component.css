@@ -20,7 +20,17 @@
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
+.user-chip-remove {
+  background: none; border: none; cursor: pointer;
+  color: #6B7280; font-size: 11px; padding: 0; line-height: 1;
+  border-radius: 50%; width: 14px; height: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.user-chip-remove:hover { background: #DC2626; color: #fff; }
 
 /* ── Attendance Hero Card ─────────────────────────────────────────────────── */
 .zatt-hero {
@@ -85,3 +95,26 @@
   color: #9CA3AF; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px;
 }
 .zprofile-info-value { display: block; font-size: 14px; font-weight: 600; color: #111827; }
+
+/* ── Weekly Timesheet Grid ────────────────────────────────────────────────── */
+.zts-week-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid #F3F4F6; }
+.zts-week-nav    { display:flex; align-items:center; gap:10px; }
+.zts-week-table  { min-width:960px; }
+.zts-project-col { width:180px; }
+.zts-day-col     { width:90px; text-align:center; }
+.zts-total-col   { width:80px; text-align:center; }
+.zts-status-col  { width:100px; }
+.zts-day-col .zts-day-name { font-size:11px; font-weight:700; color:#6B7280; text-transform:uppercase; letter-spacing:.5px; }
+.zts-day-col .zts-day-date { font-size:13px; font-weight:600; color:#111827; margin-top:2px; }
+.zts-today .zts-day-name   { color:#2563EB; }
+.zts-today .zts-day-date   { color:#2563EB; }
+.zts-today                 { background:#EFF6FF !important; }
+.zts-project-cell { font-size:13px; }
+.zts-hour-cell    { text-align:center; padding:10px 8px !important; }
+.zts-has-hours    { background:#F0FDF4; }
+.zts-hours-val    { font-size:13px; font-weight:700; color:#16A34A; }
+.zts-empty-cell   { color:#D1D5DB; font-size:12px; }
+.zts-total-cell   { text-align:center; background:#F9FAFB; font-size:14px; }
+.zts-total-row td { background:#F3F4F6 !important; font-size:13px; }
+.zts-day-total    { text-align:center; color:#374151; }
+.zts-grand-total  { text-align:center; color:#2563EB; font-size:15px; }

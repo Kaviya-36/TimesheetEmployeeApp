@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, HostListener, inject } from '@angular/core';
+import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { BreadcrumbComponent } from '../breadcrumb/breadcrumb.component';
@@ -11,12 +11,19 @@ import { BreadcrumbComponent } from '../breadcrumb/breadcrumb.component';
   templateUrl: './navbar.component.html',
   styleUrl:    './navbar.component.css'
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   readonly auth  = inject(AuthService);
   readonly notif = inject(NotificationService);
 
   showNotif   = false;
   showProfile = false;
+
+  ngOnInit(): void {
+    // Reconnect SignalR if user is already logged in (e.g. page refresh)
+    if (this.auth.isLoggedIn() && !this.notif.connected()) {
+      this.notif.connect();
+    }
+  }
 
   initial(): string {
     return (this.auth.username() ?? 'U')[0].toUpperCase();
