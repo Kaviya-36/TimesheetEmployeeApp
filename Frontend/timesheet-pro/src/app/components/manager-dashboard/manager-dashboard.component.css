@@ -312,7 +312,7 @@
 /* Column headers */
 .zmgr-wts-col-headers {
   display: grid;
-  grid-template-columns: 180px repeat(7, 1fr) 80px 100px;
+  grid-template-columns: 180px repeat(auto-fill, minmax(60px, 1fr)) 80px 100px;
   background: #F9FAFB; border-bottom: 1px solid #E5E7EB;
   padding: 0 16px;
 }
@@ -328,7 +328,7 @@
 /* Project rows */
 .zmgr-wts-row {
   display: grid;
-  grid-template-columns: 180px repeat(7, 1fr) 80px 100px;
+  grid-template-columns: 180px repeat(auto-fill, minmax(60px, 1fr)) 80px 100px;
   border-bottom: 1px solid #F3F4F6;
   padding: 0 16px; align-items: center;
   transition: background .12s;
@@ -366,7 +366,7 @@
 /* Footer totals */
 .zmgr-wts-footer {
   display: grid;
-  grid-template-columns: 180px repeat(7, 1fr) 80px 100px;
+  grid-template-columns: 180px repeat(auto-fill, minmax(60px, 1fr)) 80px 100px;
   padding: 10px 16px;
   border-top: 2px solid #E5E7EB;
   background: #F9FAFB; align-items: center;
@@ -733,3 +733,8 @@
 .zwts-day-total { text-align: center; font-size: 13px; font-weight: 600; color: #374151; }
 .zwts-day-total.zwts-weekend { background: rgba(0,0,0,.03); color: #9CA3AF; }
 .zwts-grand-total { text-align: center; font-size: 14px; font-weight: 800; color: #10B981; }
+
+/* Override: inline [style] on col-headers/row/footer sets exact column count */
+.zmgr-wts-col-headers,
+.zmgr-wts-row,
+.zmgr-wts-footer { grid-template-columns: 180px repeat(5, 1fr) 80px 100px; }

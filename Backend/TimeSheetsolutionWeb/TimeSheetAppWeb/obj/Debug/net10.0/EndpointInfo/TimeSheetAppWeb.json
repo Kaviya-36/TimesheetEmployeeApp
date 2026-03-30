@@ -2210,6 +2210,10 @@
             "type": "string",
             "nullable": true
           },
+          "taskTitle": {
+            "type": "string",
+            "nullable": true
+          },
           "description": {
             "type": "string",
             "nullable": true
@@ -2230,6 +2234,10 @@
         "type": "object",
         "properties": {
           "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "taskTitle": {
             "type": "string",
             "nullable": true
           },

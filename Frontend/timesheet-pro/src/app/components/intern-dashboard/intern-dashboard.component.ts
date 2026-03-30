@@ -63,7 +63,7 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
   userProfile = signal<UserProfile | null>(null);
 
   tsPage = signal(1); tsPS = 6;
-  tsViewMode      = signal<'all'|'weekly'|'monthly'>('all');
+  tsViewMode      = signal<'all'|'weekly'|'monthly'|'pending'|'approved'>('all');
   tsPeriodOffset  = signal(0);
   attViewMode     = signal<'all'|'weekly'|'monthly'>('all');
   attPeriodOffset = signal(0);
@@ -93,17 +93,165 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
     return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
   }
 
-  filteredTs  = computed(() => this.timesheets().filter(t => this._inPeriod(t.date, this.tsViewMode(), this.tsPeriodOffset())));
+  filteredTs  = computed(() => {
+    let d = this.timesheets();
+    if (this.tsViewMode() === 'pending')  d = d.filter(t => Number(t.status) === 0);
+    if (this.tsViewMode() === 'approved') d = d.filter(t => Number(t.status) === 1);
+    return d;
+  });
   pagedTs     = computed(()=>{const s=(this.tsPage()-1)*this.tsPS; return this.filteredTs().slice(s,s+this.tsPS);});
   tsTotalPages = computed(()=>Math.max(1,Math.ceil(this.filteredTs().length/this.tsPS)));
 
   weekDays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  toDateStr(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  readonly todayDate = this.toDateStr(new Date());
+
   weekDates = () => {
     const now = new Date(); const offset = this.tsPeriodOffset();
     const monday = new Date(now); const day = now.getDay() || 7;
     monday.setDate(now.getDate() - day + 1 + offset * 7); monday.setHours(0,0,0,0);
     return Array.from({length:7}, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d; });
   };
+
+  // ── Weekly grid ───────────────────────────────────────────────────────────
+  gridRows   = signal<{ projectId: number; projectName: string; hours: Record<string,string>; notes: Record<string,string>; tsPerDay: Record<string,Timesheet> }[]>([]);
+  gridSaving = signal(false);
+  showProjectPicker = signal(false);
+  activeNote = signal<{ rowIdx: number; dateStr: string } | null>(null);
+
+  private parseHoursVal(val: any): number {
+    if (!val) return 0;
+    if (typeof val === 'number') return val;
+    const s = String(val);
+    if (s.includes(':')) { const [h, m] = s.split(':').map(Number); return h + (m||0)/60; }
+    return parseFloat(s) || 0;
+  }
+  private toHHmm(dec: number): string {
+    if (!dec) return '';
+    const h = Math.floor(dec); const m = Math.round((dec-h)*60);
+    return `${String(h).padStart(2,'0')}h:${String(m).padStart(2,'0')}m`;
+  }
+  private parseCell(val: string): number {
+    if (!val) return 0;
+    const m = val.match(/^(\d+)h?:?(\d*)m?$/i);
+    if (m) return parseInt(m[1]||'0') + parseInt(m[2]||'0')/60;
+    return parseFloat(val) || 0;
+  }
+
+  initGrid() {
+    const dates = this.weekDates(); const all = this.timesheets();
+    const rowMap = new Map<string, { projectId: number; projectName: string; hours: Record<string,string>; notes: Record<string,string>; tsPerDay: Record<string,Timesheet> }>();
+    for (const ts of all) {
+      const d = new Date(ts.date); d.setHours(0,0,0,0);
+      if (!dates.some(wd => wd.getTime() === d.getTime())) continue;
+      const key = `${ts.projectId??0}|${ts.projectName}`;
+      if (!rowMap.has(key)) rowMap.set(key, { projectId: ts.projectId??0, projectName: ts.projectName, hours:{}, notes:{}, tsPerDay:{} });
+      const ds = this.toDateStr(d);
+      rowMap.get(key)!.hours[ds] = this.toHHmm(this.parseHoursVal(ts.hoursWorked));
+      rowMap.get(key)!.tsPerDay[ds] = ts;
+      if (ts.description) rowMap.get(key)!.notes[ds] = ts.description;
+    }
+    this.gridRows.set([...rowMap.values()]);
+  }
+
+  // Intern uses tasks as rows — each task maps to the first assigned project
+  taskLabel(t: InternTask): string { return (t as any).taskTitle || (t as any).title || (t as any).Title || `Task #${t.id}`; }
+
+  availableTasks = () => this.tasks().filter(t =>
+    !this.gridRows().some(r => r.projectId === t.id)
+  );
+
+  addTaskRow(task: InternTask) {
+    this.gridRows.update(rows => [...rows, {
+      projectId:   task.id,
+      projectName: this.taskLabel(task),
+      hours: {}, notes: {}, tsPerDay: {}
+    }]);
+    this.showProjectPicker.set(false);
+  }
+
+  removeGridRow(i: number) { this.gridRows.update(rows => rows.filter((_,idx)=>idx!==i)); }
+
+  private resolveProjectId(): number { return this.projects()[0]?.projectId ?? 0; }
+  private resolveProjectName(): string { return this.projects()[0]?.projectName ?? ''; }
+
+  getCellVal(i: number, d: Date): string { return this.gridRows()[i]?.hours[this.toDateStr(d)] ?? ''; }
+  setCellVal(i: number, d: Date, val: string) {
+    const ds = this.toDateStr(d);
+    this.gridRows.update(rows => rows.map((r,idx) => idx===i ? {...r, hours:{...r.hours,[ds]:val}} : r));
+  }
+  getCellNote(i: number, ds: string): string { return this.gridRows()[i]?.notes?.[ds] ?? ''; }
+  setCellNote(i: number, ds: string, val: string) {
+    this.gridRows.update(rows => rows.map((r,idx) => idx===i ? {...r, notes:{...r.notes,[ds]:val}} : r));
+  }
+  toggleNote(i: number, ds: string) {
+    const cur = this.activeNote();
+    this.activeNote.set(cur?.rowIdx===i && cur?.dateStr===ds ? null : {rowIdx:i, dateStr:ds});
+  }
+  closeNote() { this.activeNote.set(null); }
+  isNoteActive(i: number, ds: string) { const n=this.activeNote(); return n?.rowIdx===i && n?.dateStr===ds; }
+
+  getCellStatus(i: number, ds: string): number | null {
+    const ts = this.gridRows()[i]?.tsPerDay?.[ds];
+    return ts ? Number(ts.status) : null;
+  }
+
+  rowTotal(i: number): string {
+    const row = this.gridRows()[i]; if (!row) return '0';
+    const t = Object.values(row.hours).reduce((s,v)=>s+this.parseCell(v as string),0);
+    return t > 0 ? this.toHHmm(t) : '0';
+  }
+  dayTotal(d: Date): string {
+    const ds = this.toDateStr(d);
+    const t = this.gridRows().reduce((s,r)=>s+this.parseCell(r.hours[ds]??''),0);
+    return t > 0 ? this.toHHmm(t) : '0';
+  }
+  grandTotal(): string {
+    const t = this.gridRows().reduce((s,r)=>s+Object.values(r.hours).reduce((a,v)=>a+this.parseCell(v as string),0),0);
+    return `${t > 0 ? t.toFixed(1) : '0'} hrs`;
+  }
+
+  submitGrid() {
+    const uid = this.auth.currentUser(); if (!uid) return;
+    this.gridSaving.set(true);
+    const todayStr = this.toDateStr(new Date());
+    const isCurrentWeek = this.tsPeriodOffset() === 0;
+    const entries: any[] = [];
+    for (const row of this.gridRows()) {
+      for (const [ds, val] of Object.entries(row.hours)) {
+        const hours = this.parseCell(val as string); if (!hours) continue;
+        if (isCurrentWeek && ds > todayStr) continue;
+        const existing = row.tsPerDay?.[ds];
+        if (existing && Number(existing.status) === 1) continue;
+        entries.push({ projectId: this.resolveProjectId(), projectName: this.resolveProjectName(), workDate: ds, hours, taskDescription: row.projectName + (row.notes?.[ds] ? ': ' + row.notes[ds] : '') });
+      }
+    }
+    if (!entries.length) { this.toast.warning('Nothing to submit','Fill in at least one entry.'); this.gridSaving.set(false); return; }
+    this.tsSvc.submitWeekly(uid, { entries, submit: true }).subscribe({
+      next: (res: any) => {
+        const d = res?.data;
+        const parts = [];
+        if (d?.saved)           parts.push(`${d.saved} new`);
+        if (d?.updated)         parts.push(`${d.updated} updated`);
+        if (d?.alreadyApproved) parts.push(`${d.alreadyApproved} already approved`);
+        this.toast.success('Submitted', `Sent for approval. ${parts.join(' · ')}`);
+        if (isCurrentWeek && new Date().getDay() !== 0) {
+          const remaining = 7 - (new Date().getDay() === 0 ? 7 : new Date().getDay());
+          if (remaining > 0) this.toast.warning('Week Not Complete', `${remaining} day${remaining>1?'s':''} remaining were not submitted.`);
+        }
+        this.tsSvc.getByUser(uid).subscribe(r => { this.timesheets.set(this.toArr<Timesheet>(r)); this.initGrid(); });
+      },
+      error: (e: any) => this.toast.error('Error', e?.error?.message ?? ''),
+      complete: () => this.gridSaving.set(false)
+    });
+  }
+
   weeklyRows = () => {
     const dates = this.weekDates(); const all = this.timesheets();
     const map = new Map<string, { ts: any; hours: (number|null)[] }>();
@@ -140,7 +288,6 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
 
   liveTimer = signal('00:00:00');
   private timerInterval: any;
-  readonly todayDate = new Date().toISOString().split('T')[0];
 
   tsForm = this.fb.group({
     projectId:       [''],
@@ -166,7 +313,7 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
   private toArr<T>(r:any):T[] { if(Array.isArray(r))return r; if(Array.isArray(r?.data))return r.data; if(Array.isArray(r?.data?.data))return r.data.data; return []; }
 
   loadAll(uid:number) {
-    this.tsSvc.getByUser(uid).subscribe(r=>this.timesheets.set(this.toArr<Timesheet>(r)));
+    this.tsSvc.getByUser(uid).subscribe(r=>{ this.timesheets.set(this.toArr<Timesheet>(r)); this.initGrid(); });
     this.attSvc.getMyAttendance(uid).subscribe(r=>this.attendances.set(this.toArr<Attendance>(r)));
     this.lvSvc.getMyLeaves(uid).subscribe(r=>this.leaves.set(this.toArr<Leave>(r)));
     this.lvSvc.getLeaveTypes().subscribe(r=>this.leaveTypes.set(this.toArr<LeaveType>(r)));
@@ -208,10 +355,6 @@ export class InternDashboardComponent implements OnInit, OnDestroy {
     this.timerInterval=setInterval(()=>{const diff=Date.now()-base.getTime();const hh=Math.floor(diff/3600000),mm=Math.floor((diff%3600000)/60000),ss=Math.floor((diff%60000)/1000);this.liveTimer.set(`${this.p(hh)}:${this.p(mm)}:${this.p(ss)}`);},1000);
   }
   private p(n:number){return n<10?'0'+n:''+n;}
-
-  taskLabel(t: any): string {
-    return t?.description || t?.taskTitle || t?.title || t?.task_title || t?.name || `Task #${t?.id}`;
-  }
 
   onTaskSelect(): void {
     const id = +this.tsForm.value.taskId!;

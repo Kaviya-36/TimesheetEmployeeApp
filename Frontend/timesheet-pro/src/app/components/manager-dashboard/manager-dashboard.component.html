@@ -672,7 +672,7 @@
           </div>
 
           <div class="zwts-rows">
-            @for (row of myGridRows(); track row.projectName; let i = $index) {
+            @for (row of myGridRows(); track $index; let i = $index) {
               <div class="zwts-row">
                 <div class="zwts-project-cell">
                   <button class="zwts-remove-btn" (click)="myRemoveRow(i)">✕</button>
@@ -739,7 +739,7 @@
                 </button>
                 @if (myShowPicker()) {
                   <div class="zwts-picker">
-                    @for (a of myAvailableProjects(); track a.id) {
+                    @for (a of myAvailableProjects(); track a.projectId) {
                       <div class="zwts-picker-item" (click)="myAddRow(a)">{{ a.projectName }}</div>
                     }
                     @if (myAvailableProjects().length === 0) {
@@ -894,6 +894,38 @@
       <div class="zmodal-footer">
         <button class="zbtn zbtn-outline" (click)="showAddLeaveModal.set(false)">Cancel</button>
         <button class="zbtn zbtn-primary" [disabled]="addLeaveForm.invalid" (click)="addLeaveForSelf()">Apply</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Review Modal (Approve / Reject with comment) -->
+@if (reviewModal()) {
+  <div class="zmodal-overlay" (click)="cancelReview()">
+    <div class="zmodal zmodal-sm" (click)="$event.stopPropagation()">
+      <div class="zmodal-header">
+        <span class="zmodal-title">
+          @if (reviewIsApprove()) { ✅ Approve } @else { ❌ Reject }
+        </span>
+        <button class="zmodal-close" (click)="cancelReview()">✕</button>
+      </div>
+      <div class="zmodal-body">
+        <div class="zform-group">
+          <label class="zform-label">Comment <span style="color:#9CA3AF;font-weight:400">(optional)</span></label>
+          <textarea class="zform-control"
+            [value]="reviewComment()"
+            (input)="reviewComment.set($any($event.target).value)"
+            rows="3"
+            [placeholder]="reviewIsApprove() ? 'Add an approval note...' : 'Reason for rejection...'"></textarea>
+        </div>
+      </div>
+      <div class="zmodal-footer">
+        <button class="zbtn zbtn-outline" (click)="cancelReview()">Cancel</button>
+        @if (reviewIsApprove()) {
+          <button class="zbtn zbtn-success" (click)="submitReview()">✅ Approve</button>
+        } @else {
+          <button class="zbtn zbtn-danger" (click)="submitReview()">❌ Reject</button>
+        }
       </div>
     </div>
   </div>

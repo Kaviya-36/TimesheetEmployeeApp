@@ -402,6 +402,25 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   cfgType    = signal<'danger'|'warning'|'info'>('info');
   private cfgAction: (() => void) | null = null;
 
+  // ── Review modal (approve/reject with comment) ────────────────────────────
+  reviewModal = signal(false);
+  reviewComment = signal('');
+  private reviewAction: ((comment: string) => void) | null = null;
+  reviewIsApprove = signal(true);
+
+  openReviewModal(approve: boolean, action: (comment: string) => void) {
+    this.reviewIsApprove.set(approve);
+    this.reviewComment.set('');
+    this.reviewAction = action;
+    this.reviewModal.set(true);
+  }
+  submitReview() {
+    this.reviewAction?.(this.reviewComment());
+    this.reviewModal.set(false);
+    this.reviewAction = null;
+  }
+  cancelReview() { this.reviewModal.set(false); this.reviewAction = null; }
+
   // ── Own check-in/out ──────────────────────────────────────────────────────
   todayAtt   = signal<Attendance | null>(null);
   attLoading = signal(false);
@@ -686,45 +705,37 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   reviewTs(ts: Timesheet, approve: boolean) {
     const uid = this.auth.currentUser();
     if (!uid) { this.toast.error('Error','Invalid session.'); return; }
-    this.confirm(
-      approve ? 'Approve Timesheet' : 'Reject Timesheet',
-      `${approve?'Approve':'Reject'} timesheet for "${ts.employeeName}" (${ts.projectName}) on ${new Date(ts.date).toLocaleDateString()}?`,
-      () => {
-        this.tsSvc.approveOrReject({
-          timesheetId: ts.id, approvedById: uid,
-          isApproved: approve, managerComment: approve ? 'Approved by Manager' : 'Rejected by Manager'
-        }).subscribe({
-          next: () => {
-            this.toast.success(approve ? 'Approved' : 'Rejected', `Timesheet for ${ts.employeeName}.`);
-            this.loadAll();
-          },
-          error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Action failed.')
-        });
-      },
-      approve ? 'info' : 'warning'
-    );
+    this.openReviewModal(approve, (comment) => {
+      this.tsSvc.approveOrReject({
+        timesheetId: ts.id, approvedById: uid,
+        isApproved: approve,
+        managerComment: comment || (approve ? 'Approved by Manager' : 'Rejected by Manager')
+      }).subscribe({
+        next: () => {
+          this.toast.success(approve ? 'Approved' : 'Rejected', `Timesheet for ${ts.employeeName}.`);
+          this.loadAll();
+        },
+        error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Action failed.')
+      });
+    });
   }
 
   reviewLeave(l: Leave, approve: boolean) {
     const uid = this.auth.currentUser();
     if (!uid) { this.toast.error('Error','Invalid session.'); return; }
-    this.confirm(
-      approve ? 'Approve Leave' : 'Reject Leave',
-      `${approve?'Approve':'Reject'} leave request from "${l.employeeName}"?`,
-      () => {
-        this.lvSvc.approveOrReject({
-          leaveId: l.id, approvedById: uid,
-          isApproved: approve, managerComment: approve ? 'Approved' : 'Rejected'
-        }).subscribe({
-          next: () => {
-            this.toast.success(approve ? 'Leave Approved' : 'Leave Rejected', `For ${l.employeeName}`);
-            this.loadAll();
-          },
-          error: (e: any) => this.toast.error('Failed', e?.error?.message ?? '')
-        });
-      },
-      approve ? 'info' : 'warning'
-    );
+    this.openReviewModal(approve, (comment) => {
+      this.lvSvc.approveOrReject({
+        leaveId: l.id, approvedById: uid,
+        isApproved: approve,
+        managerComment: comment || (approve ? 'Approved' : 'Rejected')
+      }).subscribe({
+        next: () => {
+          this.toast.success(approve ? 'Leave Approved' : 'Leave Rejected', `For ${l.employeeName}`);
+          this.loadAll();
+        },
+        error: (e: any) => this.toast.error('Failed', e?.error?.message ?? '')
+      });
+    });
   }
 
   assignUserToProject() {

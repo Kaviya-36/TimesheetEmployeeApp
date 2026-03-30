@@ -30,7 +30,7 @@ namespace TimeSheetAppWeb.Controllers
 
         // ================= GET LEAVE TYPES =================
         [HttpGet("types")]
-        [Authorize(Roles = "Employee,Intern,HR,Manager,Admin")]
+        [Authorize(Roles = "Employee,Intern,HR,Manager,Admin,Mentor")]
         public async Task<IActionResult> GetLeaveTypes()
         {
             var response = await _leaveService.GetLeaveTypesAsync();
@@ -39,7 +39,7 @@ namespace TimeSheetAppWeb.Controllers
 
         // ================= APPLY LEAVE =================
         [HttpPost("apply")]
-        [Authorize(Roles = "Employee,Intern,HR,Manager,Admin")]
+        [Authorize(Roles = "Employee,Intern,HR,Manager,Admin,Mentor")]
         public async Task<IActionResult> ApplyLeave([FromBody] LeaveCreateRequest request)
         {
             try

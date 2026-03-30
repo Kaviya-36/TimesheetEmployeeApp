@@ -175,7 +175,7 @@
         <form [formGroup]="taskForm" novalidate>
           <div class="zform-group"><label class="zform-label">Task Title <span class="req">*</span></label><input formControlName="taskTitle" class="zform-control" placeholder="Enter task title" /></div>
           <div class="zform-group"><label class="zform-label">Description</label><textarea formControlName="description" class="zform-control" rows="3" placeholder="Enter description"></textarea></div>
-          <div class="zform-group"><label class="zform-label">Due Date</label><input formControlName="dueDate" type="date" class="zform-control" /></div>
+          <div class="zform-group"><label class="zform-label">Due Date</label><input formControlName="dueDate" type="date" class="zform-control" [min]="todayDate" /></div>
         </form>
       </div>
       <div class="zmodal-footer">
@@ -198,7 +198,7 @@
         <form [formGroup]="editTaskForm" novalidate>
           <div class="zform-group"><label class="zform-label">Task Title <span class="req">*</span></label><input formControlName="taskTitle" class="zform-control" /></div>
           <div class="zform-group"><label class="zform-label">Description</label><textarea formControlName="description" class="zform-control" rows="3"></textarea></div>
-          <div class="zform-group"><label class="zform-label">Due Date</label><input formControlName="dueDate" type="date" class="zform-control" /></div>
+          <div class="zform-group"><label class="zform-label">Due Date</label><input formControlName="dueDate" type="date" class="zform-control" [min]="todayDate" /></div>
         </form>
       </div>
       <div class="zmodal-footer">
@@ -230,8 +230,8 @@
             </select>
           </div>
           <div class="zgrid-2">
-            <div class="zform-group"><label class="zform-label">From <span class="req">*</span></label><input formControlName="fromDate" type="date" class="zform-control" /></div>
-            <div class="zform-group"><label class="zform-label">To <span class="req">*</span></label><input formControlName="toDate" type="date" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">From <span class="req">*</span></label><input formControlName="fromDate" type="date" class="zform-control" [min]="todayDate" /></div>
+            <div class="zform-group"><label class="zform-label">To <span class="req">*</span></label><input formControlName="toDate" type="date" class="zform-control" [min]="todayDate" /></div>
           </div>
           <div class="zform-group"><label class="zform-label">Reason</label><textarea formControlName="reason" class="zform-control" rows="2"></textarea></div>
         </form>

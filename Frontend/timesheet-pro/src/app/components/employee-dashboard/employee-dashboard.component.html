@@ -86,7 +86,7 @@
 
           <!-- Rows -->
           <div class="zwts-rows">
-            @for (row of gridRows(); track row.projectName; let i = $index) {
+            @for (row of gridRows(); track $index; let i = $index) {
               <div class="zwts-row">
                 <div class="zwts-project-cell">
                   <button class="zwts-remove-btn" (click)="removeGridRow(i)" title="Remove">✕</button>

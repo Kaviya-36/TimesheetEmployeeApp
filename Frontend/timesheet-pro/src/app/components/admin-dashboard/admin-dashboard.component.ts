@@ -112,6 +112,20 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     return this.filteredAtt().slice(s, s + this.attPS);
   });
 
+  // Today's attendance stats
+  todayAttStats = computed(() => {
+    const today = this.toDateStr(new Date());
+    const recs = this.allAttendances().filter(a => a.date?.startsWith(today));
+    return {
+      checkedIn:  recs.filter(a => a.checkIn).length,
+      checkedOut: recs.filter(a => a.checkOut).length,
+      active:     recs.filter(a => a.checkIn && !a.checkOut).length,
+      late:       recs.filter(a => a.isLate).length,
+      notStarted: Math.max(0, this.allUsers().length - recs.filter(a => a.checkIn).length),
+      records:    recs
+    };
+  });
+
   uSearch   = signal('');  uRole = signal('all');  uStatus = signal('all');
   uPage     = signal(1);   uSort = signal<'name'|'role'|'status'|'joined'>('name');
   uSortDir  = signal<'asc'|'desc'>('asc');

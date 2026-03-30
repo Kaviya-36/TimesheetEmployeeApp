@@ -82,7 +82,7 @@ namespace TimeSheetAppWeb.Controllers
 
         // ---------------- GET ALL PROJECTS WITH PAGINATION ----------------
         [HttpGet]
-        [Authorize(Roles = "Admin,HR,Manager")]
+        [Authorize(Roles = "Admin,HR,Manager,Mentor")]
         public async Task<IActionResult> GetAllProjects([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try

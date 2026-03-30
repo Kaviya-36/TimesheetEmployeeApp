@@ -547,7 +547,7 @@ namespace TimeSheetAppWeb.Services
                 {
                     result.Add(new ProjectAssignmentResponse
                     {
-                        Id = 0,  // synthetic — no assignment row
+                        Id = -(project.Id),  // negative id to avoid collision with real assignment ids
                         ProjectId = project.Id,
                         ProjectName = project.ProjectName,
                         UserId = user.Id,

@@ -675,7 +675,7 @@
 
 <!-- Report Preview Modal -->
 @if (previewType()) {
-  <div class="zmodal-overlay" (click)="closePreview()">
+  <div class="zpreview-overlay" (click)="closePreview()">
     <div class="zpreview-modal" (click)="$event.stopPropagation()">
       <div class="zpreview-header">
         <span class="zpreview-title">
@@ -691,6 +691,7 @@
           }
           @if (previewType()==='attendance') {
             <button class="zbtn zbtn-success zbtn-sm" (click)="exportAttendanceExcel()">⬇ Excel</button>
+            <button class="zbtn zbtn-danger zbtn-sm" (click)="exportAttendancePDF()">📄 PDF</button>
           }
           @if (previewType()==='leaves') {
             <button class="zbtn zbtn-success zbtn-sm" (click)="exportLeavesExcel()">⬇ Excel</button>

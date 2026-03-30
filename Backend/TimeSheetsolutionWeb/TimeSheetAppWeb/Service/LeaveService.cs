@@ -36,6 +36,9 @@ namespace TimeSheetAppWeb.Services
             try
             {
                 // 🔹 Validate dates
+                if (request.FromDate.Date < DateTime.Today)
+                    return Fail<LeaveResponse>("From date cannot be in the past");
+
                 if (request.FromDate > request.ToDate)
                     return Fail<LeaveResponse>("From date cannot be after To date");
 

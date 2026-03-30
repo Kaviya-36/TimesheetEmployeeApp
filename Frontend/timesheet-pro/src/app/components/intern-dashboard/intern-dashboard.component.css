@@ -75,3 +75,74 @@
 .zts-total-row td { background:#F3F4F6 !important; font-size:13px; }
 .zts-day-total    { text-align:center; color:#374151; }
 .zts-grand-total  { text-align:center; color:#F97316; font-size:15px; }
+
+/* ── Weekly Timesheet Grid ───────────────────────────────────────────────── */
+.zwts-card { background:#fff; border-radius:16px; border:1px solid #E5E7EB; box-shadow:0 2px 12px rgba(0,0,0,.06); overflow:hidden; }
+.zwts-header { display:flex; align-items:center; justify-content:space-between; padding:18px 24px; border-bottom:1px solid #F3F4F6; }
+.zwts-title { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:800; color:#111827; }
+.zwts-nav { display:flex; align-items:center; gap:8px; }
+.zwts-nav-btn { padding:6px 14px; border:1.5px solid #E5E7EB; border-radius:8px; background:#fff; font-size:12px; font-weight:600; color:#374151; cursor:pointer; transition:all .15s; }
+.zwts-nav-btn:hover { border-color:#10B981; color:#10B981; }
+.zwts-week-range { display:flex; align-items:center; gap:6px; padding:6px 14px; border:1.5px solid #E5E7EB; border-radius:8px; font-size:12px; font-weight:600; color:#374151; }
+.zwts-arrow { width:32px; height:32px; border:1.5px solid #E5E7EB; border-radius:8px; background:#fff; cursor:pointer; font-size:16px; color:#374151; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+.zwts-arrow:hover:not(:disabled) { border-color:#10B981; color:#10B981; }
+.zwts-arrow:disabled { opacity:.4; cursor:not-allowed; }
+.zwts-col-headers { display:grid; grid-template-columns:200px repeat(7,1fr) 90px; background:#F9FAFB; border-bottom:1px solid #E5E7EB; padding:0 16px; }
+.zwts-project-hdr { padding:12px 8px; font-size:12px; font-weight:700; color:#6B7280; }
+.zwts-day-hdr { padding:10px 4px; text-align:center; font-size:11px; color:#6B7280; }
+.zwts-day-hdr.zwts-today { color:#10B981; }
+.zwts-day-hdr.zwts-weekend { background:rgba(0,0,0,.03); color:#9CA3AF; }
+.zwts-day-name { font-weight:700; text-transform:uppercase; letter-spacing:.5px; font-size:10px; }
+.zwts-day-date { font-size:11px; margin-top:1px; }
+.zwts-week-hdr { padding:10px 4px; text-align:center; font-size:11px; font-weight:700; color:#6B7280; }
+.zwts-rows { min-height:80px; }
+.zwts-row { display:grid; grid-template-columns:200px repeat(7,1fr) 90px; border-bottom:1px solid #F3F4F6; padding:0 16px; align-items:center; }
+.zwts-row:hover { background:#FAFAFA; }
+.zwts-project-cell { display:flex; align-items:center; gap:8px; padding:10px 8px; }
+.zwts-remove-btn { width:20px; height:20px; border-radius:50%; border:1.5px solid #E5E7EB; background:#fff; cursor:pointer; font-size:10px; color:#9CA3AF; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; }
+.zwts-remove-btn:hover { border-color:#DC2626; color:#DC2626; }
+.zwts-project-name { font-size:13px; font-weight:600; color:#111827; }
+.zwts-cell { padding:6px 4px; text-align:center; position:relative; display:flex; flex-direction:column; align-items:center; gap:2px; min-height:56px; }
+.zwts-cell.zwts-today { background:rgba(16,185,129,.04); }
+.zwts-cell.zwts-weekend { background:rgba(0,0,0,.025) !important; }
+.zwts-cell-approved { background:rgba(16,185,129,.06) !important; }
+.zwts-cell-empty { padding:6px 4px; }
+.zwts-input { width:80px; padding:6px 8px; text-align:center; border:1.5px solid #E5E7EB; border-radius:8px; font-size:12px; font-weight:600; color:#374151; font-family:'Roboto Mono',monospace; transition:border-color .15s; background:#F9FAFB; }
+.zwts-input:focus { outline:none; border-color:#10B981; box-shadow:0 0 0 3px rgba(16,185,129,.12); background:#fff; }
+.zwts-input::placeholder { color:#D1D5DB; font-weight:400; }
+.zwts-cell-locked { display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 4px; width:100%; }
+.zwts-cell-locked-val { font-size:12px; font-weight:700; color:#16A34A; font-family:'Roboto Mono',monospace; }
+.zwts-cell-locked-badge { font-size:10px; color:#16A34A; font-weight:800; background:#DCFCE7; border-radius:3px; padding:1px 4px; }
+.zwts-cell-del-btn { position:absolute; top:2px; right:2px; width:16px; height:16px; border-radius:3px; border:1px solid #FECACA; background:#FEF2F2; cursor:pointer; font-size:9px; color:#DC2626; display:flex; align-items:center; justify-content:center; padding:0; opacity:0; transition:opacity .15s; }
+.zwts-cell:hover .zwts-cell-del-btn { opacity:1; }
+.zwts-cell-del-btn:hover { background:#DC2626; color:#fff; }
+.zwts-cell-note-preview { font-size:10px; color:#6B7280; line-height:1.3; max-width:76px; text-align:center; cursor:pointer; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; padding:0 2px; margin-top:2px; border-radius:3px; transition:background .12s; }
+.zwts-cell-note-preview:hover { background:#F3F4F6; color:#374151; }
+.zwts-cell-note-add { font-size:10px; color:#10B981; cursor:pointer; margin-top:2px; padding:1px 4px; border-radius:3px; font-weight:600; transition:background .12s; }
+.zwts-cell-note-add:hover { background:#F0FDF4; }
+.zwts-note-btn { position:absolute; bottom:4px; right:4px; width:18px; height:18px; border-radius:4px; border:1px solid #E5E7EB; background:#F9FAFB; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#9CA3AF; padding:0; transition:all .15s; opacity:0; }
+.zwts-cell:hover .zwts-note-btn, .zwts-note-btn.zwts-note-has { opacity:1; }
+.zwts-note-btn.zwts-note-has { background:#FEF0EB; border-color:#E05B2B; color:#E05B2B; }
+.zwts-note-popover { position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%); z-index:200; background:#fff; border:1px solid #E5E7EB; border-radius:12px; box-shadow:0 8px 28px rgba(0,0,0,.14); width:240px; overflow:hidden; }
+.zwts-note-popover-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:#F9FAFB; border-bottom:1px solid #F3F4F6; font-size:11px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.5px; }
+.zwts-note-close { background:none; border:none; cursor:pointer; font-size:12px; color:#9CA3AF; padding:0; }
+.zwts-note-textarea { width:100%; padding:10px 14px; border:none; resize:none; font-size:13px; color:#374151; font-family:inherit; background:#fff; outline:none; box-sizing:border-box; line-height:1.5; }
+.zwts-note-footer { padding:8px 10px; border-top:1px solid #F3F4F6; background:#FAFAFA; display:flex; justify-content:flex-end; }
+.zwts-note-submit-btn { padding:5px 14px; background:#10B981; color:#fff; border:none; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:background .14s; }
+.zwts-note-submit-btn:hover { background:#059669; }
+.zwts-row-total { text-align:center; font-size:13px; font-weight:700; color:#10B981; padding:10px 4px; }
+.zwts-add-row { display:grid; grid-template-columns:200px repeat(7,1fr) 90px; padding:8px 16px; border-bottom:1px solid #F3F4F6; align-items:center; }
+.zwts-add-btn { display:flex; align-items:center; gap:8px; background:none; border:none; cursor:pointer; font-size:13px; color:#9CA3AF; padding:8px; border-radius:8px; transition:all .15s; width:100%; }
+.zwts-add-btn:hover { background:#F3F4F6; color:#374151; }
+.zwts-picker { position:absolute; top:100%; left:0; z-index:100; background:#fff; border:1px solid #E5E7EB; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.12); min-width:200px; overflow:hidden; }
+.zwts-picker-item { padding:10px 16px; font-size:13px; color:#374151; cursor:pointer; transition:background .1s; }
+.zwts-picker-item:hover { background:#F0FDF4; color:#10B981; }
+.zwts-picker-empty { padding:12px 16px; font-size:12px; color:#9CA3AF; }
+.zwts-footer { display:grid; grid-template-columns:200px repeat(7,1fr) 90px; padding:12px 16px; border-top:2px solid #E5E7EB; background:#F9FAFB; align-items:center; }
+.zwts-footer-actions { display:flex; gap:8px; align-items:center; }
+.zwts-submit-btn { padding:8px 22px; background:#10B981; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:800; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:6px; }
+.zwts-submit-btn:hover:not(:disabled) { background:#059669; box-shadow:0 2px 10px rgba(16,185,129,.3); }
+.zwts-submit-btn:disabled { opacity:.4; cursor:not-allowed; }
+.zwts-day-total { text-align:center; font-size:13px; font-weight:600; color:#374151; }
+.zwts-day-total.zwts-weekend { background:rgba(0,0,0,.03); color:#9CA3AF; }
+.zwts-grand-total { text-align:center; font-size:14px; font-weight:800; color:#10B981; }

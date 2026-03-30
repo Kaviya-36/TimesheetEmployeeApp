@@ -504,9 +504,77 @@
           </div>
         </div>
 
+        <!-- Today's Summary Stats -->
+        <div class="zadm-att-today">
+          <div class="zadm-att-today-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Today's Overview — {{ todayDate | date:'dd MMM yyyy' }}
+          </div>
+          <div class="zadm-att-stats-grid">
+            <div class="zadm-att-stat-card zadm-att-green">
+              <div class="zadm-att-stat-icon">✅</div>
+              <div class="zadm-att-stat-val">{{ todayAttStats().checkedIn }}</div>
+              <div class="zadm-att-stat-lbl">Checked In</div>
+            </div>
+            <div class="zadm-att-stat-card zadm-att-blue">
+              <div class="zadm-att-stat-icon">🟢</div>
+              <div class="zadm-att-stat-val">{{ todayAttStats().active }}</div>
+              <div class="zadm-att-stat-lbl">Active Now</div>
+            </div>
+            <div class="zadm-att-stat-card zadm-att-purple">
+              <div class="zadm-att-stat-icon">⏏</div>
+              <div class="zadm-att-stat-val">{{ todayAttStats().checkedOut }}</div>
+              <div class="zadm-att-stat-lbl">Checked Out</div>
+            </div>
+            <div class="zadm-att-stat-card zadm-att-orange">
+              <div class="zadm-att-stat-icon">⚠</div>
+              <div class="zadm-att-stat-val">{{ todayAttStats().late }}</div>
+              <div class="zadm-att-stat-lbl">Late</div>
+            </div>
+            <div class="zadm-att-stat-card zadm-att-gray">
+              <div class="zadm-att-stat-icon">⭕</div>
+              <div class="zadm-att-stat-val">{{ todayAttStats().notStarted }}</div>
+              <div class="zadm-att-stat-lbl">Not Started</div>
+            </div>
+          </div>
+
+          <!-- Today's employee cards -->
+          @if (todayAttStats().records.length > 0) {
+            <div class="zadm-att-emp-grid">
+              @for (a of todayAttStats().records; track a.id) {
+                <div class="zadm-att-emp-card" [class.zadm-att-emp-late]="a.isLate" [class.zadm-att-emp-active]="a.checkIn && !a.checkOut" [class.zadm-att-emp-done]="a.checkOut">
+                  <div class="zadm-att-emp-avatar">{{ (a.employeeName ?? 'U')[0].toUpperCase() }}</div>
+                  <div class="zadm-att-emp-info">
+                    <div class="zadm-att-emp-name">{{ a.employeeName }}</div>
+                    <div class="zadm-att-emp-times">
+                      <span>🕐 {{ a.checkIn || '—' }}</span>
+                      @if (a.checkOut) { <span>→ {{ a.checkOut }}</span> }
+                    </div>
+                  </div>
+                  <div class="zadm-att-emp-status">
+                    @if (!a.checkIn) { <span class="zbadge zbadge-inactive">Absent</span> }
+                    @else if (a.isLate) { <span class="zbadge zbadge-pending">⚠ Late</span> }
+                    @else if (!a.checkOut) { <span class="zbadge zbadge-info">🟢 Active</span> }
+                    @else { <span class="zbadge zbadge-approved">✅ Done</span> }
+                    @if (a.totalHours) { <div class="zadm-att-emp-hours">{{ a.totalHours }}</div> }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="zempty" style="padding:32px">
+              <span class="zempty-icon">📅</span>
+              <span class="zempty-title">No attendance recorded today yet</span>
+            </div>
+          }
+        </div>
+
         <!-- All employees attendance table -->
-        <div class="zcard">
-          <div class="zcard-header"><span class="zcard-title">All Employees Attendance</span></div>
+        <div class="zcard" style="margin-top:20px">
+          <div class="zcard-header">
+            <span class="zcard-title">Attendance History</span>
+            <span class="zresult-count">{{ filteredAtt().length }} records</span>
+          </div>
           <div class="zfilter-bar">
             <div class="zfilter-wrap">
               <input class="zfilter-input" [ngModel]="attSearch()" (ngModelChange)="attSearch.set($event);attPage.set(1)" placeholder="Search employee..." />
@@ -523,7 +591,6 @@
                 <button class="zpg-btn" (click)="attPeriodOffset.update(o=>o+1);attPage.set(1)" [disabled]="attPeriodOffset()>=0">›</button>
               </div>
             }
-            <span class="zresult-count">{{ filteredAtt().length }} records</span>
           </div>
           <div class="ztable-wrap">
             <table class="ztable">
@@ -531,7 +598,12 @@
               <tbody>
                 @for (a of pagedAtt(); track a.id) {
                   <tr>
-                    <td><strong>{{ a.employeeName }}</strong></td>
+                    <td>
+                      <div class="zuser-cell">
+                        <div class="zavatar" style="width:30px;height:30px;font-size:12px">{{ (a.employeeName??'U')[0].toUpperCase() }}</div>
+                        <strong>{{ a.employeeName }}</strong>
+                      </div>
+                    </td>
                     <td>{{ a.date | date:'EEE, dd MMM yyyy' }}</td>
                     <td class="ztime-cell">{{ a.checkIn || '—' }}</td>
                     <td class="ztime-cell">{{ a.checkOut || '—' }}</td>

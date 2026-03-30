@@ -462,6 +462,23 @@ exportAttendanceExcel() {
   saveAs(new Blob([buffer]), 'attendance-report.xlsx');
 }
 
+exportAttendancePDF() {
+  const doc = new jsPDF();
+  const rows = this.attendance().map(a => [
+    a.employeeName,
+    a.date,
+    a.checkIn || '—',
+    a.checkOut || '—',
+    a.totalHours || '—',
+    a.isLate ? 'Late' : 'On Time'
+  ]);
+  autoTable(doc, {
+    head: [['Employee', 'Date', 'Check In', 'Check Out', 'Total Hours', 'Status']],
+    body: rows
+  });
+  doc.save('attendance-report.pdf');
+}
+
 exportLeavesExcel() {
   const data = this.allLeaves().map(l => ({
     Employee: l.employeeName,

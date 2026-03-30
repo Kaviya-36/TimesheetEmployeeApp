@@ -177,3 +177,65 @@ input[type="time"].zform-control {
 .zmgr-month-footer-label { width: 160px; min-width: 160px; padding: 8px 12px; font-size: 11px; font-weight: 800; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; display: flex; align-items: center; }
 .zmgr-month-day-total { width: 52px; min-width: 52px; padding: 8px 2px; font-size: 10px; font-weight: 600; color: #374151; text-align: center; border-left: 1px solid #F3F4F6; display: flex; align-items: center; justify-content: center; }
 .zmgr-month-grand-total { width: 70px; min-width: 70px; padding: 8px 4px; font-size: 13px; font-weight: 800; color: #E05B2B; text-align: center; display: flex; align-items: center; justify-content: center; }
+
+/* ── Today's Attendance Overview ─────────────────────────────────────────── */
+.zadm-att-today {
+  background: #fff; border-radius: 16px;
+  border: 1px solid #E5E7EB; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  padding: 20px; margin-bottom: 0;
+}
+.zadm-att-today-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 15px; font-weight: 800; color: #111827;
+  margin-bottom: 16px;
+}
+
+/* Stat cards row */
+.zadm-att-stats-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 12px; margin-bottom: 20px;
+}
+@media (max-width: 900px) { .zadm-att-stats-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.zadm-att-stat-card {
+  border-radius: 12px; padding: 16px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  text-align: center; border: 1px solid transparent;
+}
+.zadm-att-green  { background: #F0FDF4; border-color: #BBF7D0; }
+.zadm-att-blue   { background: #EFF6FF; border-color: #BFDBFE; }
+.zadm-att-purple { background: #F5F3FF; border-color: #DDD6FE; }
+.zadm-att-orange { background: #FFFBEB; border-color: #FDE68A; }
+.zadm-att-gray   { background: #F9FAFB; border-color: #E5E7EB; }
+
+.zadm-att-stat-icon { font-size: 22px; }
+.zadm-att-stat-val  { font-size: 28px; font-weight: 900; color: #111827; line-height: 1; }
+.zadm-att-stat-lbl  { font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; }
+
+/* Employee cards grid */
+.zadm-att-emp-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.zadm-att-emp-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; border-radius: 12px;
+  border: 1.5px solid #E5E7EB; background: #FAFAFA;
+  transition: box-shadow .15s;
+}
+.zadm-att-emp-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+.zadm-att-emp-active { border-color: #BFDBFE; background: #EFF6FF; }
+.zadm-att-emp-done   { border-color: #BBF7D0; background: #F0FDF4; }
+.zadm-att-emp-late   { border-color: #FDE68A; background: #FFFBEB; }
+
+.zadm-att-emp-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: linear-gradient(135deg, #E05B2B, #F07A4A);
+  color: #fff; font-size: 15px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.zadm-att-emp-info { flex: 1; min-width: 0; }
+.zadm-att-emp-name  { font-size: 13px; font-weight: 700; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zadm-att-emp-times { font-size: 11px; color: #6B7280; margin-top: 2px; font-family: monospace; }
+.zadm-att-emp-status { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+.zadm-att-emp-hours  { font-size: 11px; font-weight: 700; color: #374151; font-family: monospace; }

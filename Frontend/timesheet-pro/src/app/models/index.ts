@@ -85,7 +85,7 @@ export interface Payroll {
 }
 
 // Intern
-export interface InternTask { id: number; taskTitle: string; description?: string; status: string; dueDate?: string; }
+export interface InternTask { id: number; taskTitle?: string; title?: string; description?: string; status: string; dueDate?: string; }
 export interface InternTaskCreateRequest { internId: number; taskTitle: string; description?: string; dueDate?: string; }
 
 // Analytics
