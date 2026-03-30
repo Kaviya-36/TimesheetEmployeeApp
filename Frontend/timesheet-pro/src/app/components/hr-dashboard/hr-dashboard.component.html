@@ -1,9 +1,7 @@
 <div class="app-shell"><app-sidebar /><div class="app-main"><app-navbar />
 <div class="app-content">
   <div class="zpage-header"><div><h1 class="zpage-title">HR Dashboard</h1><p class="zpage-sub">Manage employees, attendance, leaves & payroll</p></div><span class="zhr-pill">👥 HR</span></div>
-  <div class="ztab-bar">
-    @for (t of tabs; track t.key) { <button class="ztab-btn" [class.active]="activeTab()===t.key" (click)="setTab(t.key)">{{ t.icon }} {{ t.label }}</button> }
-  </div>
+  <!-- Tab Bar removed — navigation via sidebar -->
 
   @if (activeTab()==='employees') {
     <div class="zatt-hero">
@@ -165,7 +163,7 @@
               <td>{{ l.fromDate | date:'dd MMM yyyy' }}</td><td>{{ l.toDate | date:'dd MMM yyyy' }}</td>
               <td class="ztext-muted">{{ l.reason||'—' }}</td>
               <td><span class="zbadge" [class]="stClass(l.status)">{{ stText(l.status) }}</span></td>
-              <td>@if(+l.status===0){<div class="zaction-row"><button class="zbtn zbtn-success zbtn-sm" (click)="approveLeave(l)">✅ Approve</button><button class="zbtn zbtn-danger zbtn-sm" (click)="rejectLeave(l)">❌ Reject</button></div>}@else{<span class="ztext-muted">—</span>}</td>
+              <td>@if(+l.status===0){<div class="zaction-row">@if(l.userId !== auth.currentUser()){<button class="zbtn zbtn-success zbtn-sm" (click)="approveLeave(l)">✅ Approve</button><button class="zbtn zbtn-danger zbtn-sm" (click)="rejectLeave(l)">❌ Reject</button>}@else{<span class="ztext-muted" style="font-size:11px">Own request</span>}</div>}@else{<span class="ztext-muted">—</span>}</td>
             </tr>
           }
           @if (pagedLv().length===0) { <tr class="empty-row"><td colspan="7">No leave requests.</td></tr> }
@@ -182,44 +180,282 @@
     </div>
   }
 
-  @if (activeTab()==='payroll') {
+  @if (activeTab()==='timesheets') {
     <div class="zcard">
-      <div class="zcard-header"><span class="zcard-title">Payroll Management</span><button class="zbtn zbtn-primary zbtn-sm" (click)="showPayrollModal.set(true)">+ Generate Payroll</button></div>
-      <div class="zpay-summary-row">
-        <div class="zpay-stat"><span class="zpay-lbl">Total Payout</span><span class="zpay-val">₹{{ totalPayroll() | number:'1.0-0' }}</span></div>
-        <div class="zpay-stat"><span class="zpay-lbl">Records</span><span class="zpay-val">{{ payrolls().length }}</span></div>
-      </div>
-      <div class="zfilter-bar">
-        <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="paySearch()" (ngModelChange)="paySearch.set($event);payPage.set(1)" placeholder="Search employee..." /></div>
-        <span class="zresult-count">{{ filteredPay().length }} records</span>
-      </div>
-      <div class="ztable-wrap"><table class="ztable">
-        <thead><tr><th>Employee</th><th>Emp ID</th><th>Basic Salary</th><th>Overtime</th><th>Deductions</th><th>Net Salary</th><th>Month</th><th>Generated</th></tr></thead>
-        <tbody>
-          @for (p of pagedPay(); track p.payrollId) {
-            <tr>
-              <td><strong>{{ p.employeeName }}</strong></td>
-              <td><code class="zemp-id">{{ p.employeeId }}</code></td>
-              <td>₹{{ p.basicSalary | number:'1.0-0' }}</td>
-              <td class="zpay-green">+₹{{ p.overtimeAmount | number:'1.0-0' }}</td>
-              <td class="zpay-red">−₹{{ p.deductions | number:'1.0-0' }}</td>
-              <td><strong class="zpay-net">₹{{ p.netSalary | number:'1.0-0' }}</strong></td>
-              <td>{{ p.salaryMonth | date:'MMM yyyy' }}</td>
-              <td class="ztext-muted">{{ p.generatedDate | date:'dd MMM yyyy' }}</td>
-            </tr>
-          }
-          @if (pagedPay().length===0) { <tr class="empty-row"><td colspan="8">No payroll records.</td></tr> }
-        </tbody>
-      </table></div>
-      <div class="zpagination">
-        <span class="zpagination-info">{{ filteredPay().length }} records</span>
-        <div class="zpagination-btns">
-          <button class="zpg-btn" (click)="payPage.update(p=>p-1)" [disabled]="payPage()===1">‹ Prev</button>
-          <span style="padding:0 12px;font-size:13px;color:#6B7280">Page {{ payPage() }}/{{ payTotalPages() }}</span>
-          <button class="zpg-btn" (click)="payPage.update(p=>p+1)" [disabled]="payPage()===payTotalPages()">Next ›</button>
+      <div class="zcard-header">
+        <span class="zcard-title">All Timesheets</span>
+        <div class="zview-toggle">
+          <button class="zview-btn" [class.active]="tsViewMode()==='weekly'"  (click)="tsViewMode.set('weekly'); tsPeriodOffset.set(0); tsPage.set(1)">Weekly Grid</button>
+          <button class="zview-btn" [class.active]="tsViewMode()==='all'"     (click)="tsViewMode.set('all'); tsPeriodOffset.set(0); tsPage.set(1)">All</button>
+          <button class="zview-btn" [class.active]="tsViewMode()==='monthly'" (click)="tsViewMode.set('monthly'); tsPeriodOffset.set(0); tsPage.set(1)">Month</button>
         </div>
       </div>
+
+      @if (tsViewMode() === 'weekly') {
+        <div class="zmgr-wts-wrap">
+          <div class="zmgr-wts-nav">
+            <button class="zwts-nav-btn" (click)="tsPeriodOffset.set(0)">Current Week</button>
+            <div class="zwts-week-range">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>{{ weekDates()[0] | date:'dd MMM' }} – {{ weekDates()[6] | date:'dd MMM yyyy' }}</span>
+            </div>
+            <button class="zwts-arrow" (click)="tsPeriodOffset.update(o=>o-1)">‹</button>
+            <button class="zwts-arrow" (click)="tsPeriodOffset.update(o=>o+1)" [disabled]="tsPeriodOffset()>=0">›</button>
+            <span class="zresult-count" style="margin-left:8px">{{ weeklyRows().length }} rows</span>
+          </div>
+          @if (groupedWeeklyRows().length === 0) {
+            <div class="zempty" style="padding:48px"><span class="zempty-icon">📋</span><span class="zempty-title">No timesheets this week</span></div>
+          }
+          @for (group of groupedWeeklyRows(); track group.employeeName) {
+            <div class="zmgr-wts-card">
+              <div class="zmgr-wts-emp-header">
+                <div class="zmgr-wts-emp-avatar">{{ group.employeeName[0].toUpperCase() }}</div>
+                <div class="zmgr-wts-emp-info">
+                  <span class="zmgr-wts-emp-name">{{ group.employeeName }}</span>
+                  <span class="zmgr-wts-emp-meta">{{ group.rows.length }} project{{ group.rows.length > 1 ? 's' : '' }} · {{ fmtH(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }} total</span>
+                </div>
+              </div>
+              <div class="zmgr-wts-col-headers" [style.grid-template-columns]="'180px repeat(' + visibleWeekDates().length + ', 1fr) 80px 100px'">
+                <div class="zmgr-wts-project-hdr">Project</div>
+                @for (d of visibleWeekDates(); track d.getTime()) {
+                  <div class="zmgr-wts-day-hdr" [class.zmgr-wts-today]="toDateStr(d)===todayDateStr" [class.zmgr-wts-weekend]="$index>=5">
+                    <div class="zwts-day-name">{{ weekDays[$index] }}</div>
+                    <div class="zwts-day-date">{{ d | date:'MMM d' }}</div>
+                  </div>
+                }
+                <div class="zmgr-wts-week-hdr">Total</div>
+                <div class="zmgr-wts-action-hdr">Status</div>
+              </div>
+              @for (row of group.rows; track row.ts.projectName) {
+                <div class="zmgr-wts-row" [style.grid-template-columns]="'180px repeat(' + visibleWeekDates().length + ', 1fr) 80px 100px'">
+                  <div class="zmgr-wts-project-cell"><span class="zmgr-wts-project-name">{{ row.ts.projectName }}</span></div>
+                  @for (h of row.hours; track $index) {
+                    <div class="zmgr-wts-cell" [class.zmgr-wts-today]="toDateStr(visibleWeekDates()[$index])===todayDateStr" [class.zmgr-wts-has-hours]="h !== null" [class.zmgr-wts-weekend]="$index>=5">
+                      @if (h !== null) {
+                        <span class="zmgr-wts-hours-val">{{ fmtH(h) }}</span>
+                        @if (row.tsPerDay[$index]?.description) {
+                          <span class="zmgr-wts-task-text" [title]="row.tsPerDay[$index]?.description ?? ''">{{ row.tsPerDay[$index]?.description }}</span>
+                        }
+                      } @else { <span class="zmgr-wts-empty">—</span> }
+                    </div>
+                  }
+                  <div class="zmgr-wts-row-total">{{ fmtH(row.hours.reduce((s,h)=>s+(h||0),0)) }}</div>
+                  <div class="zmgr-wts-row-actions">
+                    <span class="zbadge" [class]="row.tsPerDay.some(t=>t&&Number(t.status)===0)?'zbadge-pending':row.tsPerDay.some(t=>t&&Number(t.status)===1)?'zbadge-approved':'zbadge-rejected'" style="font-size:11px">
+                      {{ row.tsPerDay.some(t=>t&&Number(t.status)===0)?'Pending':row.tsPerDay.some(t=>t&&Number(t.status)===1)?'Approved':'Rejected' }}
+                    </span>
+                  </div>
+                </div>
+              }
+              <div class="zmgr-wts-footer" [style.grid-template-columns]="'180px repeat(' + visibleWeekDates().length + ', 1fr) 80px 100px'">
+                <div class="zmgr-wts-footer-label">Day Total</div>
+                @for (d of visibleWeekDates(); track d.getTime(); let i = $index) {
+                  <div class="zmgr-wts-day-total" [class.zmgr-wts-weekend]="i>=5">{{ fmtH(group.rows.reduce((s,r)=>s+(r.hours[i]||0),0)) }}</div>
+                }
+                <div class="zmgr-wts-grand-total">{{ fmtH(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</div>
+                <div></div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      @if (tsViewMode() === 'monthly') {
+        <div class="zmgr-wts-wrap">
+          <div class="zmgr-wts-nav">
+            <button class="zwts-nav-btn" (click)="tsPeriodOffset.set(0)">Current Month</button>
+            <div class="zwts-week-range">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>{{ tsPeriodLabel() }}</span>
+            </div>
+            <button class="zwts-arrow" (click)="tsPeriodOffset.update(o=>o-1)">‹</button>
+            <button class="zwts-arrow" (click)="tsPeriodOffset.update(o=>o+1)" [disabled]="tsPeriodOffset()>=0">›</button>
+            <span class="zresult-count" style="margin-left:8px">{{ monthlyGroupedRows().length }} employees</span>
+          </div>
+          @if (monthlyGroupedRows().length === 0) {
+            <div class="zempty" style="padding:48px"><span class="zempty-icon">📋</span><span class="zempty-title">No timesheets this month</span></div>
+          }
+          @for (group of monthlyGroupedRows(); track group.employeeName) {
+            <div class="zmgr-wts-card">
+              <div class="zmgr-wts-emp-header">
+                <div class="zmgr-wts-emp-avatar">{{ group.employeeName[0].toUpperCase() }}</div>
+                <div class="zmgr-wts-emp-info">
+                  <span class="zmgr-wts-emp-name">{{ group.employeeName }}</span>
+                  <span class="zmgr-wts-emp-meta">{{ group.rows.length }} project{{ group.rows.length > 1 ? 's' : '' }} · {{ fmtH(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }} total</span>
+                </div>
+              </div>
+              <div style="overflow-x:auto">
+                <div class="zmgr-month-col-headers">
+                  <div class="zmgr-month-project-hdr">Project</div>
+                  @for (d of monthDates(); track d.getTime()) {
+                    <div class="zmgr-month-day-hdr" [class.zmgr-month-today]="toDateStr(d)===todayDateStr" [class.zmgr-month-weekend]="d.getDay()===0||d.getDay()===6">
+                      <div class="zmgr-month-day-num">{{ d | date:'d' }}</div>
+                      <div class="zmgr-month-day-name">{{ d | date:'EEE' }}</div>
+                    </div>
+                  }
+                  <div class="zmgr-month-total-hdr">Total</div>
+                </div>
+                @for (row of group.rows; track row.projectName) {
+                  <div class="zmgr-month-row">
+                    <div class="zmgr-month-project-cell"><span class="zmgr-wts-project-name">{{ row.projectName }}</span></div>
+                    @for (d of monthDates(); track d.getTime(); let di = $index) {
+                      <div class="zmgr-month-cell" [class.zmgr-month-today]="toDateStr(d)===todayDateStr" [class.zmgr-month-weekend]="d.getDay()===0||d.getDay()===6" [class.zmgr-month-has]="row.hours[di] !== null">
+                        @if (row.hours[di] !== null) {
+                          <span class="zmgr-month-hours">{{ fmtH(row.hours[di]!) }}</span>
+                          @if (row.tsPerDay[di]?.description) {
+                            <span class="zmgr-month-task" [title]="row.tsPerDay[di]?.description ?? ''">{{ row.tsPerDay[di]?.description }}</span>
+                          }
+                        }
+                      </div>
+                    }
+                    <div class="zmgr-month-row-total">{{ fmtH(row.hours.reduce((s,h)=>s+(h||0),0)) }}</div>
+                  </div>
+                }
+                <div class="zmgr-month-footer">
+                  <div class="zmgr-month-footer-label">Total</div>
+                  @for (d of monthDates(); track d.getTime(); let di = $index) {
+                    <div class="zmgr-month-day-total" [class.zmgr-month-weekend]="d.getDay()===0||d.getDay()===6">
+                      {{ group.rows.reduce((s,r)=>s+(r.hours[di]||0),0) > 0 ? fmtH(group.rows.reduce((s,r)=>s+(r.hours[di]||0),0)) : '' }}
+                    </div>
+                  }
+                  <div class="zmgr-month-grand-total">{{ fmtH(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      @if (tsViewMode() === 'all') {
+        <div class="zfilter-bar">
+          <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="tsSearch()" (ngModelChange)="tsSearch.set($event);tsPage.set(1)" placeholder="Search employee or project..." /></div>
+          <select class="zfilter-select" [ngModel]="tsStatus()" (ngModelChange)="tsStatus.set($event);tsPage.set(1)">
+            <option value="all">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option>
+          </select>
+          <span class="zresult-count">{{ filteredTs().length }} records</span>
+        </div>
+        <div class="ztable-wrap"><table class="ztable">
+          <thead><tr>
+            <th class="sortable" (click)="sortTs('employee')">Employee {{ ico(tsSortCol()==='employee', tsSortDir()) }}</th>
+            <th>Project</th>
+            <th class="sortable" (click)="sortTs('date')">Date {{ ico(tsSortCol()==='date', tsSortDir()) }}</th>
+            <th class="sortable" (click)="sortTs('hours')">Hours {{ ico(tsSortCol()==='hours', tsSortDir()) }}</th>
+            <th>Status</th><th>Note</th><th>Comment</th>
+          </tr></thead>
+          <tbody>
+            @for (ts of pagedTs(); track ts.id) {
+              <tr>
+                <td><strong>{{ ts.employeeName }}</strong><br><code class="zemp-id">{{ ts.employeeId }}</code></td>
+                <td>{{ ts.projectName }}</td>
+                <td>{{ ts.date | date:'dd MMM yyyy' }}</td>
+                <td><strong class="zhours">{{ fmtH(parseHoursPublic(ts.hoursWorked)) }}</strong></td>
+                <td><span class="zbadge" [class]="stClass(ts.status)">{{ stText(ts.status) }}</span></td>
+                <td class="ztext-muted zcomment-cell">{{ ts.description || '—' }}</td>
+                <td class="ztext-muted zcomment-cell">{{ ts.managerComment || '—' }}</td>
+              </tr>
+            }
+            @if (pagedTs().length === 0) { <tr class="empty-row"><td colspan="7">No timesheets found.</td></tr> }
+          </tbody>
+        </table></div>
+        <div class="zpagination">
+          <span class="zpagination-info">{{ filteredTs().length }} records</span>
+          <div class="zpagination-btns">
+            <button class="zpg-btn" (click)="tsPage.update(p=>p-1)" [disabled]="tsPage()===1">‹ Prev</button>
+            <span style="padding:0 12px;font-size:13px;color:#6B7280">Page {{ tsPage() }}/{{ tsTotalPages() }}</span>
+            <button class="zpg-btn" (click)="tsPage.update(p=>p+1)" [disabled]="tsPage()===tsTotalPages()">Next ›</button>
+          </div>
+        </div>
+      }
     </div>
+  }
+
+  @if (activeTab()==='payroll') {
+
+    <!-- Payroll Summary Stats -->
+    <div class="zpay-hero-grid">
+      <div class="zpay-hero-card zpay-hero-total">
+        <div class="zpay-hero-icon">💰</div>
+        <div class="zpay-hero-body">
+          <div class="zpay-hero-val">₹{{ totalPayroll() | number:'1.0-0' }}</div>
+          <div class="zpay-hero-lbl">Total Payout</div>
+        </div>
+      </div>
+      <div class="zpay-hero-card zpay-hero-count">
+        <div class="zpay-hero-icon">👥</div>
+        <div class="zpay-hero-body">
+          <div class="zpay-hero-val">{{ payrolls().length }}</div>
+          <div class="zpay-hero-lbl">Payroll Records</div>
+        </div>
+      </div>
+      <div class="zpay-hero-card zpay-hero-avg">
+        <div class="zpay-hero-icon">📊</div>
+        <div class="zpay-hero-body">
+          <div class="zpay-hero-val">₹{{ payrolls().length ? (totalPayroll() / payrolls().length | number:'1.0-0') : '0' }}</div>
+          <div class="zpay-hero-lbl">Avg Net Salary</div>
+        </div>
+      </div>
+      <div class="zpay-hero-card zpay-hero-action">
+        <button class="zbtn zbtn-primary" style="width:100%" (click)="showPayrollModal.set(true)">+ Generate Payroll</button>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="zfilter-bar" style="margin-bottom:16px">
+      <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="paySearch()" (ngModelChange)="paySearch.set($event);payPage.set(1)" placeholder="Search employee..." /></div>
+      <span class="zresult-count">{{ filteredPay().length }} records</span>
+    </div>
+
+    <!-- Payroll Cards -->
+    <div class="zpay-cards-grid">
+      @for (p of pagedPay(); track p.payrollId) {
+        <div class="zpay-card">
+          <div class="zpay-card-header">
+            <div class="zpay-card-avatar">{{ (p.employeeName??'E')[0].toUpperCase() }}</div>
+            <div class="zpay-card-info">
+              <div class="zpay-card-name">{{ p.employeeName }}</div>
+              <code class="zemp-id">{{ p.employeeId }}</code>
+            </div>
+            <div class="zpay-card-month">{{ p.salaryMonth | date:'MMM yyyy' }}</div>
+          </div>
+          <div class="zpay-card-breakdown">
+            <div class="zpay-breakdown-row">
+              <span class="zpay-breakdown-lbl">Basic</span>
+              <span class="zpay-breakdown-val">₹{{ p.basicSalary | number:'1.0-0' }}</span>
+            </div>
+            <div class="zpay-breakdown-row">
+              <span class="zpay-breakdown-lbl">Overtime</span>
+              <span class="zpay-breakdown-val zpay-green">+₹{{ p.overtimeAmount | number:'1.0-0' }} ({{ p.overtimeAmount / 100 }}h)</span>
+            </div>
+            <div class="zpay-breakdown-row">
+              <span class="zpay-breakdown-lbl">Deductions</span>
+              <span class="zpay-breakdown-val zpay-red">−₹{{ p.deductions | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          <div class="zpay-card-footer">
+            <div class="zpay-net-label">Net Salary</div>
+            <div class="zpay-net-val">₹{{ p.netSalary | number:'1.0-0' }}</div>
+          </div>
+        </div>
+      }
+      @if (pagedPay().length === 0) {
+        <div class="zempty" style="grid-column:1/-1">
+          <span class="zempty-icon">💰</span>
+          <span class="zempty-title">No payroll records</span>
+          <span class="zempty-sub">Click "+ Generate Payroll" to get started</span>
+        </div>
+      }
+    </div>
+
+    <!-- Pagination -->
+    <div class="zpagination" style="margin-top:16px">
+      <span class="zpagination-info">{{ filteredPay().length }} records</span>
+      <div class="zpagination-btns">
+        <button class="zpg-btn" (click)="payPage.update(p=>p-1)" [disabled]="payPage()===1">‹ Prev</button>
+        <span style="padding:0 12px;font-size:13px;color:#6B7280">Page {{ payPage() }}/{{ payTotalPages() }}</span>
+        <button class="zpg-btn" (click)="payPage.update(p=>p+1)" [disabled]="payPage()===payTotalPages()">Next ›</button>
+      </div>
+    </div>
+
     @if (showPayrollModal()) {
       <div class="zmodal-overlay" (click)="showPayrollModal.set(false)"><div class="zmodal" (click)="$event.stopPropagation()">
         <div class="zmodal-header"><span class="zmodal-title">💰 Generate Payroll</span><button class="zmodal-close" (click)="showPayrollModal.set(false)">✕</button></div>
@@ -229,11 +465,11 @@
           </div>
           <div class="zgrid-2">
             <div class="zform-group"><label class="zform-label">Basic Salary *</label><input formControlName="basicSalary" type="number" class="zform-control" placeholder="50000" /></div>
-            <div class="zform-group"><label class="zform-label">Overtime Amount</label><input formControlName="overtimeAmount" type="number" class="zform-control" placeholder="0" /></div>
+            <div class="zform-group"><label class="zform-label">Overtime Hours</label><input formControlName="overtimeAmount" type="number" class="zform-control" placeholder="0" /></div>
           </div>
           <div class="zgrid-2">
             <div class="zform-group"><label class="zform-label">Deductions</label><input formControlName="deductions" type="number" class="zform-control" placeholder="0" /></div>
-            <div class="zform-group"><label class="zform-label">Salary Month *</label><input formControlName="salaryMonth" type="month" class="zform-control" /></div>
+            <div class="zform-group"><label class="zform-label">Salary Month *</label><input formControlName="salaryMonth" type="month" class="zform-control" [min]="currentMonth" [max]="currentMonth" [attr.value]="currentMonth" /></div>
           </div>
         </form></div>
         <div class="zmodal-footer"><button class="zbtn zbtn-outline" (click)="showPayrollModal.set(false)">Cancel</button><button class="zbtn zbtn-primary" [disabled]="payrollForm.invalid" (click)="generatePayroll()">Generate</button></div>
@@ -246,67 +482,104 @@
   <!-- HEADER -->
   <div class="zreports-header">
     <h3>📊 Reports & Analytics</h3>
-
-    <div class="zreport-actions">
-      <button class="zbtn zbtn-success" (click)="exportEmployeesExcel()">⬇ Employees (Excel)</button>
-      <button class="zbtn zbtn-danger" (click)="exportEmployeesPDF()">📄 Employees (PDF)</button>
-
-      <button class="zbtn zbtn-success" (click)="exportAttendanceExcel()">⬇ Attendance (Excel)</button>
-      <button class="zbtn zbtn-danger" (click)="exportAttendancePDF()">📄 Attendance (PDF)</button>
-    </div>
   </div>
 
-  <!-- GRID -->
-  <div class="zreports-grid">
+  <!-- TWO-COLUMN LAYOUT: stats left, chat right -->
+  <div class="zreports-layout">
 
-    <!-- EMPLOYEE -->
-    <div class="zcard">
-      <div class="zreport-icon">👥</div>
-      <h4 class="zreport-title">Employee Summary</h4>
+    <!-- LEFT: stat cards -->
+    <div class="zreports-stats">
+      <div class="zreport-card">
+        <div class="zreport-card-header"><span class="zreport-card-icon">👥</span><span class="zreport-card-title">Employees</span></div>
+        <div class="zreport-stat"><span>Total</span><strong>{{ employees().length }}</strong></div>
+        <div class="zreport-stat"><span>Active</span><strong class="green">{{ activeCount() }}</strong></div>
+        <div class="zreport-stat"><span>Inactive</span><strong class="red">{{ employees().length - activeCount() }}</strong></div>
+        <div class="zreport-card-actions">
+          <button class="zbtn zbtn-outline zbtn-sm" (click)="openPreview('employees')">👁 Preview</button>
+          <button class="zbtn zbtn-success zbtn-sm" (click)="exportEmployeesExcel()">⬇ Excel</button>
+        </div>
+      </div>
 
-      <div class="zreport-stat"><span>Total</span><strong>{{ employees().length }}</strong></div>
-      <div class="zreport-stat"><span>Active</span><strong class="green">{{ activeCount() }}</strong></div>
-      <div class="zreport-stat"><span>Inactive</span><strong class="red">{{ employees().length - activeCount() }}</strong></div>
-      
-    </div>
+      <div class="zreport-card">
+        <div class="zreport-card-header"><span class="zreport-card-icon">📅</span><span class="zreport-card-title">Attendance</span></div>
+        <div class="zreport-stat"><span>Total Records</span><strong>{{ attendance().length }}</strong></div>
+        <div class="zreport-stat"><span>Late Entries</span><strong class="orange">{{ lateToday() }}</strong></div>
+        <div class="zreport-card-actions">
+          <button class="zbtn zbtn-outline zbtn-sm" (click)="openPreview('attendance')">👁 Preview</button>
+          <button class="zbtn zbtn-success zbtn-sm" (click)="exportAttendanceExcel()">⬇ Excel</button>
+        </div>
+      </div>
 
-    <!-- ATTENDANCE -->
-    <div class="zcard">
-      <div class="zreport-icon">📅</div>
-      <h4 class="zreport-title">Attendance Report</h4>
+      <div class="zreport-card">
+        <div class="zreport-card-header"><span class="zreport-card-icon">🌴</span><span class="zreport-card-title">Leaves</span></div>
+        <div class="zreport-stat"><span>Total</span><strong>{{ allLeaves().length }}</strong></div>
+        <div class="zreport-stat"><span>Pending</span><strong class="orange">{{ pendingLv() }}</strong></div>
+        <div class="zreport-stat"><span>Approved</span><strong class="green">{{ allLeaves().length - pendingLv() }}</strong></div>
+        <div class="zreport-card-actions">
+          <button class="zbtn zbtn-outline zbtn-sm" (click)="openPreview('leaves')">👁 Preview</button>
+          <button class="zbtn zbtn-success zbtn-sm" (click)="exportLeavesExcel()">⬇ Excel</button>
+        </div>
+      </div>
 
-      <div class="zreport-stat"><span>Total Records</span><strong>{{ attendance().length }}</strong></div>
-      <div class="zreport-stat"><span>Late Today</span><strong class="orange">{{ lateToday() }}</strong></div>
-    </div>
-
-    <!-- LEAVE -->
-    <div class="zcard">
-      <div class="zreport-icon">🌴</div>
-      <h4 class="zreport-title">Leave Report</h4>
-
-      <div class="zreport-stat"><span>Total</span><strong>{{ allLeaves().length }}</strong></div>
-      <div class="zreport-stat"><span>Pending</span><strong class="orange">{{ pendingLv() }}</strong></div>
-
-      <div class="zreport-actions">
-        <button class="zbtn zbtn-success" (click)="exportLeavesExcel()">Excel</button>
-        <button class="zbtn zbtn-danger" (click)="exportLeavesPDF()">PDF</button>
+      <div class="zreport-card">
+        <div class="zreport-card-header"><span class="zreport-card-icon">💰</span><span class="zreport-card-title">Payroll</span></div>
+        <div class="zreport-stat"><span>Records</span><strong>{{ payrolls().length }}</strong></div>
+        <div class="zreport-stat"><span>Total Payout</span><strong class="green">₹{{ totalPayroll() | number:'1.0-0' }}</strong></div>
+        <div class="zreport-card-actions">
+          <button class="zbtn zbtn-outline zbtn-sm" (click)="openPreview('payroll')">👁 Preview</button>
+          <button class="zbtn zbtn-success zbtn-sm" (click)="exportPayrollExcel()">⬇ Excel</button>
+        </div>
       </div>
     </div>
 
-    <!-- PAYROLL -->
-    <div class="zcard">
-      <div class="zreport-icon">💰</div>
-      <h4 class="zreport-title">Payroll</h4>
-
-      <div class="zreport-stat"><span>Generated</span><strong>{{ payrolls().length }}</strong></div>
-      <div class="zreport-stat">
-        <span>Total</span>
-        <strong class="green">₹{{ totalPayroll() | number:'1.0-0' }}</strong>
+    <!-- RIGHT: chat assistant -->
+    <div class="zhr-chat-panel">
+      <div class="zhr-chat-header">
+        <span class="zhr-chat-title">
+          <svg width="18" height="18" fill="none" stroke="#16A34A" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          HR Assistant
+        </span>
+        <span class="zhr-chat-badge">AI</span>
       </div>
 
-      <div class="zreport-actions">
-        <button class="zbtn zbtn-success" (click)="exportPayrollExcel()">Excel</button>
-        <button class="zbtn zbtn-danger" (click)="exportPayrollPDF()">PDF</button>
+      <div class="zhr-chat-messages" #chatBox>
+        @for (msg of chatMessages(); track $index) {
+          <div class="zhr-chat-msg" [class.zhr-chat-user]="msg.role==='user'" [class.zhr-chat-bot]="msg.role==='assistant'">
+            @if (msg.role === 'assistant') {
+              <div class="zhr-chat-avatar">🤖</div>
+            }
+            <div class="zhr-chat-bubble">{{ msg.text }}</div>
+            @if (msg.role === 'user') {
+              <div class="zhr-chat-avatar zhr-chat-user-av">{{ (auth.username() ?? 'U')[0].toUpperCase() }}</div>
+            }
+          </div>
+        }
+        @if (chatLoading()) {
+          <div class="zhr-chat-msg zhr-chat-bot">
+            <div class="zhr-chat-avatar">🤖</div>
+            <div class="zhr-chat-bubble zhr-chat-typing"><span></span><span></span><span></span></div>
+          </div>
+        }
+      </div>
+
+      <div class="zhr-chat-suggestions">
+        <button class="zhr-chat-chip" (click)="chatInput.set('How many employees are active?'); sendChat()">Active employees?</button>
+        <button class="zhr-chat-chip" (click)="chatInput.set('Who has pending leaves?'); sendChat()">Pending leaves?</button>
+        <button class="zhr-chat-chip" (click)="chatInput.set('What is the total payroll?'); sendChat()">Total payroll?</button>
+        <button class="zhr-chat-chip" (click)="chatInput.set('Who was late?'); sendChat()">Who was late?</button>
+        <button class="zhr-chat-chip" (click)="chatInput.set('Give me a summary'); sendChat()">Summary</button>
+      </div>
+
+      <div class="zhr-chat-input-row">
+        <input class="zhr-chat-input"
+          [value]="chatInput()"
+          (input)="chatInput.set($any($event.target).value)"
+          (keydown.enter)="sendChat()"
+          placeholder="Ask about employees, leaves, payroll..."
+          [disabled]="chatLoading()" />
+        <button class="zhr-chat-send" (click)="sendChat()" [disabled]="chatLoading() || !chatInput().trim()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
       </div>
     </div>
 
@@ -395,6 +668,131 @@
       <div class="zmodal-footer">
         <button class="zbtn zbtn-outline" (click)="showAddLeaveModal.set(false)">Cancel</button>
         <button class="zbtn zbtn-primary" [disabled]="addLeaveForm.invalid" (click)="addLeaveForSelf()">Apply</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Report Preview Modal -->
+@if (previewType()) {
+  <div class="zmodal-overlay" (click)="closePreview()">
+    <div class="zpreview-modal" (click)="$event.stopPropagation()">
+      <div class="zpreview-header">
+        <span class="zpreview-title">
+          @if (previewType()==='employees')  { 👥 Employee Report }
+          @if (previewType()==='attendance') { 📅 Attendance Report }
+          @if (previewType()==='leaves')     { 🌴 Leave Report }
+          @if (previewType()==='payroll')    { 💰 Payroll Report }
+        </span>
+        <div class="zpreview-header-actions">
+          @if (previewType()==='employees')  {
+            <button class="zbtn zbtn-success zbtn-sm" (click)="exportEmployeesExcel()">⬇ Excel</button>
+            <button class="zbtn zbtn-danger zbtn-sm" (click)="exportEmployeesPDF()">📄 PDF</button>
+          }
+          @if (previewType()==='attendance') {
+            <button class="zbtn zbtn-success zbtn-sm" (click)="exportAttendanceExcel()">⬇ Excel</button>
+          }
+          @if (previewType()==='leaves') {
+            <button class="zbtn zbtn-success zbtn-sm" (click)="exportLeavesExcel()">⬇ Excel</button>
+            <button class="zbtn zbtn-danger zbtn-sm" (click)="exportLeavesPDF()">📄 PDF</button>
+          }
+          @if (previewType()==='payroll') {
+            <button class="zbtn zbtn-success zbtn-sm" (click)="exportPayrollExcel()">⬇ Excel</button>
+            <button class="zbtn zbtn-danger zbtn-sm" (click)="exportPayrollPDF()">📄 PDF</button>
+          }
+          <button class="zmodal-close" (click)="closePreview()">✕</button>
+        </div>
+      </div>
+
+      <div class="zpreview-body">
+
+        @if (previewType()==='employees') {
+          <table class="zpreview-table">
+            <thead><tr><th>#</th><th>Name</th><th>Employee ID</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th></tr></thead>
+            <tbody>
+              @for (e of employees(); track e.id; let i = $index) {
+                <tr>
+                  <td class="zpreview-num">{{ i+1 }}</td>
+                  <td><strong>{{ e.name }}</strong></td>
+                  <td><code class="zemp-id">{{ e.employeeId }}</code></td>
+                  <td class="ztext-muted">{{ e.email }}</td>
+                  <td><span class="zbadge zbadge-role">{{ e.role }}</span></td>
+                  <td><span class="zbadge" [class]="e.status==='Active'?'zbadge-active':'zbadge-inactive'">{{ e.status }}</span></td>
+                  <td class="ztext-muted">{{ e.joiningDate | date:'dd MMM yyyy' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+
+        @if (previewType()==='attendance') {
+          <table class="zpreview-table">
+            <thead><tr><th>#</th><th>Employee</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Total Hours</th><th>Status</th></tr></thead>
+            <tbody>
+              @for (a of attendance(); track a.id; let i = $index) {
+                <tr>
+                  <td class="zpreview-num">{{ i+1 }}</td>
+                  <td><strong>{{ a.employeeName }}</strong></td>
+                  <td>{{ a.date | date:'EEE, dd MMM yyyy' }}</td>
+                  <td class="ztime-cell">{{ a.checkIn || '—' }}</td>
+                  <td class="ztime-cell">{{ a.checkOut || '—' }}</td>
+                  <td><strong>{{ a.totalHours || '—' }}</strong></td>
+                  <td>
+                    @if (a.isLate) { <span class="zbadge zbadge-pending">⚠ Late</span> }
+                    @else { <span class="zbadge zbadge-approved">✅ On Time</span> }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+
+        @if (previewType()==='leaves') {
+          <table class="zpreview-table">
+            <thead><tr><th>#</th><th>Employee</th><th>Leave Type</th><th>From</th><th>To</th><th>Days</th><th>Reason</th><th>Status</th></tr></thead>
+            <tbody>
+              @for (l of allLeaves(); track l.id; let i = $index) {
+                <tr>
+                  <td class="zpreview-num">{{ i+1 }}</td>
+                  <td><strong>{{ l.employeeName }}</strong></td>
+                  <td>{{ l.leaveType }}</td>
+                  <td>{{ l.fromDate | date:'dd MMM yyyy' }}</td>
+                  <td>{{ l.toDate | date:'dd MMM yyyy' }}</td>
+                  <td><span class="zdays-badge">{{ leaveDays(l) }}d</span></td>
+                  <td class="ztext-muted">{{ l.reason || '—' }}</td>
+                  <td><span class="zbadge" [class]="stClass(l.status)">{{ stText(l.status) }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+
+        @if (previewType()==='payroll') {
+          <table class="zpreview-table">
+            <thead><tr><th>#</th><th>Employee</th><th>ID</th><th>Month</th><th>Basic</th><th>Overtime</th><th>Deductions</th><th>Net Salary</th></tr></thead>
+            <tbody>
+              @for (p of payrolls(); track p.payrollId; let i = $index) {
+                <tr>
+                  <td class="zpreview-num">{{ i+1 }}</td>
+                  <td><strong>{{ p.employeeName }}</strong></td>
+                  <td><code class="zemp-id">{{ p.employeeId }}</code></td>
+                  <td>{{ p.salaryMonth | date:'MMM yyyy' }}</td>
+                  <td>₹{{ p.basicSalary | number:'1.0-0' }}</td>
+                  <td class="green">+₹{{ p.overtimeAmount | number:'1.0-0' }}</td>
+                  <td class="red">−₹{{ p.deductions | number:'1.0-0' }}</td>
+                  <td><strong class="green">₹{{ p.netSalary | number:'1.0-0' }}</strong></td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr class="zpreview-total-row">
+                <td colspan="7" style="text-align:right;font-weight:700;padding:10px 16px">Total Payout</td>
+                <td style="font-weight:800;color:#16A34A;padding:10px 16px">₹{{ totalPayroll() | number:'1.0-0' }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        }
+
       </div>
     </div>
   </div>

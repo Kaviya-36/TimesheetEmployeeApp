@@ -35,6 +35,29 @@ namespace TimeSheetAppWeb.Services
                     return new ApiResponse<PayrollResponse> { Success = false, Message = "User not found" };
                 }
 
+                // ── Only allow current month ───────────────────────────────────────
+                var now = DateTime.Now;
+                if (request.SalaryMonth.Year != now.Year || request.SalaryMonth.Month != now.Month)
+                    return new ApiResponse<PayrollResponse>
+                    {
+                        Success = false,
+                        Message = $"Payroll can only be generated for the current month ({now:MMMM yyyy})."
+                    };
+
+                // ── Prevent duplicate payroll for same user + month ────────────────
+                var existing = await _payrollRepository.GetAllAsync() ?? Enumerable.Empty<Payroll>();
+                var duplicate = existing.Any(p =>
+                    p.UserId == request.UserId &&
+                    p.SalaryMonth.Year  == request.SalaryMonth.Year &&
+                    p.SalaryMonth.Month == request.SalaryMonth.Month);
+
+                if (duplicate)
+                    return new ApiResponse<PayrollResponse>
+                    {
+                        Success = false,
+                        Message = $"Payroll for {user.Name} has already been generated for {request.SalaryMonth:MMMM yyyy}."
+                    };
+
                 decimal netSalary = request.BasicSalary + request.OvertimeAmount - request.Deductions;
 
                 var payroll = new Payroll

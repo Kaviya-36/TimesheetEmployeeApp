@@ -15,7 +15,7 @@ import { ConfirmComponent } from '../confirm-dialog/confirm.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 
-export type HrTab = 'employees' | 'attendance' | 'leaves' | 'payroll' | 'reports' | 'profile';
+export type HrTab = 'employees' | 'attendance' | 'leaves' | 'payroll' | 'timesheets' | 'reports' | 'profile';
 
 @Component({
   selector: 'app-hr-dashboard',
@@ -46,12 +46,13 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
 
   activeTab = signal<HrTab>('employees');
   readonly tabs = [
-    { key:'employees' as HrTab, label:'Employees', icon:'👥' },
-    { key:'attendance' as HrTab, label:'Attendance', icon:'📅' },
-    { key:'leaves' as HrTab, label:'Leaves', icon:'🌴' },
-    { key:'payroll' as HrTab, label:'Payroll', icon:'💰' },
-    { key:'reports' as HrTab, label:'Reports', icon:'📊' },
-    { key:'profile' as HrTab, label:'Profile', icon:'👤' },
+    { key:'employees'  as HrTab, label:'Employees',  icon:'👥' },
+    { key:'attendance' as HrTab, label:'Attendance',  icon:'📅' },
+    { key:'leaves'     as HrTab, label:'Leaves',      icon:'🌴' },
+    { key:'timesheets' as HrTab, label:'Timesheets',  icon:'📋' },
+    { key:'payroll'    as HrTab, label:'Payroll',     icon:'💰' },
+    { key:'reports'    as HrTab, label:'Reports',     icon:'📊' },
+    { key:'profile'    as HrTab, label:'Profile',     icon:'👤' },
   ];
   readonly roleOptions = ['Employee','Manager','HR','Intern','Mentor'];
 
@@ -67,11 +68,137 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   liveTimer  = signal('00:00:00');
   private timerInterval: any;
   readonly todayDate = new Date().toISOString().split('T')[0];
+  readonly currentMonth = new Date().toISOString().slice(0, 7); // "2026-03"
 
   empSearch  = signal(''); empRoleF = signal('all'); empStatusF = signal('all'); empPage = signal(1); empPS = 8;
   attSearch  = signal(''); attPage = signal(1); attPS = 8;
   lvSearch   = signal(''); lvStatusF = signal('all'); lvPage = signal(1); lvPS = 8;
   paySearch  = signal(''); payPage = signal(1); payPS = 8;
+
+  // ── Timesheets ────────────────────────────────────────────────────────────
+  allTimesheets = signal<any[]>([]);
+  tsSearch  = signal(''); tsStatus = signal('all'); tsPage = signal(1); tsPS = 8;
+  tsSortCol = signal<'date'|'hours'|'employee'>('date'); tsSortDir = signal<'asc'|'desc'>('desc');
+  tsViewMode     = signal<'all'|'weekly'|'monthly'>('all');
+  tsPeriodOffset = signal(0);
+  tsPeriodLabel  = () => this._periodLabel(this.tsViewMode(), this.tsPeriodOffset());
+
+  weekDays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  toDateStr(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  readonly todayDateStr = this.toDateStr(new Date());
+
+  weekDates = () => {
+    const now = new Date(); const offset = this.tsPeriodOffset();
+    const monday = new Date(now); const day = now.getDay() || 7;
+    monday.setDate(now.getDate() - day + 1 + offset * 7); monday.setHours(0,0,0,0);
+    return Array.from({length:7}, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d; });
+  };
+
+  visibleWeekDates = () => {
+    const all = this.weekDates();
+    if (this.tsPeriodOffset() !== 0) return all;
+    const todayStr = this.toDateStr(new Date());
+    return all.filter(d => this.toDateStr(d) <= todayStr);
+  };
+
+  private parseHoursVal(val: any): number {
+    if (!val) return 0;
+    if (typeof val === 'number') return val;
+    const s = String(val);
+    if (s.includes(':')) { const [h, m] = s.split(':').map(Number); return h + (m||0)/60; }
+    return parseFloat(s) || 0;
+  }
+  fmtH(decimal: number): string {
+    if (!decimal) return '—';
+    const h = Math.floor(decimal); const m = Math.round((decimal-h)*60);
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+  parseHoursPublic = (val: any) => this.parseHoursVal(val);
+
+  filteredTs = computed(() => {
+    let d = this.allTimesheets();
+    const q = this.tsSearch().toLowerCase();
+    if (q) d = d.filter(t => (t.employeeName??'').toLowerCase().includes(q) || (t.projectName??'').toLowerCase().includes(q));
+    if (this.tsStatus() !== 'all') {
+      const sv: Record<string,number> = { pending:0, approved:1, rejected:2 };
+      d = d.filter(t => Number(t.status) === sv[this.tsStatus()]);
+    }
+    d = d.filter(t => this._inPeriod(t.date, this.tsViewMode(), this.tsPeriodOffset()));
+    const col = this.tsSortCol(); const dir = this.tsSortDir();
+    d = [...d].sort((a,b) => {
+      const v = col==='date' ? new Date(a.date).getTime()-new Date(b.date).getTime()
+              : col==='hours' ? this.parseHoursVal(a.hoursWorked)-this.parseHoursVal(b.hoursWorked)
+              : (a.employeeName??'').localeCompare(b.employeeName??'');
+      return dir==='asc' ? v : -v;
+    });
+    return d;
+  });
+  tsTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredTs().length / this.tsPS)));
+  pagedTs      = computed(() => { const s=(this.tsPage()-1)*this.tsPS; return this.filteredTs().slice(s,s+this.tsPS); });
+
+  weeklyRows = () => {
+    const dates = this.visibleWeekDates(); const all = this.allTimesheets();
+    const map = new Map<string, { ts: any; hours: (number|null)[]; tsPerDay: (any|null)[] }>();
+    for (const ts of all) {
+      const d = new Date(ts.date); d.setHours(0,0,0,0);
+      const idx = dates.findIndex(wd => wd.getTime() === d.getTime());
+      if (idx === -1) continue;
+      const key = `${ts.employeeName}|${ts.projectName}`;
+      if (!map.has(key)) map.set(key, { ts, hours: Array(dates.length).fill(null), tsPerDay: Array(dates.length).fill(null) });
+      map.get(key)!.hours[idx] = this.parseHoursVal(ts.hoursWorked);
+      map.get(key)!.tsPerDay[idx] = ts;
+    }
+    return [...map.values()];
+  };
+
+  groupedWeeklyRows = () => {
+    const rows = this.weeklyRows();
+    const map = new Map<string, { employeeName: string; rows: typeof rows }>();
+    for (const row of rows) {
+      const name = row.ts.employeeName ?? 'Unknown';
+      if (!map.has(name)) map.set(name, { employeeName: name, rows: [] });
+      map.get(name)!.rows.push(row);
+    }
+    return [...map.values()];
+  };
+
+  monthDates = () => {
+    const now = new Date();
+    const year  = now.getFullYear();
+    const month = now.getMonth() + this.tsPeriodOffset();
+    const ref   = new Date(year, month, 1);
+    const days  = new Date(ref.getFullYear(), ref.getMonth() + 1, 0).getDate();
+    return Array.from({ length: days }, (_, i) => new Date(ref.getFullYear(), ref.getMonth(), i + 1));
+  };
+
+  monthlyGroupedRows = () => {
+    const dates = this.monthDates();
+    const all   = this.allTimesheets().filter(t => this._inPeriod(t.date, 'monthly', this.tsPeriodOffset()));
+    const empMap = new Map<string, Map<string, { hours: (number|null)[]; tsPerDay: (any|null)[]; projectName: string }>>();
+    for (const ts of all) {
+      const d = new Date(ts.date); d.setHours(0,0,0,0);
+      const idx = dates.findIndex(md => md.getTime() === d.getTime());
+      if (idx === -1) continue;
+      const emp = ts.employeeName ?? 'Unknown';
+      const prj = ts.projectName ?? '';
+      if (!empMap.has(emp)) empMap.set(emp, new Map());
+      const prjMap = empMap.get(emp)!;
+      if (!prjMap.has(prj)) prjMap.set(prj, { hours: Array(dates.length).fill(null), tsPerDay: Array(dates.length).fill(null), projectName: prj });
+      prjMap.get(prj)!.hours[idx]    = this.parseHoursVal(ts.hoursWorked);
+      prjMap.get(prj)!.tsPerDay[idx] = ts;
+    }
+    return [...empMap.entries()].map(([employeeName, prjMap]) => ({ employeeName, rows: [...prjMap.values()] }));
+  };
+
+  sortTs(col: 'date'|'hours'|'employee') {
+    if (this.tsSortCol() === col) this.tsSortDir.update(d => d==='asc'?'desc':'asc');
+    else { this.tsSortCol.set(col); this.tsSortDir.set('asc'); }
+    this.tsPage.set(1);
+  }
+  ico(active: boolean, dir: string) { return !active ? '⇅' : dir==='asc' ? '↑' : '↓'; }
 
   // ── View mode ─────────────────────────────────────────────────────────────
   attViewMode     = signal<'all'|'weekly'|'monthly'>('all');
@@ -157,7 +284,7 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   private cfgAction: (()=>void)|null=null;
 
   editForm = this.fb.group({ name:['',Validators.required], email:['',[Validators.required,Validators.email]], phone:[''], role:['',Validators.required] });
-  payrollForm = this.fb.group({ userId:['',Validators.required], basicSalary:['',[Validators.required,Validators.min(0)]], overtimeAmount:['0'], deductions:['0'], salaryMonth:['',Validators.required] });
+  payrollForm = this.fb.group({ userId:['',Validators.required], basicSalary:['',[Validators.required,Validators.min(0)]], overtimeAmount:['0'], deductions:['0'], salaryMonth:[new Date().toISOString().slice(0,7),Validators.required] });
 
   addTimesheetForm = this.fb.group({
     projectId:       ['', Validators.required],
@@ -198,17 +325,17 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
     this.usrSvc.getAll().subscribe({next:r=>this.employees.set(this.toArr<User>(r)),error:()=>{}});
     this.attSvc.getAll().subscribe({next:r=>this.attendance.set(this.toArr<Attendance>(r)),error:()=>{}});
     this.lvSvc.getAll().subscribe({next:r=>this.allLeaves.set(this.toArr<Leave>(r)),error:()=>{}});
+    this.tsSvc.getAll().subscribe({
+      next:(r:any)=>{ const d=r?.data?.data??r?.data??r??[]; this.allTimesheets.set(Array.isArray(d)?d:[]); },
+      error:()=>{}
+    });
     this.paySvc.getAll().subscribe({
-    next: r => {
-      if (!r?.success) return;
-
-      const payrolls = r.data?.data ?? [];
-      this.payrolls.set(payrolls);
-    },
-    error: err => {
-      console.error('Failed to load payrolls', err);
-    }
-  });
+      next: r => {
+        const list = this.toArr<any>(r);
+        this.payrolls.set(list);
+      },
+      error: () => {}
+    });
   }
 
   private refreshToday(): void {
@@ -293,8 +420,10 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   generatePayroll(){
     if(this.payrollForm.invalid)return;
     const v=this.payrollForm.value;
-    this.paySvc.generate({userId:+v.userId!,basicSalary:+v.basicSalary!,overtimeAmount:+v.overtimeAmount!,deductions:+v.deductions!,salaryMonth:v.salaryMonth!}).subscribe({
-      next:()=>{this.toast.success('Payroll Generated');this.showPayrollModal.set(false);this.payrollForm.reset();this.loadAll();},
+    const salaryMonth = v.salaryMonth ? `${v.salaryMonth}-01` : '';
+    const overtimeAmount = (+v.overtimeAmount! || 0) * 100; // 1 hour = ₹100
+    this.paySvc.generate({userId:+v.userId!,basicSalary:+v.basicSalary!,overtimeAmount,deductions:+v.deductions!,salaryMonth}).subscribe({
+      next:()=>{this.toast.success('Payroll Generated');this.showPayrollModal.set(false);this.payrollForm.reset({salaryMonth:this.currentMonth,overtimeAmount:'0',deductions:'0'});this.loadAll();},
       error:(e:any)=>this.toast.error('Error',e?.error?.message??'Failed.')
     });
   }
@@ -433,8 +562,140 @@ exportPayrollPDF() {
   doc.save('payroll-report.pdf');
 }
 
+  // ── HR Chat Assistant ─────────────────────────────────────────────────────
+  chatMessages = signal<{ role: 'user'|'assistant'; text: string }[]>([
+    { role: 'assistant', text: 'Hi! I\'m your HR assistant. Ask me anything about employees, attendance, leaves, or payroll. Try: "How many employees are active?" or "Who was late this month?"' }
+  ]);
+  chatInput    = signal('');
+  chatLoading  = signal(false);
+
+  sendChat() {
+    const q = this.chatInput().trim(); if (!q) return;
+    this.chatMessages.update(m => [...m, { role: 'user', text: q }]);
+    this.chatInput.set('');
+    this.chatLoading.set(true);
+    const answer = this.processQuery(q.toLowerCase());
+    setTimeout(() => {
+      this.chatMessages.update(m => [...m, { role: 'assistant', text: answer }]);
+      this.chatLoading.set(false);
+    }, 300);
+  }
+
+  private processQuery(q: string): string {
+    const emps = this.employees();
+    const att  = this.attendance();
+    const lvs  = this.allLeaves();
+    const pays = this.payrolls();
+
+    // ── Employees ──────────────────────────────────────────────────────────
+    if (q.includes('how many employee') || q.includes('total employee') || q.includes('employee count')) {
+      const active = emps.filter(e => e.status === 'Active').length;
+      return `There are ${emps.length} total employees — ${active} active and ${emps.length - active} inactive.`;
+    }
+    if (q.includes('active employee')) {
+      const list = emps.filter(e => e.status === 'Active');
+      return `${list.length} active employees: ${list.slice(0,5).map(e=>e.name).join(', ')}${list.length>5?` and ${list.length-5} more`:''}`;
+    }
+    if (q.includes('inactive employee') || q.includes('deactivated')) {
+      const list = emps.filter(e => e.status !== 'Active');
+      return list.length ? `${list.length} inactive: ${list.map(e=>e.name).join(', ')}` : 'No inactive employees.';
+    }
+    if (q.includes('role') || q.includes('manager') || q.includes('intern') || q.includes('mentor')) {
+      const role = q.includes('manager') ? 'Manager' : q.includes('intern') ? 'Intern' : q.includes('mentor') ? 'Mentor' : q.includes('hr') ? 'HR' : null;
+      if (role) {
+        const list = emps.filter(e => e.role === role);
+        return `${list.length} ${role}(s): ${list.map(e=>e.name).join(', ') || 'none'}`;
+      }
+      const byRole: Record<string,number> = {};
+      emps.forEach(e => { byRole[e.role] = (byRole[e.role]||0)+1; });
+      return 'Employees by role: ' + Object.entries(byRole).map(([r,c])=>`${r}: ${c}`).join(', ');
+    }
+
+    // ── Attendance ─────────────────────────────────────────────────────────
+    if (q.includes('late') || q.includes('who was late')) {
+      const late = att.filter(a => a.isLate);
+      if (!late.length) return 'No late attendance records found.';
+      const names = [...new Set(late.map(a => a.employeeName))];
+      return `${late.length} late records for ${names.length} employee(s): ${names.slice(0,5).join(', ')}${names.length>5?` and ${names.length-5} more`:''}`;
+    }
+    if (q.includes('attendance') && (q.includes('today') || q.includes('checked in'))) {
+      const today = new Date().toISOString().split('T')[0];
+      const todayRec = att.filter(a => a.date?.startsWith(today));
+      return `${todayRec.length} attendance record(s) today. ${todayRec.filter(a=>a.checkOut).length} checked out.`;
+    }
+    if (q.includes('total attendance') || q.includes('attendance record')) {
+      return `${att.length} total attendance records. ${att.filter(a=>a.isLate).length} late entries.`;
+    }
+
+    // ── Leaves ─────────────────────────────────────────────────────────────
+    if (q.includes('pending leave') || q.includes('leave pending')) {
+      const pending = lvs.filter(l => Number(l.status) === 0);
+      if (!pending.length) return 'No pending leave requests.';
+      return `${pending.length} pending leave(s): ${pending.slice(0,5).map(l=>`${l.employeeName} (${l.leaveType})`).join(', ')}${pending.length>5?` and ${pending.length-5} more`:''}`;
+    }
+    if (q.includes('approved leave')) {
+      const approved = lvs.filter(l => Number(l.status) === 1);
+      return `${approved.length} approved leave(s).`;
+    }
+    if (q.includes('rejected leave')) {
+      const rejected = lvs.filter(l => Number(l.status) === 2);
+      return `${rejected.length} rejected leave(s).`;
+    }
+    if (q.includes('leave') && q.includes('who')) {
+      const pending = lvs.filter(l => Number(l.status) === 0);
+      return pending.length ? `Employees with pending leaves: ${[...new Set(pending.map(l=>l.employeeName))].join(', ')}` : 'No pending leaves.';
+    }
+    if (q.includes('total leave') || q.includes('leave count') || q.includes('how many leave')) {
+      return `${lvs.length} total leave requests — ${lvs.filter(l=>Number(l.status)===0).length} pending, ${lvs.filter(l=>Number(l.status)===1).length} approved, ${lvs.filter(l=>Number(l.status)===2).length} rejected.`;
+    }
+
+    // ── Payroll ────────────────────────────────────────────────────────────
+    if (q.includes('total payroll') || q.includes('total payout') || q.includes('payroll total')) {
+      return `Total payroll payout: ₹${this.totalPayroll().toLocaleString('en-IN')} across ${pays.length} record(s).`;
+    }
+    if (q.includes('highest salary') || q.includes('highest paid') || q.includes('top salary')) {
+      if (!pays.length) return 'No payroll records found.';
+      const top = [...pays].sort((a,b)=>b.netSalary-a.netSalary)[0];
+      return `Highest paid: ${top.employeeName} with ₹${top.netSalary.toLocaleString('en-IN')} net salary.`;
+    }
+    if (q.includes('lowest salary') || q.includes('lowest paid')) {
+      if (!pays.length) return 'No payroll records found.';
+      const bot = [...pays].sort((a,b)=>a.netSalary-b.netSalary)[0];
+      return `Lowest paid: ${bot.employeeName} with ₹${bot.netSalary.toLocaleString('en-IN')} net salary.`;
+    }
+    if (q.includes('average salary') || q.includes('avg salary')) {
+      if (!pays.length) return 'No payroll records.';
+      const avg = this.totalPayroll() / pays.length;
+      return `Average net salary: ₹${avg.toLocaleString('en-IN', {maximumFractionDigits:0})}.`;
+    }
+    if (q.includes('payroll') && q.includes('who')) {
+      return pays.length ? `Payroll generated for: ${pays.map(p=>p.employeeName).join(', ')}` : 'No payroll records.';
+    }
+
+    // ── Summary ────────────────────────────────────────────────────────────
+    if (q.includes('summary') || q.includes('overview') || q.includes('dashboard')) {
+      return `📊 HR Summary:\n• ${emps.length} employees (${emps.filter(e=>e.status==='Active').length} active)\n• ${att.filter(a=>a.isLate).length} late attendance records\n• ${lvs.filter(l=>Number(l.status)===0).length} pending leaves\n• ₹${this.totalPayroll().toLocaleString('en-IN')} total payroll`;
+    }
+
+    // ── Help ───────────────────────────────────────────────────────────────
+    if (q.includes('help') || q.includes('what can you') || q.includes('what do you')) {
+      return 'I can answer questions about:\n• Employees — count, roles, active/inactive\n• Attendance — late records, today\'s check-ins\n• Leaves — pending, approved, who applied\n• Payroll — totals, highest/lowest/average salary\n\nTry: "Who has pending leaves?" or "What is the total payroll?"';
+    }
+
+    return `I couldn't find a specific answer for "${q}". Try asking about employees, attendance, leaves, or payroll. Type "help" for examples.`;
+  }
+  // ── Report Preview ────────────────────────────────────────────────────────
+  previewType = signal<'employees'|'attendance'|'leaves'|'payroll'|null>(null);
+  openPreview(type: 'employees'|'attendance'|'leaves'|'payroll') { this.previewType.set(type); }
+  closePreview() { this.previewType.set(null); }
+
+  leaveDays(l: Leave): number {
+    return Math.ceil((new Date(l.toDate).getTime() - new Date(l.fromDate).getTime()) / 86400000) + 1;
+  }
+
   stText(s:any){return s==0?'Pending':s==1?'Approved':'Rejected';}
   stClass(s:any){return s==0?'zbadge-pending':s==1?'zbadge-approved':'zbadge-rejected';}
+  Number = Number;
 
   addTimesheetForSelf() {
     if (this.addTimesheetForm.invalid) return;

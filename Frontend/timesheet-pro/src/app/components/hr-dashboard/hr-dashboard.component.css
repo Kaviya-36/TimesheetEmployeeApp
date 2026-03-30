@@ -1,107 +1,27 @@
-.zhr-pill{background:#F0FDF4;color:#16A34A;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid #BBF7D0}
-.zhr-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#059669,#10B981);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.zuser-cell{display:flex;align-items:center;gap:8px}.zemp-id{font-family:monospace;font-size:11px;color:#E05B2B;background:#FEF0EB;padding:2px 6px;border-radius:4px}.ztext-muted{color:#9CA3AF}.ztime-cell{font-family:monospace;font-size:12px}
-.zpay-summary-row{display:flex;gap:16px;padding:16px 20px;background:#F9FAFB;border-bottom:1px solid #E5E7EB}
-.zpay-stat{display:flex;flex-direction:column}.zpay-lbl{font-size:11px;color:#6B7280;text-transform:uppercase;letter-spacing:.5px}.zpay-val{font-size:20px;font-weight:800;color:#111827}
-.zpay-green{color:#16A34A}.zpay-red{color:#DC2626}.zpay-net{color:#16A34A;font-size:14px}
-.zreports-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
-.zreport-icon{font-size:36px;margin-bottom:10px}.zreport-title{font-size:15px;font-weight:700;color:#111827;margin:0 0 14px}
-.zreport-stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F3F4F6;font-size:13px;color:#374151}
-.zreport-stat:last-child{border-bottom:none}
-.zreports-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+/* ── HR role pill ────────────────────────────────────────────────────────── */
+.zhr-pill {
+  background: #F0FDF4; color: #16A34A;
+  padding: 6px 16px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; border: 1px solid #BBF7D0;
 }
 
-.zreport-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+/* ── Shared helpers ──────────────────────────────────────────────────────── */
+.zhr-av {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, #059669, #10B981);
+  color: #fff; font-weight: 700; font-size: 12px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-
-.zreports-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-}
-
-.zcard {
-  padding: 16px;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-}
-
-.zreport-icon {
-  font-size: 28px;
-  margin-bottom: 10px;
-}
-
-.zreport-title {
-  margin-bottom: 12px;
-}
-
-.zreport-stat {
-  display: flex;
-  justify-content: space-between;
-  margin: 6px 0;
-}
-
-.green { color: #16A34A; }
-.red { color: #DC2626; }
+.zuser-cell  { display: flex; align-items: center; gap: 8px; }
+.zemp-id     { font-family: monospace; font-size: 11px; color: #E05B2B; background: #FEF0EB; padding: 2px 6px; border-radius: 4px; }
+.ztext-muted { color: #9CA3AF; }
+.ztime-cell  { font-family: monospace; font-size: 12px; }
+.green  { color: #16A34A; }
+.red    { color: #DC2626; }
 .orange { color: #D97706; }
 
-.zbtn {
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.zbtn-success {
-  background: #16A34A;
-  color: white;
-}
-
-.zbtn-danger {
-  background: #DC2626;
-  color: white;
-}
-
-/* ── Attendance Hero Card ─────────────────────────────────────────────────── */
-.zatt-hero {
-  background: linear-gradient(135deg, #1A1F2E 0%, #065F46 100%);
-  border-radius: 16px; padding: 28px 32px;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 24px; margin-bottom: 20px;
-  box-shadow: 0 8px 32px rgba(26,31,46,.3);
-}
-.zatt-hero-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 4px; }
-.zatt-hero-date  { font-size: 13px; color: rgba(255,255,255,.5); margin-bottom: 20px; }
-.zlive-timer-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
-.zlive-dot { width: 8px; height: 8px; background: #10B981; border-radius: 50%; animation: pulse 1.5s infinite; flex-shrink: 0; }
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.3)} }
-.zlive-label { font-size: 10px; font-weight: 800; color: #10B981; text-transform: uppercase; letter-spacing: 1px; }
-.zlive-time  { font-family: 'Roboto Mono', monospace; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: 2px; }
-.zatt-stats-row { display: flex; gap: 24px; flex-wrap: wrap; }
-.zatt-stat { display: flex; flex-direction: column; }
-.zatt-stat-label { font-size: 10px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 3px; }
-.zatt-stat-value { font-size: 15px; font-weight: 700; color: #fff; }
-.zatt-stat-value.zlate { color: #FCD34D; }
-.zatt-hero-right { display: flex; flex-direction: column; align-items: center; gap: 12px; flex-shrink: 0; }
-.zatt-status-badge { font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 20px; }
-.zatt-not-started { background: rgba(255,255,255,.1); color: rgba(255,255,255,.6); }
-.zatt-active { background: rgba(16,185,129,.2); color: #10B981; border: 1px solid rgba(16,185,129,.3); }
-.zatt-done   { background: rgba(255,255,255,.1); color: rgba(255,255,255,.6); }
-.zatt-btn    { min-width: 140px; }
-.zbtn-spin { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; margin-right: 6px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Profile card ────────────────────────── */
-.zprofile-card  { max-width: 520px; margin: 0 auto; }
+/* ── Profile card ────────────────────────────────────────────────────────── */
+.zprofile-card   { max-width: 520px; margin: 0 auto; }
 .zprofile-banner {
   height: 130px; border-radius: 16px 16px 0 0;
   background: linear-gradient(135deg, #1A1F2E 0%, #065F46 100%);
@@ -134,3 +54,291 @@
   color: #9CA3AF; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px;
 }
 .zprofile-info-value { display: block; font-size: 14px; font-weight: 600; color: #111827; }
+
+/* ── Payroll hero stats ──────────────────────────────────────────────────── */
+.zpay-hero-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 16px; margin-bottom: 20px;
+}
+@media (max-width: 900px) { .zpay-hero-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.zpay-hero-card {
+  background: #fff; border-radius: 14px; padding: 20px;
+  border: 1px solid #E5E7EB; box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  display: flex; align-items: center; gap: 14px;
+}
+.zpay-hero-total  { border-left: 4px solid #16A34A; }
+.zpay-hero-count  { border-left: 4px solid #2563EB; }
+.zpay-hero-avg    { border-left: 4px solid #D97706; }
+.zpay-hero-action { border: 2px dashed #E5E7EB; background: #FAFAFA; justify-content: center; }
+.zpay-hero-icon   { font-size: 28px; flex-shrink: 0; }
+.zpay-hero-body   { display: flex; flex-direction: column; }
+.zpay-hero-val    { font-size: 22px; font-weight: 800; color: #111827; line-height: 1.1; }
+.zpay-hero-lbl    { font-size: 12px; color: #6B7280; margin-top: 3px; font-weight: 500; }
+
+/* ── Payroll cards ───────────────────────────────────────────────────────── */
+.zpay-cards-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.zpay-card {
+  background: #fff; border-radius: 16px;
+  border: 1px solid #E5E7EB; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  overflow: hidden; transition: box-shadow .15s, transform .15s;
+}
+.zpay-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.1); transform: translateY(-2px); }
+
+.zpay-card-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px; border-bottom: 1px solid #F3F4F6; background: #FAFAFA;
+}
+.zpay-card-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, #1A1F2E, #2D2060);
+  color: #fff; font-weight: 800; font-size: 16px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.zpay-card-info  { flex: 1; min-width: 0; }
+.zpay-card-name  { font-size: 14px; font-weight: 700; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zpay-card-month { font-size: 11px; font-weight: 700; color: #6B7280; background: #F3F4F6; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+
+.zpay-card-breakdown { padding: 14px 18px; display: flex; flex-direction: column; gap: 8px; }
+.zpay-breakdown-row  { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+.zpay-breakdown-lbl  { color: #6B7280; }
+.zpay-breakdown-val  { font-weight: 600; color: #374151; }
+.zpay-breakdown-val.zpay-green { color: #16A34A; }
+.zpay-breakdown-val.zpay-red   { color: #DC2626; }
+.zpay-green { color: #16A34A; }
+.zpay-red   { color: #DC2626; }
+
+.zpay-card-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #1A1F2E, #2D2060);
+  border-radius: 0 0 16px 16px;
+}
+.zpay-net-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .5px; }
+.zpay-net-val   { font-size: 18px; font-weight: 800; color: #fff; }
+
+/* ── Reports page layout ─────────────────────────────────────────────────── */
+.zreports-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+}
+.zreports-header h3 { font-size: 18px; font-weight: 800; color: #111827; margin: 0; }
+
+.zreports-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 20px; align-items: start;
+}
+@media (max-width: 900px) { .zreports-layout { grid-template-columns: 1fr; } }
+
+/* ── Report stat cards ───────────────────────────────────────────────────── */
+.zreports-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+.zreport-card {
+  background: #fff; border-radius: 14px;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  padding: 18px; display: flex; flex-direction: column;
+}
+.zreport-card-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+}
+.zreport-card-icon  { font-size: 22px; }
+.zreport-card-title { font-size: 14px; font-weight: 800; color: #111827; }
+.zreport-stat {
+  display: flex; justify-content: space-between;
+  padding: 7px 0; border-bottom: 1px solid #F3F4F6;
+  font-size: 13px; color: #374151;
+}
+.zreport-stat:last-of-type { border-bottom: none; }
+.zreport-card-actions { display: flex; gap: 6px; margin-top: 14px; }
+
+/* ── HR Chat Panel ───────────────────────────────────────────────────────── */
+.zhr-chat-panel {
+  background: #fff; border-radius: 16px;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 4px 20px rgba(0,0,0,.08);
+  display: flex; flex-direction: column;
+  height: 560px; overflow: hidden;
+  position: sticky; top: 20px;
+}
+.zhr-chat-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid #F3F4F6;
+  background: linear-gradient(90deg, #F0FDF4, #ECFDF5);
+  flex-shrink: 0;
+}
+.zhr-chat-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 800; color: #111827;
+}
+.zhr-chat-badge {
+  background: #16A34A; color: #fff;
+  font-size: 10px; font-weight: 800; padding: 2px 7px;
+  border-radius: 20px; letter-spacing: .5px;
+}
+.zhr-chat-messages {
+  flex: 1; overflow-y: auto; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.zhr-chat-messages::-webkit-scrollbar { width: 4px; }
+.zhr-chat-messages::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 99px; }
+
+.zhr-chat-msg  { display: flex; align-items: flex-end; gap: 8px; }
+.zhr-chat-bot  { justify-content: flex-start; }
+.zhr-chat-user { justify-content: flex-end; }
+
+.zhr-chat-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #F0FDF4; display: flex; align-items: center;
+  justify-content: center; font-size: 14px; flex-shrink: 0;
+}
+.zhr-chat-user-av {
+  background: linear-gradient(135deg, #059669, #10B981);
+  color: #fff; font-size: 12px; font-weight: 700;
+}
+.zhr-chat-bubble {
+  max-width: 260px; padding: 10px 14px;
+  border-radius: 16px; font-size: 13px; line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word;
+}
+.zhr-chat-bot  .zhr-chat-bubble { background: #F3F4F6; color: #111827; border-bottom-left-radius: 4px; }
+.zhr-chat-user .zhr-chat-bubble { background: #16A34A; color: #fff; border-bottom-right-radius: 4px; }
+
+.zhr-chat-typing { display: flex; align-items: center; gap: 4px; padding: 12px 16px; }
+.zhr-chat-typing span {
+  width: 6px; height: 6px; border-radius: 50%; background: #9CA3AF;
+  animation: ztyping 1.2s infinite;
+}
+.zhr-chat-typing span:nth-child(2) { animation-delay: .2s; }
+.zhr-chat-typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes ztyping {
+  0%, 60%, 100% { transform: translateY(0); }
+  30%           { transform: translateY(-6px); }
+}
+
+.zhr-chat-suggestions {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 8px 14px; border-top: 1px solid #F3F4F6; flex-shrink: 0;
+}
+.zhr-chat-chip {
+  padding: 4px 10px; border-radius: 20px;
+  border: 1.5px solid #BBF7D0; background: #F0FDF4;
+  color: #16A34A; font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all .12s; white-space: nowrap;
+}
+.zhr-chat-chip:hover { background: #16A34A; color: #fff; border-color: #16A34A; }
+
+.zhr-chat-input-row {
+  display: flex; gap: 8px; padding: 12px 14px;
+  border-top: 1px solid #F3F4F6; background: #FAFAFA; flex-shrink: 0;
+}
+.zhr-chat-input {
+  flex: 1; padding: 9px 14px; border: 1.5px solid #E5E7EB;
+  border-radius: 24px; font-size: 13px; font-family: inherit;
+  outline: none; transition: border-color .15s;
+}
+.zhr-chat-input:focus   { border-color: #16A34A; }
+.zhr-chat-input:disabled { opacity: .6; }
+.zhr-chat-send {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: #16A34A; color: #fff; border: none;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .14s; flex-shrink: 0;
+}
+.zhr-chat-send:hover:not(:disabled) { background: #15803D; }
+.zhr-chat-send:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── Weekly Timesheet Grid ───────────────────────────────────────────────── */
+.zmgr-wts-wrap { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+.zmgr-wts-nav  { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.zwts-nav-btn  { padding: 6px 14px; border: 1.5px solid #E5E7EB; border-radius: 8px; background: #fff; font-size: 12px; font-weight: 600; color: #374151; cursor: pointer; transition: all .15s; }
+.zwts-nav-btn:hover { border-color: #16A34A; color: #16A34A; }
+.zwts-week-range { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1.5px solid #E5E7EB; border-radius: 8px; font-size: 12px; font-weight: 600; color: #374151; }
+.zwts-arrow { width: 32px; height: 32px; border: 1.5px solid #E5E7EB; border-radius: 8px; background: #fff; cursor: pointer; font-size: 16px; color: #374151; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.zwts-arrow:hover:not(:disabled) { border-color: #16A34A; color: #16A34A; }
+.zwts-arrow:disabled { opacity: .4; cursor: not-allowed; }
+.zwts-day-name { font-weight: 700; text-transform: uppercase; letter-spacing: .5px; font-size: 10px; }
+.zwts-day-date { font-size: 11px; margin-top: 1px; }
+
+.zmgr-wts-card { background: #fff; border-radius: 14px; border: 1px solid #E5E7EB; box-shadow: 0 2px 10px rgba(0,0,0,.05); overflow: hidden; }
+.zmgr-wts-emp-header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; background: linear-gradient(90deg, #F0FDF4, #ECFDF5); border-bottom: 1px solid #E5E7EB; }
+.zmgr-wts-emp-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #059669, #10B981); color: #fff; font-size: 16px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.zmgr-wts-emp-info { display: flex; flex-direction: column; gap: 2px; }
+.zmgr-wts-emp-name { font-size: 15px; font-weight: 800; color: #111827; }
+.zmgr-wts-emp-meta { font-size: 12px; color: #6B7280; }
+
+.zmgr-wts-col-headers { display: grid; grid-template-columns: 180px repeat(auto-fill, minmax(60px, 1fr)) 80px 100px; background: #F9FAFB; border-bottom: 1px solid #E5E7EB; padding: 0 16px; }
+.zmgr-wts-project-hdr { padding: 10px 8px; font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; }
+.zmgr-wts-day-hdr { padding: 10px 4px; text-align: center; font-size: 11px; color: #6B7280; }
+.zmgr-wts-day-hdr.zmgr-wts-today { color: #16A34A; }
+.zmgr-wts-day-hdr.zmgr-wts-weekend { background: rgba(0,0,0,.03); color: #9CA3AF; }
+.zmgr-wts-week-hdr  { padding: 10px 4px; text-align: center; font-size: 11px; font-weight: 700; color: #6B7280; }
+.zmgr-wts-action-hdr { padding: 10px 8px; text-align: center; font-size: 11px; font-weight: 700; color: #6B7280; }
+
+.zmgr-wts-row { display: grid; grid-template-columns: 180px repeat(auto-fill, minmax(60px, 1fr)) 80px 100px; border-bottom: 1px solid #F3F4F6; padding: 0 16px; align-items: center; transition: background .12s; }
+.zmgr-wts-row:last-child { border-bottom: none; }
+.zmgr-wts-row:hover { background: #FAFAFA; }
+.zmgr-wts-project-cell { display: flex; flex-direction: column; gap: 4px; padding: 10px 8px; }
+.zmgr-wts-project-name { font-size: 13px; font-weight: 700; color: #111827; }
+
+.zmgr-wts-cell { padding: 10px 4px; text-align: center; position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 48px; }
+.zmgr-wts-cell.zmgr-wts-today { background: rgba(16,185,129,.04); }
+.zmgr-wts-cell.zmgr-wts-has-hours { background: #F0FDF4; }
+.zmgr-wts-cell.zmgr-wts-weekend { background: rgba(0,0,0,.025) !important; }
+.zmgr-wts-hours-val { font-size: 13px; font-weight: 700; color: #16A34A; }
+.zmgr-wts-empty     { font-size: 13px; color: #D1D5DB; }
+.zmgr-wts-task-text { font-size: 10px; color: #6B7280; max-width: 80px; text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical; }
+
+.zmgr-wts-row-total { text-align: center; font-size: 13px; font-weight: 800; color: #16A34A; padding: 10px 4px; }
+.zmgr-wts-row-actions { display: flex; gap: 5px; align-items: center; justify-content: center; padding: 8px 4px; }
+
+.zmgr-wts-footer { display: grid; grid-template-columns: 180px repeat(auto-fill, minmax(60px, 1fr)) 80px 100px; padding: 10px 16px; border-top: 2px solid #E5E7EB; background: #F9FAFB; align-items: center; }
+.zmgr-wts-footer-label { font-size: 11px; font-weight: 800; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; padding: 0 8px; }
+.zmgr-wts-day-total { text-align: center; font-size: 12px; font-weight: 600; color: #374151; }
+.zmgr-wts-day-total.zmgr-wts-weekend { background: rgba(0,0,0,.03); color: #9CA3AF; }
+.zmgr-wts-grand-total { text-align: center; font-size: 14px; font-weight: 800; color: #16A34A; }
+
+/* Inline [style] on grid elements sets exact column count per visible days */
+.zmgr-wts-col-headers,
+.zmgr-wts-row,
+.zmgr-wts-footer { grid-template-columns: 180px repeat(5, 1fr) 80px 100px; }
+
+/* ── Monthly Calendar Grid ───────────────────────────────────────────────── */
+.zmgr-month-col-headers,
+.zmgr-month-row,
+.zmgr-month-footer { display: flex; align-items: stretch; min-width: max-content; }
+.zmgr-month-project-hdr,
+.zmgr-month-project-cell { width: 160px; min-width: 160px; flex-shrink: 0; padding: 10px 12px; font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; }
+.zmgr-month-day-hdr,
+.zmgr-month-cell,
+.zmgr-month-day-total { width: 52px; min-width: 52px; flex-shrink: 0; }
+.zmgr-month-total-hdr,
+.zmgr-month-row-total,
+.zmgr-month-grand-total { width: 70px; min-width: 70px; flex-shrink: 0; text-align: center; }
+.zmgr-month-col-headers { background: #F9FAFB; border-bottom: 1px solid #E5E7EB; }
+.zmgr-month-day-hdr { padding: 8px 2px; text-align: center; font-size: 10px; color: #6B7280; border-left: 1px solid #F3F4F6; }
+.zmgr-month-day-num { font-weight: 800; font-size: 12px; color: #374151; }
+.zmgr-month-day-name { font-size: 9px; text-transform: uppercase; letter-spacing: .3px; margin-top: 1px; }
+.zmgr-month-total-hdr { padding: 10px 4px; font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; text-align: center; }
+.zmgr-month-today { background: #F0FDF4 !important; }
+.zmgr-month-today .zmgr-month-day-num { color: #16A34A; }
+.zmgr-month-weekend { background: rgba(0,0,0,.025) !important; color: #9CA3AF; }
+.zmgr-month-row { border-bottom: 1px solid #F3F4F6; transition: background .12s; }
+.zmgr-month-row:hover { background: #FAFAFA; }
+.zmgr-month-project-cell { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+.zmgr-month-cell { padding: 6px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1px; border-left: 1px solid #F9FAFB; }
+.zmgr-month-has { background: #F0FDF4; }
+.zmgr-month-hours { font-size: 11px; font-weight: 700; color: #16A34A; font-family: 'Roboto Mono', monospace; }
+.zmgr-month-task { font-size: 9px; color: #6B7280; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical; max-width: 48px; text-align: center; }
+.zmgr-month-row-total { padding: 10px 4px; font-size: 12px; font-weight: 800; color: #16A34A; text-align: center; display: flex; align-items: center; justify-content: center; }
+.zmgr-month-footer { border-top: 2px solid #E5E7EB; background: #F9FAFB; }
+.zmgr-month-footer-label { width: 160px; min-width: 160px; padding: 8px 12px; font-size: 11px; font-weight: 800; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; display: flex; align-items: center; }
+.zmgr-month-day-total { width: 52px; min-width: 52px; padding: 8px 2px; font-size: 10px; font-weight: 600; color: #374151; text-align: center; border-left: 1px solid #F3F4F6; display: flex; align-items: center; justify-content: center; }
+.zmgr-month-grand-total { width: 70px; min-width: 70px; padding: 8px 4px; font-size: 13px; font-weight: 800; color: #16A34A; text-align: center; display: flex; align-items: center; justify-content: center; }

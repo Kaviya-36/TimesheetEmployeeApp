@@ -3,6 +3,14 @@
   "WorkspaceRootPath": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|c:\\users\\kaviya.n\\onedrive - new american funding\\documents\\github\\timesheetapp\\backend\\timesheetsolutionweb\\timesheetappweb\\service\\attendanceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|solutionrelative:timesheetappweb\\service\\attendanceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|c:\\users\\kaviya.n\\onedrive - new american funding\\documents\\github\\timesheetapp\\backend\\timesheetsolutionweb\\timesheetappweb\\controllers\\timesheetcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|solutionrelative:timesheetappweb\\controllers\\timesheetcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|c:\\users\\kaviya.n\\onedrive - new american funding\\documents\\github\\timesheetapp\\backend\\timesheetsolutionweb\\timesheetappweb\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|solutionrelative:timesheetappweb\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -17,10 +25,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|c:\\users\\kaviya.n\\onedrive - new american funding\\documents\\github\\timesheetapp\\backend\\timesheetsolutionweb\\timesheetappweb\\model\\attendance.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|solutionrelative:timesheetappweb\\model\\attendance.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|c:\\users\\kaviya.n\\onedrive - new american funding\\documents\\github\\timesheetapp\\backend\\timesheetsolutionweb\\timesheetappweb\\service\\attendanceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|solutionrelative:timesheetappweb\\service\\attendanceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|c:\\users\\kaviya.n\\onedrive - new american funding\\documents\\github\\timesheetapp\\backend\\timesheetsolutionweb\\timesheetappweb\\service\\interntaskservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -205,10 +209,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|c:\\users\\kaviya.n\\onedrive - new american funding\\documents\\github\\timesheetapp\\backend\\timesheetsolutionweb\\timesheetappweb\\controllers\\authenticationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|solutionrelative:timesheetappweb\\controllers\\authenticationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|c:\\users\\kaviya.n\\onedrive - new american funding\\documents\\github\\timesheetapp\\backend\\timesheetsolutionweb\\timesheetappweb\\controllers\\timesheetcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|solutionrelative:timesheetappweb\\controllers\\timesheetcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5E6E8308-EEBB-F376-6DA1-163C1F05F8CA}|TimeSheetAppWeb\\TimeSheetAppWeb.csproj|c:\\users\\kaviya.n\\onedrive - new american funding\\documents\\github\\timesheetapp\\backend\\timesheetsolutionweb\\timesheetappweb\\model\\dtos\\projectassignrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -400,7 +400,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 10,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Bookmark",
@@ -420,32 +420,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "ProjectService.cs",
-              "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\ProjectService.cs",
-              "RelativeDocumentMoniker": "TimeSheetAppWeb\\Service\\ProjectService.cs",
-              "ToolTip": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\ProjectService.cs",
-              "RelativeToolTip": "TimeSheetAppWeb\\Service\\ProjectService.cs",
-              "ViewState": "AgIAADkCAAAAAAAAAAAowEcCAAAmAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-22T15:55:03.683Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 0,
               "Title": "AttendanceService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\AttendanceService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Service\\AttendanceService.cs",
               "ToolTip": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\AttendanceService.cs",
               "RelativeToolTip": "TimeSheetAppWeb\\Service\\AttendanceService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAABHAAAAAAAAAA==",
+              "ViewState": "AgIAADoBAAAAAAAAAAAmwFMBAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-22T11:31:09.11Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 17,
               "Title": "AuditService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\AuditService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Service\\AuditService.cs",
@@ -457,7 +445,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "PayrollService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\PayrollService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Service\\PayrollService.cs",
@@ -469,7 +457,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "LeaveController.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\LeaveController.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Controllers\\LeaveController.cs",
@@ -477,12 +465,11 @@
               "RelativeToolTip": "TimeSheetAppWeb\\Controllers\\LeaveController.cs",
               "ViewState": "AgIAAB8AAAAAAAAAAAAAACYAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-22T14:48:59.365Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-22T14:48:59.365Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "PayrollController.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\PayrollController.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Controllers\\PayrollController.cs",
@@ -494,20 +481,43 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Program.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Program.cs",
               "ToolTip": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Program.cs",
               "RelativeToolTip": "TimeSheetAppWeb\\Program.cs",
-              "ViewState": "AgIAAMMAAAAAAAAAAAAswN4AAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAKkAAAAAAAAAAAAiwLwAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-22T12:10:31.716Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-22T12:10:31.716Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 1,
+              "Title": "TimesheetController.cs",
+              "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\TimesheetController.cs",
+              "RelativeDocumentMoniker": "TimeSheetAppWeb\\Controllers\\TimesheetController.cs",
+              "ToolTip": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\TimesheetController.cs",
+              "RelativeToolTip": "TimeSheetAppWeb\\Controllers\\TimesheetController.cs",
+              "ViewState": "AgIAABEAAAAAAAAAAAA7wCIAAABrAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-22T15:36:15.996Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ProjectService.cs",
+              "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\ProjectService.cs",
+              "RelativeDocumentMoniker": "TimeSheetAppWeb\\Service\\ProjectService.cs",
+              "ToolTip": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\ProjectService.cs",
+              "RelativeToolTip": "TimeSheetAppWeb\\Service\\ProjectService.cs",
+              "ViewState": "AgIAADkCAAAAAAAAAAAowEcCAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-22T15:55:03.683Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
               "Title": "InternTaskService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\InternTaskService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Service\\InternTaskService.cs",
@@ -515,12 +525,11 @@
               "RelativeToolTip": "TimeSheetAppWeb\\Service\\InternTaskService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAABNAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-22T12:28:50.248Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-22T12:28:50.248Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "LeaveService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\LeaveService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Service\\LeaveService.cs",
@@ -528,12 +537,11 @@
               "RelativeToolTip": "TimeSheetAppWeb\\Service\\LeaveService.cs",
               "ViewState": "AgIAAPAAAAAAAAAAAAAgwAgBAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-22T14:32:50.054Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-22T14:32:50.054Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "UserController.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\UserController.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Controllers\\UserController.cs",
@@ -545,7 +553,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "Payroll.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\Payroll.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\Payroll.cs",
@@ -557,7 +565,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "Project.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\Project.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\Project.cs",
@@ -569,7 +577,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "Attendance.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\Attendance.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\Attendance.cs",
@@ -577,12 +585,11 @@
               "RelativeToolTip": "TimeSheetAppWeb\\Model\\Attendance.cs",
               "ViewState": "AgIAAA0AAAAAAAAAAADwvxgAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:09:14.606Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:09:14.606Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "TimesheetService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\TimesheetService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Service\\TimesheetService.cs",
@@ -606,7 +613,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 20,
               "Title": "TokenPayloadDto.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\DTOs\\TokenPayloadDto.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\DTOs\\TokenPayloadDto.cs",
@@ -618,7 +625,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 14,
               "Title": "UserService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\UserService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Service\\UserService.cs",
@@ -630,7 +637,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 21,
               "Title": "CheckUserResponseDto.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\DTOs\\CheckUserResponseDto.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\DTOs\\CheckUserResponseDto.cs",
@@ -642,7 +649,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 19,
               "Title": "IUserService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Interface\\IUserService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Interface\\IUserService.cs",
@@ -654,7 +661,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 15,
               "Title": "AuditLogController.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\AuditLogController.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Controllers\\AuditLogController.cs",
@@ -666,7 +673,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 16,
               "Title": "IAuditService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Interface\\IAuditService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Interface\\IAuditService.cs",
@@ -678,7 +685,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 18,
               "Title": "UserResponse.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\DTOs\\UserResponse.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\DTOs\\UserResponse.cs",
@@ -690,7 +697,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 22,
               "Title": "CheckUserRequestDto.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\DTOs\\CheckUserRequestDto.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\DTOs\\CheckUserRequestDto.cs",
@@ -702,7 +709,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 23,
               "Title": "LoginResponse.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\DTOs\\LoginResponse.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\DTOs\\LoginResponse.cs",
@@ -714,7 +721,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 24,
               "Title": "TokenService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\TokenService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Service\\TokenService.cs",
@@ -726,7 +733,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 25,
               "Title": "InternDetailsService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\InternDetailsService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Service\\InternDetailsService.cs",
@@ -738,7 +745,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 26,
               "Title": "AnalyticsService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Service\\AnalyticsService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Service\\AnalyticsService.cs",
@@ -750,7 +757,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 27,
               "Title": "AnalyticsRequest.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\DTOs\\AnalyticsRequest.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\DTOs\\AnalyticsRequest.cs",
@@ -762,7 +769,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 29,
               "Title": "IRepository.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Interface\\IRepository.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Interface\\IRepository.cs",
@@ -774,7 +781,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
+              "DocumentIndex": 30,
               "Title": "IReportService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Interface\\IReportService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Interface\\IReportService.cs",
@@ -786,7 +793,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 28,
               "Title": "Repository.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Repositories\\Repository.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Repositories\\Repository.cs",
@@ -798,7 +805,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 32,
               "Title": "IProjectService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Interface\\IProjectService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Interface\\IProjectService.cs",
@@ -810,7 +817,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 31,
               "Title": "IPasswordService.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Interface\\IPasswordService.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Interface\\IPasswordService.cs",
@@ -822,7 +829,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 34,
               "Title": "AuditLog.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\AuditLog.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\AuditLog.cs",
@@ -834,7 +841,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
+              "DocumentIndex": 36,
               "Title": "Timesheet.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\Timesheet.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\Timesheet.cs",
@@ -846,7 +853,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 36,
+              "DocumentIndex": 37,
               "Title": "ProjectAssignment.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\ProjectAssignment.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\ProjectAssignment.cs",
@@ -858,7 +865,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 37,
+              "DocumentIndex": 38,
               "Title": "LeaveType.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\LeaveType.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\LeaveType.cs",
@@ -870,7 +877,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 38,
+              "DocumentIndex": 39,
               "Title": "LeaveRequest.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\LeaveRequest.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\LeaveRequest.cs",
@@ -882,7 +889,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 33,
               "Title": "TimeSheetContext.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Contexts\\TimeSheetContext.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Contexts\\TimeSheetContext.cs",
@@ -894,7 +901,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 39,
+              "DocumentIndex": 40,
               "Title": "InternDetails.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\InternDetails.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\InternDetails.cs",
@@ -906,7 +913,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 35,
               "Title": "User.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\User.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\User.cs",
@@ -918,7 +925,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 40,
+              "DocumentIndex": 41,
               "Title": "InternTask.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\InternTask.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\InternTask.cs",
@@ -930,7 +937,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 41,
+              "DocumentIndex": 42,
               "Title": "Department.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\Department.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\Department.cs",
@@ -942,7 +949,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 42,
+              "DocumentIndex": 43,
               "Title": "AnalyticsController.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\AnalyticsController.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Controllers\\AnalyticsController.cs",
@@ -954,7 +961,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 45,
+              "DocumentIndex": 46,
               "Title": "LeaveResponse.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Model\\DTOs\\LeaveResponse.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Model\\DTOs\\LeaveResponse.cs",
@@ -966,7 +973,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 44,
+              "DocumentIndex": 45,
               "Title": "TimeSheetAppWeb.csproj",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\TimeSheetAppWeb.csproj",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\TimeSheetAppWeb.csproj",
@@ -978,7 +985,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 43,
+              "DocumentIndex": 44,
               "Title": "TimeSheetAppWeb",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\TimeSheetAppWeb.csproj",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\TimeSheetAppWeb.csproj",
@@ -989,7 +996,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 47,
+              "DocumentIndex": 48,
               "Title": "InternDetailsController.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\InternDetailsController.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Controllers\\InternDetailsController.cs",
@@ -1001,7 +1008,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 46,
+              "DocumentIndex": 47,
               "Title": "AttendanceController.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\AttendanceController.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Controllers\\AttendanceController.cs",
@@ -1013,7 +1020,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 48,
+              "DocumentIndex": 49,
               "Title": "InternTaskController.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\InternTaskController.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Controllers\\InternTaskController.cs",
@@ -1025,7 +1032,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 49,
+              "DocumentIndex": 50,
               "Title": "ProjectController.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\ProjectController.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Controllers\\ProjectController.cs",
@@ -1037,7 +1044,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 50,
+              "DocumentIndex": 51,
               "Title": "AuthenticationController.cs",
               "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\AuthenticationController.cs",
               "RelativeDocumentMoniker": "TimeSheetAppWeb\\Controllers\\AuthenticationController.cs",
@@ -1046,18 +1053,6 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAEgAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-22T16:19:50.387Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 51,
-              "Title": "TimesheetController.cs",
-              "DocumentMoniker": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\TimesheetController.cs",
-              "RelativeDocumentMoniker": "TimeSheetAppWeb\\Controllers\\TimesheetController.cs",
-              "ToolTip": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\Controllers\\TimesheetController.cs",
-              "RelativeToolTip": "TimeSheetAppWeb\\Controllers\\TimesheetController.cs",
-              "ViewState": "AgIAAEEAAAAAAAAAAIBJwEQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-22T15:36:15.996Z"
             },
             {
               "$type": "Document",

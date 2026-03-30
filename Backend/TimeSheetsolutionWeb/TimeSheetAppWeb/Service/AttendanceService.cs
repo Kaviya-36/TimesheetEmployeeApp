@@ -190,10 +190,10 @@ namespace TimeSheetAppWeb.Services
                     var autoCheckoutTime = attendance.Date.Add(attendance.CheckIn.Value).AddHours(12);
                     if (DateTime.Now >= autoCheckoutTime)
                     {
-                        var proposed = attendance.CheckIn.Value.Add(TimeSpan.FromHours(12));
-                        var maxTime  = new TimeSpan(23, 59, 59);
+                        var proposed   = attendance.CheckIn.Value.Add(TimeSpan.FromHours(8));
+                        var maxTime    = new TimeSpan(23, 59, 59);
                         attendance.CheckOut   = proposed > maxTime ? maxTime : proposed;
-                        attendance.TotalHours = attendance.CheckOut.Value - attendance.CheckIn.Value;
+                        attendance.TotalHours = TimeSpan.FromHours(8);  // always 8h
                         await _attendanceRepository.UpdateAsync(attendance.Id, attendance);
                     }
                 }
@@ -297,10 +297,11 @@ namespace TimeSheetAppWeb.Services
     private static (TimeSpan checkOut, TimeSpan totalHours) CalcAutoCheckout(TimeSpan checkIn)
     {
         var proposed = checkIn.Add(TimeSpan.FromHours(8));
-        // SQL time column max is 23:59:59 — cap if overflow
-        var maxTime = new TimeSpan(23, 59, 59);
+        // If shift crosses midnight, cap the stored time at 23:59:59
+        // but always record the full 8 hours as TotalHours
+        var maxTime    = new TimeSpan(23, 59, 59);
         var checkOut   = proposed > maxTime ? maxTime : proposed;
-        var totalHours = checkOut - checkIn;
+        var totalHours = TimeSpan.FromHours(8);   // always 8h regardless of midnight crossing
         return (checkOut, totalHours);
     }
         private async Task<AttendanceResponse> MapToDtoAsync(Attendance attendance)

@@ -31,6 +31,12 @@ export class TimesheetService {
   create(userId: number, req: TimesheetCreateRequest): Observable<any> {
     return this.http.post<any>(`${this.api}/${userId}/manual`, req);
   }
+  createFromGrid(userId: number, req: { projectId: number; projectName: string; workDate: string; hours: number; taskDescription?: string }): Observable<any> {
+    return this.http.post<any>(`${this.api}/${userId}/grid`, req);
+  }
+  submitWeekly(userId: number, req: { entries: { projectId: number; projectName: string; workDate: string; hours: number; taskDescription?: string }[]; submit: boolean }): Observable<any> {
+    return this.http.post<any>(`${this.api}/${userId}/weekly`, req);
+  }
   update(id: number, req: TimesheetUpdateRequest): Observable<any> {
     return this.http.put<any>(`${this.api}/${id}`, req);
   }

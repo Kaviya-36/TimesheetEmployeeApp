@@ -13,14 +13,7 @@
         <span class="zmentor-pill">🎓 Mentor</span>
       </div>
 
-      <!-- Tab Bar -->
-      <div class="ztab-bar">
-        @for (t of tabs; track t.key) {
-          <button class="ztab-btn" [class.active]="activeTab()===t.key" (click)="setTab(t.key)">
-            {{ t.icon }} {{ t.label }}
-          </button>
-        }
-      </div>
+      <!-- Tab Bar removed — navigation via sidebar -->
 
       <!-- ═══ INTERNS TAB ═══ -->
       @if (activeTab()==='interns') {

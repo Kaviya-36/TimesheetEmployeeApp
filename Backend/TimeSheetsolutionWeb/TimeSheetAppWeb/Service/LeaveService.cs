@@ -243,6 +243,7 @@ namespace TimeSheetAppWeb.Services
             return new LeaveResponse
             {
                 Id = leave.Id,
+                UserId = leave.UserId,
                 EmployeeName = user.Name,
                 LeaveType = type.Name,
                 FromDate = leave.FromDate,

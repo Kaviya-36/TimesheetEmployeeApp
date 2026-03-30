@@ -513,24 +513,44 @@ namespace TimeSheetAppWeb.Services
             {
                 _logger.LogInformation("Fetching assignments for user ID {UserId}", userId);
 
-                var assignments = (await _assignmentRepository.GetAllAsync())!
-                    .Where(a => a.UserId == userId)
-                    .OrderBy(a => a.Id);
-
-                var pagedAssignments = assignments.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+                var allProjects = (await _projectRepository.GetAllAsync()) ?? Enumerable.Empty<Project>();
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null) return new ApiResponse<IEnumerable<ProjectAssignmentResponse>> { Success = false, Message = "User not found" };
 
                 var result = new List<ProjectAssignmentResponse>();
-                foreach (var a in pagedAssignments)
-                {
-                    var user = await _userRepository.GetByIdAsync(a.UserId);
-                    var project = await _projectRepository.GetByIdAsync(a.ProjectId);
+                var addedProjectIds = new HashSet<int>();
 
+                // 1. Projects assigned via ProjectAssignment table
+                var assignments = (await _assignmentRepository.GetAllAsync())!
+                    .Where(a => a.UserId == userId)
+                    .OrderBy(a => a.Id)
+                    .Skip((pageNumber - 1) * pageSize).Take(pageSize);
+
+                foreach (var a in assignments)
+                {
+                    var project = await _projectRepository.GetByIdAsync(a.ProjectId);
+                    if (project == null) continue;
+                    addedProjectIds.Add(project.Id);
                     result.Add(new ProjectAssignmentResponse
                     {
                         Id = a.Id,
-                        ProjectId = project!.Id,
+                        ProjectId = project.Id,
                         ProjectName = project.ProjectName,
-                        UserId = user!.Id,
+                        UserId = user.Id,
+                        UserName = user.Name,
+                        UserEmail = user.Email
+                    });
+                }
+
+                // 2. Projects where user is the manager (managerId field)
+                foreach (var project in allProjects.Where(p => p.ManagerId == userId && !addedProjectIds.Contains(p.Id)))
+                {
+                    result.Add(new ProjectAssignmentResponse
+                    {
+                        Id = 0,  // synthetic — no assignment row
+                        ProjectId = project.Id,
+                        ProjectName = project.ProjectName,
+                        UserId = user.Id,
                         UserName = user.Name,
                         UserEmail = user.Email
                     });
@@ -555,39 +575,34 @@ namespace TimeSheetAppWeb.Services
             {
                 _logger.LogInformation("Fetching projects for user ID {UserId}", userId);
 
-                var assignments = (await _assignmentRepository.GetAllAsync())!
-                    .Where(a => a.UserId == userId);
+                var allProjects = (await _projectRepository.GetAllAsync()) ?? Enumerable.Empty<Project>();
+                var assignments = (await _assignmentRepository.GetAllAsync())!.Where(a => a.UserId == userId);
+                var addedIds    = new HashSet<int>();
+                var result      = new List<ProjectResponse>();
 
-                var result = new List<ProjectResponse>();
-
+                // Projects assigned via assignment table
                 foreach (var a in assignments)
                 {
                     var project = await _projectRepository.GetByIdAsync(a.ProjectId);
-
                     if (project == null) continue;
-
-                    User? manager = null;
-                    if (project.ManagerId.HasValue)
-                        manager = await _userRepository.GetByIdAsync(project.ManagerId.Value);
-
+                    addedIds.Add(project.Id);
+                    User? manager = project.ManagerId.HasValue ? await _userRepository.GetByIdAsync(project.ManagerId.Value) : null;
                     result.Add(MapToDto(project, manager));
                 }
 
-                return new ApiResponse<IEnumerable<ProjectResponse>>
+                // Projects where user is the manager
+                foreach (var project in allProjects.Where(p => p.ManagerId == userId && !addedIds.Contains(p.Id)))
                 {
-                    Success = true,
-                    Data = result
-                };
+                    var manager = await _userRepository.GetByIdAsync(userId);
+                    result.Add(MapToDto(project, manager));
+                }
+
+                return new ApiResponse<IEnumerable<ProjectResponse>> { Success = true, Data = result };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching projects for user ID {UserId}", userId);
-
-                return new ApiResponse<IEnumerable<ProjectResponse>>
-                {
-                    Success = false,
-                    Message = $"Error fetching user projects: {ex.Message}"
-                };
+                return new ApiResponse<IEnumerable<ProjectResponse>> { Success = false, Message = $"Error fetching user projects: {ex.Message}" };
             }
         }
 

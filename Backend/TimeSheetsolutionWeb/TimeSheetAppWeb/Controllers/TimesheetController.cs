@@ -115,16 +115,39 @@ namespace TimeSheetAppWeb.Controllers
             });
             return Ok(result);
         }
-        //---------------Create Timeshee--------------------
+        //---------------Create Timesheet (manual with start/end time)--------------------
         [Authorize(Roles = "Employee,Intern,Manager,Mentor,HR,Admin")]
         [HttpPost("{userId}/manual")]
         public async Task<IActionResult> CreateTimesheet(int userId, [FromBody] TimesheetCreateRequest request)
         {
             var result = await _timesheetService.CreateManualTimesheetAsync(userId, request);
+            if (!result.Success) return BadRequest(result);
+            return Ok(result);
+        }
 
-            if (!result.Success)
-                return BadRequest(result);
+        //---------------Create Timesheet from Grid (hours only) ----------------
+        [Authorize(Roles = "Employee,Intern,Manager,Mentor,HR,Admin")]
+        [HttpPost("{userId}/grid")]
+        public async Task<IActionResult> CreateTimesheetFromGrid(int userId, [FromBody] TimesheetGridRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { Success = false, Message = "Invalid request", Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
 
+            var result = await _timesheetService.CreateFromGridAsync(userId, request);
+            if (!result.Success) return BadRequest(result);
+            return Ok(result);
+        }
+
+        //--------------- Submit Weekly Timesheet (batch) ----------------
+        [Authorize(Roles = "Employee,Intern,Manager,Mentor,HR,Admin")]
+        [HttpPost("{userId}/weekly")]
+        public async Task<IActionResult> SubmitWeeklyTimesheet(int userId, [FromBody] TimesheetWeeklyRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { Success = false, Message = "Invalid request" });
+
+            var result = await _timesheetService.SubmitWeeklyAsync(userId, request);
+            if (!result.Success) return BadRequest(result);
             return Ok(result);
         }
 

@@ -1,9 +1,7 @@
 <div class="app-shell"><app-sidebar /><div class="app-main"><app-navbar />
 <div class="app-content">
   <div class="zpage-header"><div><h1 class="zpage-title">Intern Hub</h1><p class="zpage-sub">Welcome, {{ auth.username() }} 🎓</p></div><span class="zintern-pill">🎓 Intern</span></div>
-  <div class="ztab-bar">
-    @for (t of tabs;track t.key) { <button class="ztab-btn" [class.active]="activeTab()===t.key" (click)="setTab(t.key)">{{ t.icon }} {{ t.label }}</button> }
-  </div>
+  <!-- Tab Bar removed — navigation via sidebar -->
 
   @if (activeTab()==='dashboard') {
     <div class="stat-grid">

@@ -130,6 +130,95 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   tsPeriodLabel  = () => this._periodLabel(this.tsViewMode(),  this.tsPeriodOffset());
   attPeriodLabel = () => this._periodLabel(this.attViewMode(), this.attPeriodOffset());
 
+  // ── Weekly grid helpers ───────────────────────────────────────────────────
+  weekDays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  toDateStr(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  weekDates = () => {
+    const now = new Date(); const offset = this.tsPeriodOffset();
+    const monday = new Date(now); const day = now.getDay() || 7;
+    monday.setDate(now.getDate() - day + 1 + offset * 7); monday.setHours(0,0,0,0);
+    return Array.from({length:7}, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d; });
+  };
+
+  visibleWeekDates = () => {
+    const all = this.weekDates();
+    if (this.tsPeriodOffset() !== 0) return all;
+    const todayStr = this.toDateStr(new Date());
+    return all.filter(d => this.toDateStr(d) <= todayStr);
+  };
+
+  parseHoursVal(val: any): number {
+    if (!val) return 0;
+    if (typeof val === 'number') return val;
+    const s = String(val);
+    if (s.includes(':')) { const [h, m] = s.split(':').map(Number); return h + (m||0)/60; }
+    return parseFloat(s) || 0;
+  }
+
+  fmtH(decimal: number): string {
+    if (!decimal) return '—';
+    const h = Math.floor(decimal); const m = Math.round((decimal-h)*60);
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+
+  weeklyRows = () => {
+    const dates = this.visibleWeekDates(); const all = this.allTimesheets();
+    const map = new Map<string, { ts: any; hours: (number|null)[]; tsPerDay: (any|null)[] }>();
+    for (const ts of all) {
+      const d = new Date(ts.date); d.setHours(0,0,0,0);
+      const idx = dates.findIndex(wd => wd.getTime() === d.getTime());
+      if (idx === -1) continue;
+      const key = `${ts.employeeName}|${ts.projectName}`;
+      if (!map.has(key)) map.set(key, { ts, hours: Array(dates.length).fill(null), tsPerDay: Array(dates.length).fill(null) });
+      map.get(key)!.hours[idx] = this.parseHoursVal(ts.hoursWorked);
+      map.get(key)!.tsPerDay[idx] = ts;
+    }
+    return [...map.values()];
+  };
+
+  groupedWeeklyRows = () => {
+    const rows = this.weeklyRows();
+    const map = new Map<string, { employeeName: string; rows: typeof rows }>();
+    for (const row of rows) {
+      const name = row.ts.employeeName ?? 'Unknown';
+      if (!map.has(name)) map.set(name, { employeeName: name, rows: [] });
+      map.get(name)!.rows.push(row);
+    }
+    return [...map.values()];
+  };
+
+  monthDates = () => {
+    const now = new Date();
+    const year  = now.getFullYear();
+    const month = now.getMonth() + this.tsPeriodOffset();
+    const ref   = new Date(year, month, 1);
+    const days  = new Date(ref.getFullYear(), ref.getMonth() + 1, 0).getDate();
+    return Array.from({ length: days }, (_, i) => new Date(ref.getFullYear(), ref.getMonth(), i + 1));
+  };
+
+  monthlyGroupedRows = () => {
+    const dates = this.monthDates();
+    const all   = this.allTimesheets().filter((t: any) => this._inPeriod(t.date, 'monthly', this.tsPeriodOffset()));
+    const empMap = new Map<string, Map<string, { hours: (number|null)[]; tsPerDay: (any|null)[]; projectName: string }>>();
+    for (const ts of all) {
+      const d = new Date(ts.date); d.setHours(0,0,0,0);
+      const idx = dates.findIndex(md => md.getTime() === d.getTime());
+      if (idx === -1) continue;
+      const emp = ts.employeeName ?? 'Unknown';
+      const prj = ts.projectName ?? '';
+      if (!empMap.has(emp)) empMap.set(emp, new Map());
+      const prjMap = empMap.get(emp)!;
+      if (!prjMap.has(prj)) prjMap.set(prj, { hours: Array(dates.length).fill(null), tsPerDay: Array(dates.length).fill(null), projectName: prj });
+      prjMap.get(prj)!.hours[idx]    = this.parseHoursVal(ts.hoursWorked);
+      prjMap.get(prj)!.tsPerDay[idx] = ts;
+    }
+    return [...empMap.entries()].map(([employeeName, prjMap]) => ({ employeeName, rows: [...prjMap.values()] }));
+  };
+
   private _periodLabel(mode: string, offset: number): string {
     if (mode === 'all') return '';
     const now = new Date();
@@ -567,6 +656,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   stText(s:any)  { return s==0?'Pending':s==1?'Approved':'Rejected'; }
   stClass(s:any) { return s==0?'zbadge-pending':s==1?'zbadge-approved':'zbadge-rejected'; }
+  Number = Number;
 
   setTab(t:AdminTab) {
     this.activeTab.set(t);

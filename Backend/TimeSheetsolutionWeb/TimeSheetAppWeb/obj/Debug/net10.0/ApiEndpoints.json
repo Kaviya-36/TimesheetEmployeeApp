@@ -1127,6 +1127,27 @@
   },
   {
     "ContainingType": "TimeSheetAppWeb.Controllers.TimesheetController",
+    "Method": "CreateTimesheetFromGrid",
+    "RelativePath": "api/Timesheet/{userId}/grid",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "TimeSheetAppWeb.Model.DTOs.TimesheetGridRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TimeSheetAppWeb.Controllers.TimesheetController",
     "Method": "CreateTimesheet",
     "RelativePath": "api/Timesheet/{userId}/manual",
     "HttpMethod": "POST",
@@ -1141,6 +1162,27 @@
       {
         "Name": "request",
         "Type": "TimeSheetAppWeb.Model.DTOs.TimesheetCreateRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TimeSheetAppWeb.Controllers.TimesheetController",
+    "Method": "SubmitWeeklyTimesheet",
+    "RelativePath": "api/Timesheet/{userId}/weekly",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "TimeSheetAppWeb.Model.DTOs.TimesheetWeeklyRequest",
         "IsRequired": true
       }
     ],

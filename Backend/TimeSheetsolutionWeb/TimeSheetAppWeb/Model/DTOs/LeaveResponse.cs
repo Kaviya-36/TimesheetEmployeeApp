@@ -3,6 +3,7 @@
     public class LeaveResponse
     {
         public int Id { get; set; }
+        public int UserId { get; set; }
         public string EmployeeName { get; set; } = string.Empty;
         public string LeaveType { get; set; } = string.Empty;
         public DateTime FromDate { get; set; }

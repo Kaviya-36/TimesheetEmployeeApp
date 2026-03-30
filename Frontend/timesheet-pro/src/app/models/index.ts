@@ -40,7 +40,7 @@ export interface TimesheetCreateRequest {
 }
 export interface TimesheetUpdateRequest {
   projectId?: number; projectName?: string; workDate?: string;
-  startTime?: string; endTime?: string; breakTime?: string; Description?: string;
+  startTime?: string; endTime?: string; breakTime?: string; taskDescription?: string;
 }
 export interface TimesheetApprovalRequest {
   timesheetId: number; approvedById: number; isApproved: boolean; managerComment?: string;
@@ -59,7 +59,7 @@ export interface LeaveApprovalRequest {
   leaveRequestId: number; approverById: number; isApproved: boolean; managerComment?: string;
 }
 export interface Leave {
-  id: number; employeeName: string; leaveType: string; fromDate: string; toDate: string;
+  id: number; userId?: number; employeeName: string; leaveType: string; fromDate: string; toDate: string;
   reason?: number; status: Number; approvedById?: number; approvedDate?: string; managerComment?: string;
 }
 export interface LeaveType { id: number; name: string; maxDaysPerYear: number; isActive: boolean; }

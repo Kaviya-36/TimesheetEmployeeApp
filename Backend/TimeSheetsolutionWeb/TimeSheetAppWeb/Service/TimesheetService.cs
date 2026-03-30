@@ -37,10 +37,197 @@ namespace TimeSheetAppWeb.Services
             _logger = logger;
         }
 
-        // ---------------- CREATE MANUAL TIMESHEET ----------------
-        public async Task<ApiResponse<TimesheetResponse>> CreateManualTimesheetAsync(int userId, TimesheetCreateRequest request)
+        // ---------------- CREATE FROM GRID (hours only) ----------------
+        public async Task<ApiResponse<TimesheetResponse>> CreateFromGridAsync(int userId, TimesheetGridRequest request)
         {
             try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null) return new ApiResponse<TimesheetResponse> { Success = false, Message = "User not found" };
+
+                Project? project = null;
+                try { project = await _projectRepository.GetByIdAsync(request.ProjectId); } catch { }
+                if (project == null)
+                {
+                    // Fallback: find by name
+                    var allProjects = await _projectRepository.GetAllAsync() ?? Enumerable.Empty<Project>();
+                    project = allProjects.FirstOrDefault(p => p.ProjectName == request.ProjectName);
+                }
+                if (project == null) return new ApiResponse<TimesheetResponse> { Success = false, Message = $"Invalid project (id={request.ProjectId}, name={request.ProjectName})" };
+
+                if (request.Hours <= 0 || request.Hours > 24)
+                    return new ApiResponse<TimesheetResponse> { Success = false, Message = "Hours must be between 0 and 24" };
+
+                if (!DateTime.TryParse(request.WorkDate, out var workDate))
+                    return new ApiResponse<TimesheetResponse> { Success = false, Message = $"Invalid date: {request.WorkDate}" };
+
+                // Check for existing timesheet on same date+project
+                var all = await _timesheetRepository.GetAllAsync() ?? Enumerable.Empty<Timesheet>();
+                var existing = all.FirstOrDefault(t =>
+                    t.UserId == userId &&
+                    t.ProjectId == project.Id &&
+                    t.WorkDate.Date == workDate.Date);
+
+                var startTime = new TimeSpan(9, 0, 0);
+                var totalMinutes = (int)Math.Round(request.Hours * 60);
+                var endTime = startTime.Add(TimeSpan.FromMinutes(totalMinutes));
+                if (endTime.TotalHours > 23) endTime = new TimeSpan(23, 59, 0);
+
+                if (existing != null)
+                {
+                    // Update existing pending timesheet
+                    if (existing.Status == TimesheetStatus.Approved)
+                        return new ApiResponse<TimesheetResponse> { Success = false, Message = "Approved timesheets cannot be updated" };
+
+                    existing.StartTime  = startTime;
+                    existing.EndTime    = endTime;
+                    existing.TotalHours = request.Hours;
+                    if (!string.IsNullOrEmpty(request.TaskDescription))
+                        existing.TaskDescription = request.TaskDescription;
+                    await _timesheetRepository.UpdateAsync(existing.Id, existing);
+
+                    return new ApiResponse<TimesheetResponse>
+                    {
+                        Success = true, Message = "Timesheet updated",
+                        Data = MapToDto(existing, user, project)
+                    };
+                }
+
+                var timesheet = new Timesheet
+                {
+                    UserId      = userId,
+                    ProjectId   = project.Id,
+                    ProjectName = project.ProjectName,
+                    WorkDate    = workDate,
+                    StartTime   = startTime,
+                    EndTime     = endTime,
+                    BreakTime   = TimeSpan.Zero,
+                    TotalHours  = request.Hours,
+                    TaskDescription = request.TaskDescription ?? "",
+                    Status      = TimesheetStatus.Pending
+                };
+
+                await _timesheetRepository.AddAsync(timesheet);
+
+                // Notify managers/HR
+                await _notifService.SendToRoleAsync("Manager", "Timesheet", $"{user.Name} submitted a timesheet for {project.ProjectName} on {workDate:dd MMM yyyy}.");
+                await _notifService.SendToRoleAsync("HR",      "Timesheet", $"{user.Name} submitted a timesheet for {project.ProjectName} on {workDate:dd MMM yyyy}.");
+
+                return new ApiResponse<TimesheetResponse>
+                {
+                    Success = true, Message = "Timesheet created",
+                    Data = MapToDto(timesheet, user, project)
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating grid timesheet for UserId={UserId}", userId);
+                return new ApiResponse<TimesheetResponse> { Success = false, Message = $"Error: {ex.Message} | Inner: {ex.InnerException?.Message ?? "none"}" };
+            }
+        }
+
+        // ---------------- SUBMIT WEEKLY TIMESHEET (batch) ----------------
+        public async Task<ApiResponse<TimesheetWeeklyResponse>> SubmitWeeklyAsync(int userId, TimesheetWeeklyRequest request)
+        {
+            var result = new TimesheetWeeklyResponse();
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null) return new ApiResponse<TimesheetWeeklyResponse> { Success = false, Message = "User not found" };
+
+                var allProjects = (await _projectRepository.GetAllAsync() ?? Enumerable.Empty<Project>()).ToList();
+                var allTs       = (await _timesheetRepository.GetAllAsync() ?? Enumerable.Empty<Timesheet>()).ToList();
+
+                foreach (var entry in request.Entries)
+                {
+                    if (entry.Hours <= 0) { result.Skipped++; continue; }
+
+                    if (!DateTime.TryParse(entry.WorkDate, out var workDate))
+                    { result.Errors.Add($"Invalid date: {entry.WorkDate}"); result.Skipped++; continue; }
+
+                    // Resolve project
+                    Project? project = null;
+                    try { project = await _projectRepository.GetByIdAsync(entry.ProjectId); } catch { }
+                    if (project == null)
+                        project = allProjects.FirstOrDefault(p => p.ProjectName == entry.ProjectName);
+                    if (project == null)
+                    { result.Errors.Add($"Project not found: {entry.ProjectName}"); result.Skipped++; continue; }
+
+                    var startTime = new TimeSpan(9, 0, 0);
+                    var totalMinutes = (int)Math.Round(entry.Hours * 60);
+                    var endTime = startTime.Add(TimeSpan.FromMinutes(totalMinutes));
+                    if (endTime.TotalHours > 23) endTime = new TimeSpan(23, 59, 0);
+
+                    var existing = allTs.FirstOrDefault(t =>
+                        t.UserId == userId && t.ProjectId == project.Id && t.WorkDate.Date == workDate.Date);
+
+                    if (existing != null)
+                    {
+                        if (existing.Status == TimesheetStatus.Approved)
+                        { result.AlreadyApproved++; continue; }
+
+                        existing.StartTime  = startTime;
+                        existing.EndTime    = endTime;
+                        existing.TotalHours = entry.Hours;
+                        if (!string.IsNullOrEmpty(entry.TaskDescription))
+                            existing.TaskDescription = entry.TaskDescription;
+                        if (request.Submit)
+                            existing.Status = TimesheetStatus.Pending;
+
+                        await _timesheetRepository.UpdateAsync(existing.Id, existing);
+                        result.Updated++;
+                    }
+                    else
+                    {
+                        var ts = new Timesheet
+                        {
+                            UserId          = userId,
+                            ProjectId       = project.Id,
+                            ProjectName     = project.ProjectName,
+                            WorkDate        = workDate,
+                            StartTime       = startTime,
+                            EndTime         = endTime,
+                            BreakTime       = TimeSpan.Zero,
+                            TotalHours      = entry.Hours,
+                            TaskDescription = entry.TaskDescription ?? "",
+                            Status          = TimesheetStatus.Pending
+                        };
+                        await _timesheetRepository.AddAsync(ts);
+                        result.Saved++;
+                    }
+                }
+
+                if (request.Submit && (result.Saved + result.Updated) > 0)
+                {
+                    await _notifService.SendToRoleAsync("Manager", "Timesheet",
+                        $"{user.Name} submitted a weekly timesheet ({result.Saved + result.Updated} entries).");
+                    await _notifService.SendToRoleAsync("HR", "Timesheet",
+                        $"{user.Name} submitted a weekly timesheet ({result.Saved + result.Updated} entries).");
+                }
+
+                return new ApiResponse<TimesheetWeeklyResponse>
+                {
+                    Success = true,
+                    Message = request.Submit
+                        ? $"Weekly timesheet submitted: {result.Saved} new, {result.Updated} updated" +
+                          (result.AlreadyApproved > 0 ? $", {result.AlreadyApproved} already approved (unchanged)" : "") +
+                          (result.Skipped > 0 ? $", {result.Skipped} skipped" : "") + "."
+                        : $"Saved: {result.Saved} new, {result.Updated} updated" +
+                          (result.AlreadyApproved > 0 ? $", {result.AlreadyApproved} already approved (unchanged)" : "") +
+                          (result.Skipped > 0 ? $", {result.Skipped} skipped" : "") + ".",
+                    Data = result
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error submitting weekly timesheet for UserId={UserId}", userId);
+                return new ApiResponse<TimesheetWeeklyResponse> { Success = false, Message = $"Error: {ex.Message}" };
+            }
+        }
+
+        // ---------------- CREATE MANUAL TIMESHEET ----------------
+        public async Task<ApiResponse<TimesheetResponse>> CreateManualTimesheetAsync(int userId, TimesheetCreateRequest request)
+        {            try
             {
                 _logger.LogInformation("Manual timesheet creation for UserId {UserId}", userId);
 
@@ -258,7 +445,7 @@ namespace TimeSheetAppWeb.Services
                 if (request.StartTime.HasValue) timesheet.StartTime = request.StartTime.Value;
                 if (request.EndTime.HasValue) timesheet.EndTime = request.EndTime.Value;
                 if (request.BreakTime.HasValue) timesheet.BreakTime = request.BreakTime.Value;
-                if (!string.IsNullOrEmpty(request.TaskDescription)) timesheet.TaskDescription = request.TaskDescription;
+                if (request.TaskDescription != null) timesheet.TaskDescription = request.TaskDescription;
 
                 timesheet.TotalHours = Math.Max(0, (timesheet.EndTime - timesheet.StartTime - timesheet.BreakTime).TotalHours);
 
