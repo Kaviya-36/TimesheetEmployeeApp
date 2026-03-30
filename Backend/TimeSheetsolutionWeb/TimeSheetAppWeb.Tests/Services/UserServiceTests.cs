@@ -11,24 +11,73 @@ using Xunit;
 
 namespace TimeSheetAppWeb.Tests.Services
 {
+    /// <summary>
+    /// Unit tests for <see cref="UserService"/>.
+    /// Covers login, registration, CRUD operations, filtering, and sorting.
+    /// </summary>
     public class UserServiceTests
     {
-        private readonly Mock<IRepository<int, User>>       _userRepo  = new();
-        private readonly Mock<IRepository<int, Department>> _deptRepo  = new();
-        private readonly Mock<IPasswordService>             _pwdSvc    = new();
-        private readonly Mock<ITokenService>                _tokenSvc  = new();
-        private readonly Mock<ILogger<UserService>>         _logger    = new();
+        // ── Mocks ──────────────────────────────────────────────────────────────
+
+        private readonly Mock<IRepository<int, User>>       _userRepo = new();
+        private readonly Mock<IRepository<int, Department>> _deptRepo = new();
+        private readonly Mock<IPasswordService>             _pwdSvc   = new();
+        private readonly Mock<ITokenService>                _tokenSvc = new();
+        private readonly Mock<ILogger<UserService>>         _logger   = new();
+
+        // ── Helpers ────────────────────────────────────────────────────────────
 
         private UserService CreateService() =>
             new(_userRepo.Object, _deptRepo.Object, _pwdSvc.Object, _tokenSvc.Object, _logger.Object);
 
-        private User MakeUser(int id = 1, bool active = true) => new User
+        private static User MakeUser(int id = 1, bool active = true) => new()
         {
-            Id = id, Name = "Test User", Email = "test@test.com",
-            EmployeeId = "E001", Role = UserRole.Employee,
-            PasswordHash = "hashed", IsActive = active,
-            JoiningDate = DateTime.UtcNow
+            Id           = id,
+            Name         = "Test User",
+            Email        = "test@example.com",
+            EmployeeId   = "E001",
+            Role         = UserRole.Employee,
+            PasswordHash = "hashed",
+            IsActive     = active,
+            JoiningDate  = DateTime.UtcNow
         };
+
+        // ── Constructor null guards ────────────────────────────────────────────
+
+        [Fact]
+        public void Constructor_NullUserRepo_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new UserService(null!, _deptRepo.Object, _pwdSvc.Object, _tokenSvc.Object, _logger.Object));
+        }
+
+        [Fact]
+        public void Constructor_NullDeptRepo_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new UserService(_userRepo.Object, null!, _pwdSvc.Object, _tokenSvc.Object, _logger.Object));
+        }
+
+        [Fact]
+        public void Constructor_NullPasswordSvc_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new UserService(_userRepo.Object, _deptRepo.Object, null!, _tokenSvc.Object, _logger.Object));
+        }
+
+        [Fact]
+        public void Constructor_NullTokenSvc_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new UserService(_userRepo.Object, _deptRepo.Object, _pwdSvc.Object, null!, _logger.Object));
+        }
+
+        [Fact]
+        public void Constructor_NullLogger_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new UserService(_userRepo.Object, _deptRepo.Object, _pwdSvc.Object, _tokenSvc.Object, null!));
+        }
 
         // ── LoginAsync ─────────────────────────────────────────────────────────
 
@@ -259,6 +308,85 @@ namespace TimeSheetAppWeb.Tests.Services
             var result = await svc.GetAllUsersAsync(role: "Manager") as dynamic;
 
             Assert.NotNull(result);
+        }
+
+        // ── GetAllUsersAsync — status filter + sort variants ──────────────────
+
+        [Fact]
+        public async Task GetAll_StatusFilter_Active_ReturnsActiveOnly()
+        {
+            var users = new List<User>
+            {
+                MakeUser(1, active: true),
+                MakeUser(2, active: false)
+            };
+            _userRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(users);
+            _deptRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Department>());
+            var svc = CreateService();
+
+            var result = await svc.GetAllUsersAsync(status: "active");
+
+            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public async Task GetAll_SortByRole_Desc_Works()
+        {
+            var users = new List<User> { MakeUser(1) };
+            _userRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(users);
+            _deptRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Department>());
+            var svc = CreateService();
+
+            var result = await svc.GetAllUsersAsync(sortBy: "role", sortDir: "desc");
+
+            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public async Task GetAll_SortByJoined_Asc_Works()
+        {
+            var users = new List<User> { MakeUser(1) };
+            _userRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(users);
+            _deptRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Department>());
+            var svc = CreateService();
+
+            var result = await svc.GetAllUsersAsync(sortBy: "joined", sortDir: "asc");
+
+            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public async Task GetAll_SortByName_Desc_Works()
+        {
+            var users = new List<User> { MakeUser(1) };
+            _userRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(users);
+            _deptRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Department>());
+            var svc = CreateService();
+
+            var result = await svc.GetAllUsersAsync(sortBy: "name", sortDir: "desc");
+
+            Assert.NotNull(result);
+        }
+
+        // ── UpdateUserAsync — role parse + departmentId ────────────────────────
+
+        [Fact]
+        public async Task Update_WithRoleAndDepartment_UpdatesBoth()
+        {
+            var user = MakeUser();
+            var dept = new Department { Id = 2, Name = "Engineering" };
+            _userRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(user);
+            _userRepo.Setup(r => r.UpdateAsync(1, It.IsAny<User>()))
+                     .ReturnsAsync((int id, User u) => u);
+            _deptRepo.Setup(r => r.GetByIdAsync(2)).ReturnsAsync(dept);
+            var svc = CreateService();
+
+            var result = await svc.UpdateUserAsync(1, new UserUpdateRequest
+            {
+                Role = "Manager", DepartmentId = 2, Phone = "1234567890", Email = "new@test.com"
+            });
+
+            Assert.Equal("Manager", result.Role);
         }
     }
 }

@@ -144,5 +144,97 @@ namespace TimeSheetAppWeb.Tests.Services
             Assert.True(result.Success);
             Assert.Equal(1, result.Data?.TotalRecords);
         }
+
+        // ── UpdateTaskAsync ────────────────────────────────────────────────────
+
+        [Fact]
+        public async Task UpdateTask_NonMentor_ReturnsFail()
+        {
+            var svc = CreateService();
+            var result = await svc.UpdateTaskAsync(1, new InternTaskUpdateRequest { Title = "X" }, "Employee");
+
+            Assert.False(result.Success);
+            Assert.Contains("mentor", result.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task UpdateTask_NotFound_ReturnsFail()
+        {
+            _taskRepo.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((InternTask?)null);
+            var svc = CreateService();
+
+            var result = await svc.UpdateTaskAsync(99, new InternTaskUpdateRequest { Title = "X" }, "Mentor");
+
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task UpdateTask_InternNotFound_ReturnsFail()
+        {
+            var task = new InternTask { Id = 1, InternId = 99, Title = "T", AssignedDate = DateTime.Now, Status = InternTaskStatus.Pending };
+            _taskRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(task);
+            _userRepo.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((User?)null);
+            var svc = CreateService();
+
+            var result = await svc.UpdateTaskAsync(1, new InternTaskUpdateRequest { Title = "X" }, "Mentor");
+
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task UpdateTask_Valid_ReturnsSuccess()
+        {
+            var intern = MakeIntern();
+            var task = new InternTask { Id = 1, InternId = 1, Title = "Old", AssignedDate = DateTime.Now, Status = InternTaskStatus.Pending };
+            _taskRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(task);
+            _userRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(intern);
+            _taskRepo.Setup(r => r.UpdateAsync(1, It.IsAny<InternTask>())).ReturnsAsync(task);
+            var svc = CreateService();
+
+            var result = await svc.UpdateTaskAsync(1, new InternTaskUpdateRequest
+            {
+                Title = "New Title", Description = "Desc",
+                DueDate = DateTime.Today.AddDays(7), Status = InternTaskStatus.InProgress
+            }, "Mentor");
+
+            Assert.True(result.Success);
+            Assert.Equal("New Title", result.Data?.Title);
+        }
+
+        // ── MapToDto — null title branch ───────────────────────────────────────
+
+        [Fact]
+        public async Task CreateTask_NullTitle_MapsToEmptyString()
+        {
+            var intern = MakeIntern();
+            _userRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(intern);
+            _taskRepo.Setup(r => r.AddAsync(It.IsAny<InternTask>()))
+                     .ReturnsAsync(new InternTask
+                     {
+                         Id = 1, InternId = 1, Title = null!,  // null title
+                         AssignedDate = DateTime.Now,
+                         Status = InternTaskStatus.Pending
+                     });
+
+            var svc = CreateService();
+            var result = await svc.CreateTaskAsync(
+                new InternTaskCreateRequest { InternId = 1, Title = null!, DueDate = DateTime.Today.AddDays(7) },
+                "Mentor");
+
+            Assert.True(result.Success);
+            Assert.Equal(string.Empty, result.Data?.Title);
+        }
+
+        // ── DeleteTask — unauthorized role ─────────────────────────────────────
+
+        [Fact]
+        public async Task DeleteTask_UnauthorizedRole_ReturnsFail()
+        {
+            var svc = CreateService();
+            var result = await svc.DeleteTaskAsync(1, "Employee");
+
+            Assert.False(result.Success);
+            Assert.Contains("HR", result.Message, StringComparison.OrdinalIgnoreCase);
+        }
     }
 }

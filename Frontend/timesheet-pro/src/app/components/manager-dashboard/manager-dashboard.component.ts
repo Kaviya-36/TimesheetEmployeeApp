@@ -243,24 +243,21 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
     const allPending = group.rows.flatMap(r => r.tsPerDay.filter(t => t && Number(t.status) === 0)) as Timesheet[];
     if (!allPending.length) return;
     const uid = this.auth.currentUser(); if (!uid) return;
-    this.confirm(
-      approve ? 'Approve Week' : 'Reject Week',
-      `${approve ? 'Approve' : 'Reject'} all ${allPending.length} pending timesheet(s) for "${group.employeeName}" this week?`,
-      () => {
-        let done = 0;
-        const finish = () => {
-          if (++done === allPending.length) {
-            this.toast.success(approve ? 'Week Approved' : 'Week Rejected', `All timesheets for ${group.employeeName}.`);
-            this.loadAll();
-          }
-        };
-        for (const ts of allPending) {
-          this.tsSvc.approveOrReject({ timesheetId: ts.id, approvedById: uid, isApproved: approve, managerComment: approve ? 'Approved by Manager' : 'Rejected by Manager' })
-            .subscribe({ next: finish, error: finish });
+    this.openReviewModal(approve, (comment) => {
+      let done = 0;
+      const finish = () => {
+        if (++done === allPending.length) {
+          this.toast.success(approve ? 'Week Approved' : 'Week Rejected', `All timesheets for ${group.employeeName}.`);
+          this.loadAll();
         }
-      },
-      approve ? 'info' : 'warning'
-    );
+      };
+      for (const ts of allPending) {
+        this.tsSvc.approveOrReject({
+          timesheetId: ts.id, approvedById: uid, isApproved: approve,
+          managerComment: comment || (approve ? 'Approved by Manager' : 'Rejected by Manager')
+        }).subscribe({ next: finish, error: finish });
+      }
+    }, `${group.employeeName} · ${allPending.length} timesheet${allPending.length > 1 ? 's' : ''} (week)`);
   }
 
   // Approve/reject all pending in a monthly employee group
@@ -268,16 +265,21 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
     const allPending = group.rows.flatMap(r => r.tsPerDay.filter(t => t && Number(t.status) === 0)) as Timesheet[];
     if (!allPending.length) return;
     const uid = this.auth.currentUser(); if (!uid) return;
-    this.confirm(
-      approve ? 'Approve Month' : 'Reject Month',
-      `${approve ? 'Approve' : 'Reject'} all ${allPending.length} pending timesheet(s) for "${group.employeeName}" this month?`,
-      () => {
-        let done = 0;
-        const finish = () => { if (++done === allPending.length) { this.toast.success(approve ? 'Approved' : 'Rejected', `All timesheets for ${group.employeeName}.`); this.loadAll(); } };
-        for (const ts of allPending) this.tsSvc.approveOrReject({ timesheetId: ts.id, approvedById: uid, isApproved: approve, managerComment: approve ? 'Approved by Manager' : 'Rejected by Manager' }).subscribe({ next: finish, error: finish });
-      },
-      approve ? 'info' : 'warning'
-    );
+    this.openReviewModal(approve, (comment) => {
+      let done = 0;
+      const finish = () => {
+        if (++done === allPending.length) {
+          this.toast.success(approve ? 'Approved' : 'Rejected', `All timesheets for ${group.employeeName}.`);
+          this.loadAll();
+        }
+      };
+      for (const ts of allPending) {
+        this.tsSvc.approveOrReject({
+          timesheetId: ts.id, approvedById: uid, isApproved: approve,
+          managerComment: comment || (approve ? 'Approved by Manager' : 'Rejected by Manager')
+        }).subscribe({ next: finish, error: finish });
+      }
+    }, `${group.employeeName} · ${allPending.length} timesheet${allPending.length > 1 ? 's' : ''} (month)`);
   }
 
   // Approve/reject all pending in a monthly project row
@@ -285,42 +287,44 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
     const pending = row.tsPerDay.filter(t => t && Number(t.status) === 0) as Timesheet[];
     if (!pending.length) return;
     const uid = this.auth.currentUser(); if (!uid) return;
-    this.confirm(
-      approve ? 'Approve' : 'Reject',
-      `${approve ? 'Approve' : 'Reject'} ${pending.length} timesheet(s) for "${row.projectName}"?`,
-      () => {
-        let done = 0;
-        const finish = () => { if (++done === pending.length) { this.toast.success(approve ? 'Approved' : 'Rejected', `${pending.length} entries.`); this.loadAll(); } };
-        for (const ts of pending) this.tsSvc.approveOrReject({ timesheetId: ts.id, approvedById: uid, isApproved: approve, managerComment: approve ? 'Approved by Manager' : 'Rejected by Manager' }).subscribe({ next: finish, error: finish });
-      },
-      approve ? 'info' : 'warning'
-    );
+    this.openReviewModal(approve, (comment) => {
+      let done = 0;
+      const finish = () => {
+        if (++done === pending.length) {
+          this.toast.success(approve ? 'Approved' : 'Rejected', `${pending.length} entries for ${row.projectName}.`);
+          this.loadAll();
+        }
+      };
+      for (const ts of pending) {
+        this.tsSvc.approveOrReject({
+          timesheetId: ts.id, approvedById: uid, isApproved: approve,
+          managerComment: comment || (approve ? 'Approved by Manager' : 'Rejected by Manager')
+        }).subscribe({ next: finish, error: finish });
+      }
+    }, `${row.projectName} · ${pending.length} timesheet${pending.length > 1 ? 's' : ''}`);
   }
 
-  // Approve/reject all pending timesheets in a row
+  // Approve/reject all pending timesheets in a weekly project row
   reviewRowTs(row: { ts: Timesheet; tsPerDay: (Timesheet|null)[] }, approve: boolean) {
     const pending = row.tsPerDay.filter(t => t && Number(t.status) === 0) as Timesheet[];
     if (!pending.length) return;
     const uid = this.auth.currentUser(); if (!uid) return;
-    this.confirm(
-      approve ? 'Approve Timesheets' : 'Reject Timesheets',
-      `${approve ? 'Approve' : 'Reject'} ${pending.length} timesheet(s) for "${row.ts.employeeName}" (${row.ts.projectName})?`,
-      () => {
-        let done = 0;
-        const total = pending.length;
-        const finish = () => {
-          if (++done === total) {
-            this.toast.success(approve ? 'Approved' : 'Rejected', `${total} timesheet(s) for ${row.ts.employeeName}.`);
-            this.loadAll();
-          }
-        };
-        for (const ts of pending) {
-          this.tsSvc.approveOrReject({ timesheetId: ts.id, approvedById: uid, isApproved: approve, managerComment: approve ? 'Approved by Manager' : 'Rejected by Manager' })
-            .subscribe({ next: finish, error: finish });
+    this.openReviewModal(approve, (comment) => {
+      let done = 0;
+      const total = pending.length;
+      const finish = () => {
+        if (++done === total) {
+          this.toast.success(approve ? 'Approved' : 'Rejected', `${total} timesheet(s) for ${row.ts.employeeName}.`);
+          this.loadAll();
         }
-      },
-      approve ? 'info' : 'warning'
-    );
+      };
+      for (const ts of pending) {
+        this.tsSvc.approveOrReject({
+          timesheetId: ts.id, approvedById: uid, isApproved: approve,
+          managerComment: comment || (approve ? 'Approved by Manager' : 'Rejected by Manager')
+        }).subscribe({ next: finish, error: finish });
+      }
+    }, `${row.ts.employeeName} · ${row.ts.projectName} · ${pending.length} timesheet${pending.length > 1 ? 's' : ''}`);
   }
 
   // ── Attendance filter/page ────────────────────────────────────────────────
@@ -403,14 +407,16 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   private cfgAction: (() => void) | null = null;
 
   // ── Review modal (approve/reject with comment) ────────────────────────────
-  reviewModal = signal(false);
-  reviewComment = signal('');
+  reviewModal      = signal(false);
+  reviewComment    = signal('');
+  reviewContext    = signal('');   // e.g. "John Doe · 5 timesheets"
+  reviewIsApprove  = signal(true);
   private reviewAction: ((comment: string) => void) | null = null;
-  reviewIsApprove = signal(true);
 
-  openReviewModal(approve: boolean, action: (comment: string) => void) {
+  openReviewModal(approve: boolean, action: (comment: string) => void, context = '') {
     this.reviewIsApprove.set(approve);
     this.reviewComment.set('');
+    this.reviewContext.set(context);
     this.reviewAction = action;
     this.reviewModal.set(true);
   }
@@ -717,7 +723,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
         },
         error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Action failed.')
       });
-    });
+    }, `${ts.employeeName} · ${ts.projectName} · ${ts.date}`);
   }
 
   reviewLeave(l: Leave, approve: boolean) {
@@ -735,7 +741,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
         },
         error: (e: any) => this.toast.error('Failed', e?.error?.message ?? '')
       });
-    });
+    }, `${l.employeeName} · ${l.leaveType}`);
   }
 
   assignUserToProject() {

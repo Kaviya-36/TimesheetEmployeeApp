@@ -484,6 +484,13 @@ namespace TimeSheetAppWeb.Services
                     return new ApiResponse<bool> { Success = false, Message = "Timesheet not found", Data = false };
                 }
 
+                // Prevent self-approval: a manager cannot approve their own timesheet
+                if (timesheet.UserId == request.ApprovedById)
+                {
+                    _logger.LogWarning("Self-approval attempt: UserId {UserId} tried to approve their own timesheet {TimesheetId}", request.ApprovedById, request.TimesheetId);
+                    return new ApiResponse<bool> { Success = false, Message = "You cannot approve your own timesheet.", Data = false };
+                }
+
                 timesheet.Status = request.IsApproved ? TimesheetStatus.Approved : TimesheetStatus.Rejected;
                 timesheet.ApprovedById = request.ApprovedById;
                 timesheet.ManagerComment = request.ManagerComment;
@@ -654,17 +661,18 @@ namespace TimeSheetAppWeb.Services
         {
             return new TimesheetResponse
             {
-                Id = t.Id,
+                Id           = t.Id,
+                UserId       = t.UserId,
                 EmployeeName = user.Name,
-                EmployeeId = user.EmployeeId,
-                ProjectName = project.ProjectName,
-                Date = t.WorkDate,
-                StartTime = t.StartTime,
-                EndTime = t.EndTime,
-                BreakTime = t.BreakTime,
-                HoursWorked = TimeSpan.FromHours(t.TotalHours).ToString(@"hh\:mm"),
-                Description = t.TaskDescription,
-                Status = t.Status,
+                EmployeeId   = user.EmployeeId,
+                ProjectName  = project.ProjectName,
+                Date         = t.WorkDate,
+                StartTime    = t.StartTime,
+                EndTime      = t.EndTime,
+                BreakTime    = t.BreakTime,
+                HoursWorked  = TimeSpan.FromHours(t.TotalHours).ToString(@"hh\:mm"),
+                Description  = t.TaskDescription,
+                Status       = t.Status,
                 ManagerComment = t.ManagerComment
             };
         }

@@ -1005,63 +1005,6 @@
         }
       }
     },
-    "/api/notif-test/all": {
-      "get": {
-        "tags": [
-          "NotificationTest"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/notif-test/user/{userId}": {
-      "get": {
-        "tags": [
-          "NotificationTest"
-        ],
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/notif-test/role/{role}": {
-      "get": {
-        "tags": [
-          "NotificationTest"
-        ],
-        "parameters": [
-          {
-            "name": "role",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/payroll": {
       "post": {
         "tags": [
@@ -1614,29 +1557,6 @@
         }
       }
     },
-    "/api/Timesheet/{userId}": {
-      "post": {
-        "tags": [
-          "Timesheet"
-        ],
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/Timesheet/{timesheetId}": {
       "put": {
         "tags": [
@@ -1864,48 +1784,6 @@
             "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/TimesheetCreateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/Timesheet/{userId}/grid": {
-      "post": {
-        "tags": [
-          "Timesheet"
-        ],
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TimesheetGridRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TimesheetGridRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/TimesheetGridRequest"
               }
             }
           }
@@ -2457,32 +2335,6 @@
           "breakTime": {
             "type": "string",
             "format": "date-span"
-          },
-          "taskDescription": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "TimesheetGridRequest": {
-        "type": "object",
-        "properties": {
-          "projectId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "projectName": {
-            "type": "string",
-            "nullable": true
-          },
-          "workDate": {
-            "type": "string",
-            "nullable": true
-          },
-          "hours": {
-            "type": "number",
-            "format": "double"
           },
           "taskDescription": {
             "type": "string",

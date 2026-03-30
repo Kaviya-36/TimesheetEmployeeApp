@@ -750,7 +750,9 @@
               <div class="zprofile-info-item"><span class="zprofile-info-label">Status</span><span class="zprofile-info-value">{{ userProfile()?.status ?? '—' }}</span></div>
               <div class="zprofile-info-item"><span class="zprofile-info-label">Joined</span><span class="zprofile-info-value">{{ userProfile()?.joiningDate | date:'dd MMM yyyy' }}</span></div>
             </div>
-            <button class="zbtn zbtn-danger" style="margin-top:24px" (click)="auth.logout()">⎋ Sign Out</button>
+            <div class="zprofile-footer">
+              <button class="zbtn zbtn-danger" (click)="auth.logout()">⎋ Sign Out</button>
+            </div>
           </div>
         </div>
       }

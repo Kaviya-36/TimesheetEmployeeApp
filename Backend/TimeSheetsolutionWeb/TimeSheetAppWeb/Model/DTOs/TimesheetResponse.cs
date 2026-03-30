@@ -3,6 +3,7 @@
     public class TimesheetResponse
     {
         public int Id { get; set; }
+        public int UserId { get; set; }
         public string EmployeeName { get; set; } = string.Empty;
         public string EmployeeId { get; set; } = string.Empty;
         public string ProjectName { get; set; } = string.Empty;

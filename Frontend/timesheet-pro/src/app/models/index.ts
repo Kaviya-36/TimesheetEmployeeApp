@@ -27,7 +27,7 @@ export interface UserUpdateRequest {
 
 // Timesheet
 export interface Timesheet {
-  id: number; employeeName: string; employeeId: string;
+  id: number; userId?: number; employeeName: string; employeeId: string;
   projectId?: number; projectName: string; date: string;
   startTime: string; endTime: string; breakTime: string;
   hoursWorked: number; description?: string;

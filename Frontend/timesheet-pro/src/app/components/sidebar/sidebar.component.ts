@@ -69,6 +69,8 @@ export class SidebarComponent {
   readonly tabSvc    = inject(TabService);
   readonly collapsed = signal(false);
 
+  roleColor(): string { return '#2563EB'; }
+
   navItems(): NavItem[] {
     const role = this.auth.currentRole() ?? '';
     return NAV_MAP[role] ?? [];

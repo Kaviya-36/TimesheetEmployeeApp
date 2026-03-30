@@ -1,13 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "t/K5QBcOBkM=",
+  "dgSpecHash": "C07T5hBX/GQ=",
   "success": true,
   "projectFilePath": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Documents\\GitHub\\TimesheetApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb.Tests\\TimeSheetAppWeb.Tests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Kaviya.N\\.nuget\\packages\\azure.core\\1.47.1\\azure.core.1.47.1.nupkg.sha512",
     "C:\\Users\\Kaviya.N\\.nuget\\packages\\azure.identity\\1.14.2\\azure.identity.1.14.2.nupkg.sha512",
     "C:\\Users\\Kaviya.N\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
-    "C:\\Users\\Kaviya.N\\.nuget\\packages\\coverlet.collector\\6.0.4\\coverlet.collector.6.0.4.nupkg.sha512",
+    "C:\\Users\\Kaviya.N\\.nuget\\packages\\coverlet.collector\\8.0.1\\coverlet.collector.8.0.1.nupkg.sha512",
     "C:\\Users\\Kaviya.N\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\10.0.5\\microsoft.aspnetcore.authentication.jwtbearer.10.0.5.nupkg.sha512",
     "C:\\Users\\Kaviya.N\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\8.0.0\\microsoft.bcl.asyncinterfaces.8.0.0.nupkg.sha512",
     "C:\\Users\\Kaviya.N\\.nuget\\packages\\microsoft.bcl.cryptography\\9.0.4\\microsoft.bcl.cryptography.9.0.4.nupkg.sha512",

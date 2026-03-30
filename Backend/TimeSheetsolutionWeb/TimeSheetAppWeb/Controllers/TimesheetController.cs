@@ -21,35 +21,6 @@ namespace TimeSheetAppWeb.Controllers
             _attendanceService = attendanceService;
         }
 
-        // ---------------- CREATE TIMESHEET FROM ATTENDANCE (Today Only) ----------------
-        [HttpPost("{userId}")]
-        [Authorize(Roles = "Employee,Intern,Manager,Mentor,HR,Admin")]
-        public async Task<IActionResult> CreateTimesheetFromAttendance(int userId)
-        {
-            try
-            {
-                var attendances = await _attendanceService.GetUserAttendanceEntitiesAsync(userId);
-
-                var todayAttendance = attendances.FirstOrDefault(a => a.Date.Date == DateTime.Today);
-                if (todayAttendance == null)
-                    return BadRequest(new { Success = false, Message = "No attendance found for today." });
-
-                var timesheetResult = await _timesheetService.CreateTimesheetFromAttendanceAsync(userId, todayAttendance);
-                if (!timesheetResult.Success)
-                    return BadRequest(timesheetResult);
-
-                return Ok(timesheetResult);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Success = false,
-                    Message = "An error occurred while creating the timesheet from attendance.",
-                    Details = ex.Message
-                });
-            }
-        }
         // ---------------- UPDATE TIMESHEET ----------------
         [HttpPut("{timesheetId}")]
         [Authorize(Roles = "Employee,Manager,HR,Admin,Intern")]
@@ -121,19 +92,6 @@ namespace TimeSheetAppWeb.Controllers
         public async Task<IActionResult> CreateTimesheet(int userId, [FromBody] TimesheetCreateRequest request)
         {
             var result = await _timesheetService.CreateManualTimesheetAsync(userId, request);
-            if (!result.Success) return BadRequest(result);
-            return Ok(result);
-        }
-
-        //---------------Create Timesheet from Grid (hours only) ----------------
-        [Authorize(Roles = "Employee,Intern,Manager,Mentor,HR,Admin")]
-        [HttpPost("{userId}/grid")]
-        public async Task<IActionResult> CreateTimesheetFromGrid(int userId, [FromBody] TimesheetGridRequest request)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(new { Success = false, Message = "Invalid request", Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
-
-            var result = await _timesheetService.CreateFromGridAsync(userId, request);
             if (!result.Success) return BadRequest(result);
             return Ok(result);
         }

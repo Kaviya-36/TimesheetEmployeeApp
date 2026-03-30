@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TimeSheetAppWeb.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f0c5096f8a7bf49c122dbb7d5a0e93701e676c1c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fb32ed22901e4bbf5e3caf8e65dfb036aae9c8ef")]
 [assembly: System.Reflection.AssemblyProductAttribute("TimeSheetAppWeb.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TimeSheetAppWeb.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

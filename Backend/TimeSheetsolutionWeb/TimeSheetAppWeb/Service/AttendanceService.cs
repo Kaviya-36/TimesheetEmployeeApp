@@ -158,7 +158,7 @@ namespace TimeSheetAppWeb.Services
                 var yesterday = today.AddDays(-1);
                 var allAttendances = await _attendanceRepository.GetAllAsync() ?? Enumerable.Empty<Attendance>();
 
-                // ── Auto-checkout yesterday if missed, then flag it ────────────────
+                // ── Flag yesterday's missed checkout (no auto-fill) ───────────────
                 var prevRecord = allAttendances.FirstOrDefault(a => a.UserId == userId && a.Date.Date == yesterday);
                 bool missedCheckout = false;
                 if (prevRecord != null && prevRecord.CheckIn.HasValue && !prevRecord.CheckOut.HasValue)
@@ -184,19 +184,7 @@ namespace TimeSheetAppWeb.Services
                         Data = missedCheckout ? new AttendanceResponse { MissedCheckout = true } : null
                     };
 
-                // ── Auto check-out after 12 hours (same-day safety net) ────────────
-                if (attendance.CheckIn.HasValue && !attendance.CheckOut.HasValue)
-                {
-                    var autoCheckoutTime = attendance.Date.Add(attendance.CheckIn.Value).AddHours(12);
-                    if (DateTime.Now >= autoCheckoutTime)
-                    {
-                        var proposed   = attendance.CheckIn.Value.Add(TimeSpan.FromHours(8));
-                        var maxTime    = new TimeSpan(23, 59, 59);
-                        attendance.CheckOut   = proposed > maxTime ? maxTime : proposed;
-                        attendance.TotalHours = TimeSpan.FromHours(8);  // always 8h
-                        await _attendanceRepository.UpdateAsync(attendance.Id, attendance);
-                    }
-                }
+                // ── No same-day auto-checkout — leave record open for manual checkout ──
 
                 var dto = await MapToDtoAsync(attendance);
                 dto.MissedCheckout = missedCheckout;

@@ -3,14 +3,14 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
-    DashboardSummary,
-    InternTaskCreateRequest,
-    LeaveCreateRequest,
-    PayrollCreateRequest,
-    ProjectCreateRequest,
-    TimesheetApprovalRequest,
-    TimesheetCreateRequest, TimesheetUpdateRequest,
-    UserUpdateRequest
+  DashboardSummary,
+  InternTaskCreateRequest,
+  LeaveCreateRequest,
+  PayrollCreateRequest,
+  ProjectCreateRequest,
+  TimesheetApprovalRequest,
+  TimesheetCreateRequest, TimesheetUpdateRequest,
+  UserUpdateRequest
 } from '../models';
 
 // ── Shared param builder ───────────────────────────────────────────────────
@@ -30,9 +30,6 @@ export class TimesheetService {
 
   create(userId: number, req: TimesheetCreateRequest): Observable<any> {
     return this.http.post<any>(`${this.api}/${userId}/manual`, req);
-  }
-  createFromGrid(userId: number, req: { projectId: number; projectName: string; workDate: string; hours: number; taskDescription?: string }): Observable<any> {
-    return this.http.post<any>(`${this.api}/${userId}/grid`, req);
   }
   submitWeekly(userId: number, req: { entries: { projectId: number; projectName: string; workDate: string; hours: number; taskDescription?: string }[]; submit: boolean }): Observable<any> {
     return this.http.post<any>(`${this.api}/${userId}/weekly`, req);
@@ -164,7 +161,6 @@ export class UserService {
   getProfile(): Observable<any>                      { return this.http.get<any>(`${this.api}/profile`); }
   update(id: number, req: UserUpdateRequest): Observable<any> { return this.http.put<any>(`${this.api}/${id}`, req); }
   delete(id: number): Observable<any>                { return this.http.delete<any>(`${this.api}/${id}`); }
-  activate(id: number): Observable<any>              { return this.http.patch<any>(`${this.api}/${id}/activate`, {}); }
   setActive(id: number, isActive: boolean): Observable<any> {
     return this.http.put<any>(`${this.api}/${id}`, { isActive });
   }
@@ -176,11 +172,6 @@ export class InternService {
   private readonly api = `${environment.apiUrl}/interntask`;
   constructor(private http: HttpClient) {}
 
-  getInterns(): Observable<any>                          { return this.http.get<any>(this.api); }
-  getInternById(id: number): Observable<any>             { return this.http.get<any>(`${this.api}/${id}`); }
-  createIntern(data: any): Observable<any>               { return this.http.post<any>(this.api, data); }
-  updateIntern(id: number, data: any): Observable<any>   { return this.http.put<any>(`${this.api}/${id}`, data); }
-  deleteIntern(id: number): Observable<any>              { return this.http.delete<any>(`${this.api}/${id}`); }
   getTasks(internId: number): Observable<any>            { return this.http.get<any>(`${this.api}/intern/${internId}`); }
   createTask(req: InternTaskCreateRequest): Observable<any> { return this.http.post<any>(`${this.api}/create`, req); }
   updateTask(taskId: number, req: any)                   { return this.http.put(`${this.api}/update/${taskId}`, { request: req }); }

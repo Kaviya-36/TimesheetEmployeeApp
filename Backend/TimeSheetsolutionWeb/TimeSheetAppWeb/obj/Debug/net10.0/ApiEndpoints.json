@@ -641,48 +641,6 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "TimeSheetAppWeb.Controllers.NotificationTestController",
-    "Method": "TestAll",
-    "RelativePath": "api/notif-test/all",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "TimeSheetAppWeb.Controllers.NotificationTestController",
-    "Method": "TestRole",
-    "RelativePath": "api/notif-test/role/{role}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "role",
-        "Type": "System.String",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "TimeSheetAppWeb.Controllers.NotificationTestController",
-    "Method": "TestUser",
-    "RelativePath": "api/notif-test/user/{userId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "userId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
     "ContainingType": "TimeSheetAppWeb.Controllers.PayrollController",
     "Method": "CreatePayroll",
     "RelativePath": "api/payroll",
@@ -1104,43 +1062,6 @@
       {
         "Name": "timesheetId",
         "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "TimeSheetAppWeb.Controllers.TimesheetController",
-    "Method": "CreateTimesheetFromAttendance",
-    "RelativePath": "api/Timesheet/{userId}",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "userId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "TimeSheetAppWeb.Controllers.TimesheetController",
-    "Method": "CreateTimesheetFromGrid",
-    "RelativePath": "api/Timesheet/{userId}/grid",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "userId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "request",
-        "Type": "TimeSheetAppWeb.Model.DTOs.TimesheetGridRequest",
         "IsRequired": true
       }
     ],

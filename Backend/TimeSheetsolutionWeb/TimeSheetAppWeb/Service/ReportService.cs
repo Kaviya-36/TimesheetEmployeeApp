@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using TimeSheetAppWeb.Interface;
 using TimeSheetAppWeb.Model;
 using TimeSheetAppWeb.Model.DTOs;

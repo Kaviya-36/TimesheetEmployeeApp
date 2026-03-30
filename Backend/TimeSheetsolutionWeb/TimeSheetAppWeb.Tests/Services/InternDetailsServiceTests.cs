@@ -192,5 +192,131 @@ namespace TimeSheetAppWeb.Tests.Services
             Assert.True(result.Success);
             Assert.Equal(2, result.Data?.TotalRecords);
         }
+
+        // ── Constructor null guards ────────────────────────────────────────────
+
+        [Fact]
+        public void Constructor_NullInternRepo_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new InternDetailsService(null!, _userRepo.Object, _logger.Object));
+        }
+
+        [Fact]
+        public void Constructor_NullUserRepo_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new InternDetailsService(_internRepo.Object, null!, _logger.Object));
+        }
+
+        [Fact]
+        public void Constructor_NullLogger_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new InternDetailsService(_internRepo.Object, _userRepo.Object, null!));
+        }
+
+        // ── GetAll with mentorName filter ──────────────────────────────────────
+
+        [Fact]
+        public async Task GetAll_WithMentorNameFilter_ReturnsFiltered()
+        {
+            var intern = MakeIntern();
+            var mentor = new User { Id = 2, Name = "Mentor Bob", Email = "m@t.com", EmployeeId = "M001", Role = UserRole.Manager, PasswordHash = "h", IsActive = true };
+            var details = new InternDetails
+            {
+                Id = 1, UserId = 1, MentorId = 2,
+                TrainingStart = DateTime.Today, TrainingEnd = DateTime.Today.AddMonths(3),
+                Mentor = mentor
+            };
+            _internRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<InternDetails> { details });
+            _userRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(intern);
+            _userRepo.Setup(r => r.GetByIdAsync(2)).ReturnsAsync(mentor);
+
+            var svc = CreateService();
+            var result = await svc.GetAllAsync(1, 10, mentorName: "Bob");
+
+            Assert.True(result.Success);
+            Assert.Equal(1, result.Data?.TotalRecords);
+        }
+
+        [Fact]
+        public async Task GetAll_WithUserNameFilter_ReturnsFiltered()
+        {
+            var intern = MakeIntern();
+            intern.Name = "Alice";
+            var details = new InternDetails
+            {
+                Id = 1, UserId = 1, MentorId = 2,
+                TrainingStart = DateTime.Today, TrainingEnd = DateTime.Today.AddMonths(3),
+                User = intern
+            };
+            _internRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<InternDetails> { details });
+            _userRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(intern);
+
+            var svc = CreateService();
+            var result = await svc.GetAllAsync(1, 10, userName: "Alice");
+
+            Assert.True(result.Success);
+            Assert.Equal(1, result.Data?.TotalRecords);
+        }
+
+        // ── MapToDtoAsync — mentor lookup branch ───────────────────────────────
+
+        [Fact]
+        public async Task GetById_WithMentorId_LooksUpMentorName()
+        {
+            var intern = MakeIntern();
+            var mentor = new User { Id = 2, Name = "Mentor Bob", Email = "m@t.com", EmployeeId = "M001", Role = UserRole.Manager, PasswordHash = "h", IsActive = true };
+            var details = new InternDetails
+            {
+                Id = 1, UserId = 1, MentorId = 2,
+                TrainingStart = DateTime.Today, TrainingEnd = DateTime.Today.AddMonths(3)
+            };
+            _internRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(details);
+            _userRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(intern);
+            _userRepo.Setup(r => r.GetByIdAsync(2)).ReturnsAsync(mentor);
+
+            var svc = CreateService();
+            var result = await svc.GetByIdAsync(1);
+
+            Assert.True(result.Success);
+            Assert.Equal("Mentor Bob", result.Data?.MentorName);
+        }
+
+        // ── Create — user is null (combined null+role check) ──────────────────
+
+        [Fact]
+        public async Task Create_UserIsNull_ReturnsFail()
+        {
+            _userRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((User?)null);
+            var svc = CreateService();
+
+            var result = await svc.CreateAsync(new InternDetailsCreateDto
+            {
+                UserId = 1, TrainingStart = DateTime.Today, TrainingEnd = DateTime.Today.AddMonths(3)
+            });
+
+            Assert.False(result.Success);
+            Assert.Contains("intern", result.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // ── Update — user is null ──────────────────────────────────────────────
+
+        [Fact]
+        public async Task Update_UserIsNull_ReturnsFail()
+        {
+            var details = MakeDetails();
+            _internRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(details);
+            _userRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((User?)null);
+            var svc = CreateService();
+
+            var result = await svc.UpdateAsync(1, new InternDetailsCreateDto
+            {
+                UserId = 1, TrainingStart = DateTime.Today, TrainingEnd = DateTime.Today.AddMonths(3)
+            });
+
+            Assert.False(result.Success);
+        }
     }
 }

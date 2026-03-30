@@ -73,6 +73,9 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   empSearch  = signal(''); empRoleF = signal('all'); empStatusF = signal('all'); empPage = signal(1); empPS = 8;
   attSearch  = signal(''); attPage = signal(1); attPS = 8;
   lvSearch   = signal(''); lvStatusF = signal('all'); lvPage = signal(1); lvPS = 8;
+  showLeaveCommentModal = signal(false);
+  leaveComment = signal('');
+  pendingLeaveAction = signal<{ leave: Leave; isApprove: boolean } | null>(null);
   paySearch  = signal(''); payPage = signal(1); payPS = 8;
 
   // ── Timesheets ────────────────────────────────────────────────────────────
@@ -271,6 +274,13 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
 
   activeCount  = computed(()=>this.employees().filter(u=>u.status==='Active').length);
   lateToday    = computed(()=>this.attendance().filter(a=>a.isLate).length);
+  onTimeCount  = computed(()=>this.attendance().filter(a=>!a.isLate).length);
+  avgHrsPerDay = computed(()=>{
+    const list = this.attendance();
+    if (!list.length) return '0.0';
+    const total = list.reduce((s,a)=>{ const n=parseFloat(String(a.totalHours)); return s+(isNaN(n)?0:n); },0);
+    return (total/list.length).toFixed(1);
+  });
   pendingLv    = computed(()=>this.allLeaves().filter(l=>Number(l.status)===0).length);
   totalPayroll = computed(()=>this.payrolls().reduce((s,p)=>s+(p.netSalary??0),0));
 
@@ -404,16 +414,39 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  approveLeave(l:Leave){
-    const uid=this.auth.currentUser()!;
-    this.lvSvc.approveOrReject({leaveId:l.id,approvedById:uid,isApproved:true,managerComment:'Approved by HR'}).subscribe({
-      next:()=>{this.toast.success('Approved',`Leave for ${l.employeeName}`);this.loadAll();},error:()=>this.toast.error('Error','Failed.')
-    });
+  approveLeave(l: Leave) {
+    this.pendingLeaveAction.set({ leave: l, isApprove: true });
+    this.leaveComment.set('');
+    this.showLeaveCommentModal.set(true);
   }
-  rejectLeave(l:Leave){
-    const uid=this.auth.currentUser()!;
-    this.lvSvc.approveOrReject({leaveId:l.id,approvedById:uid,isApproved:false,managerComment:'Rejected by HR'}).subscribe({
-      next:()=>{this.toast.warning('Rejected',`Leave for ${l.employeeName}`);this.loadAll();},error:()=>this.toast.error('Error','Failed.')
+
+  rejectLeave(l: Leave) {
+    this.pendingLeaveAction.set({ leave: l, isApprove: false });
+    this.leaveComment.set('');
+    this.showLeaveCommentModal.set(true);
+  }
+
+  submitLeaveDecision() {
+    const action = this.pendingLeaveAction();
+    if (!action) return;
+    const uid = this.auth.currentUser()!;
+    const comment = this.leaveComment().trim() ||
+      (action.isApprove ? 'Approved by HR' : 'Rejected by HR');
+    this.lvSvc.approveOrReject({
+      leaveId: action.leave.id,
+      approvedById: uid,
+      isApproved: action.isApprove,
+      managerComment: comment
+    }).subscribe({
+      next: () => {
+        action.isApprove
+          ? this.toast.success('Approved', `Leave for ${action.leave.employeeName}`)
+          : this.toast.warning('Rejected', `Leave for ${action.leave.employeeName}`);
+        this.showLeaveCommentModal.set(false);
+        this.pendingLeaveAction.set(null);
+        this.loadAll();
+      },
+      error: () => this.toast.error('Error', 'Failed.')
     });
   }
 

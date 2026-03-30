@@ -78,8 +78,13 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   attViewMode     = signal<'all'|'weekly'|'monthly'>('all');
   attPeriodOffset = signal(0);
 
-  tsPeriodLabel  = () => this._periodLabel(this.tsViewMode(),  this.tsPeriodOffset());
-  attPeriodLabel = () => this._periodLabel(this.attViewMode(), this.attPeriodOffset());
+  // ── Top submit section view mode (Week grid vs Month overview) ────────────
+  submitViewMode   = signal<'weekly'|'monthly'>('weekly');
+  submitMonthOffset = signal(0);
+
+  tsPeriodLabel       = () => this._periodLabel(this.tsViewMode(),       this.tsPeriodOffset());
+  attPeriodLabel      = () => this._periodLabel(this.attViewMode(),      this.attPeriodOffset());
+  submitMonthLabel    = () => this._periodLabel('monthly', this.submitMonthOffset());
 
   private _periodLabel(mode: string, offset: number): string {
     if (mode === 'all') return '';
@@ -134,6 +139,16 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   pagedAtt      = computed(() => { const s = (this.attPage()-1)*this.attPS; return this.filteredAtt().slice(s, s+this.attPS); });
   attTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredAtt().length / this.attPS)));
 
+  avgHoursPerDay = computed(() => {
+    const list = this.attendances();
+    if (!list.length) return '0.0';
+    const total = list.reduce((s, a) => {
+      const n = parseFloat(String(a.totalHours));
+      return s + (isNaN(n) ? 0 : n);
+    }, 0);
+    return (total / list.length).toFixed(1);
+  });
+
   lvPage = signal(1);
   lvPS = 6;
   pagedLv      = computed(() => { const s = (this.lvPage()-1)*this.lvPS; return this.leaves().slice(s, s+this.lvPS); });
@@ -141,10 +156,30 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
 
   approvedCount = computed(() => this.timesheets().filter(t => t.status === 1).length);
   pendingCount  = computed(() => this.timesheets().filter(t => t.status === 0).length);
+  rejectedCount = computed(() => this.timesheets().filter(t => t.status === 2).length);
   totalHours    = computed(() => {
-    const total = (this.timesheets() ?? []).reduce((s, t) => s + (isNaN(Number(t?.hoursWorked)) ? 0 : Number(t.hoursWorked)), 0);
+    const total = (this.timesheets() ?? []).reduce((s, t) => s + this.parseHours(t?.hoursWorked), 0);
     return total.toFixed(1);
   });
+
+  recentTimesheets = computed(() =>
+    [...this.timesheets()].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5)
+  );
+
+  pendingLeaves = computed(() => this.leaves().filter(l => +l.status === 0).length);
+  approvedLeaves = computed(() => this.leaves().filter(l => +l.status === 1).length);
+
+  thisWeekHours = computed(() => {
+    const now = new Date();
+    const mon = new Date(now); mon.setDate(now.getDate() - (now.getDay() || 7) + 1); mon.setHours(0,0,0,0);
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23,59,59,999);
+    const total = this.timesheets()
+      .filter(t => { const d = new Date(t.date); return d >= mon && d <= sun; })
+      .reduce((s, t) => s + this.parseHours(t.hoursWorked), 0);
+    return total.toFixed(1);
+  });
+
+  onTimeDays = computed(() => this.attendances().filter(a => !a.isLate).length);
 
   showTsModal    = signal(false);
   showLeaveModal = signal(false);
@@ -188,6 +223,88 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     const now = new Date(); const offset = this.tsPeriodOffset();
     const monday = new Date(now); monday.setDate(now.getDate() - (now.getDay() || 7) + 1 + offset * 7); monday.setHours(0,0,0,0);
     return Array.from({length:7}, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d; });
+  };
+
+  // All calendar days for the selected month
+  monthDates = () => {
+    const now = new Date();
+    const ref  = new Date(now.getFullYear(), now.getMonth() + this.tsPeriodOffset(), 1);
+    const days = new Date(ref.getFullYear(), ref.getMonth() + 1, 0).getDate();
+    return Array.from({ length: days }, (_, i) => new Date(ref.getFullYear(), ref.getMonth(), i + 1));
+  };
+
+  // History weekly grid dates (uses tsPeriodOffset, separate from submit grid)
+  histWeekDates = () => {
+    const now = new Date(); const offset = this.tsPeriodOffset();
+    const monday = new Date(now); monday.setDate(now.getDate() - (now.getDay() || 7) + 1 + offset * 7); monday.setHours(0,0,0,0);
+    return Array.from({length:7}, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d; });
+  };
+
+  // Group timesheets by project for the history weekly read-only grid
+  histWeeklyRows = () => {
+    const dates = this.histWeekDates();
+    const all   = this.timesheets().filter(t => this._inPeriod(t.date, 'weekly', this.tsPeriodOffset()));
+    const map   = new Map<string, { projectName: string; hours: (number|null)[]; tsPerDay: (Timesheet|null)[] }>();
+    for (const ts of all) {
+      const d = new Date(ts.date); d.setHours(0,0,0,0);
+      const idx = dates.findIndex(wd => wd.getTime() === d.getTime());
+      if (idx === -1) continue;
+      const key = `${ts.projectId}|${ts.projectName ?? ''}`;
+      if (!map.has(key)) map.set(key, { projectName: ts.projectName ?? '', hours: Array(7).fill(null), tsPerDay: Array(7).fill(null) });
+      map.get(key)!.hours[idx]   = this.parseHours(ts.hoursWorked);
+      map.get(key)!.tsPerDay[idx] = ts;
+    }
+    return [...map.values()];
+  };
+
+  // Group timesheets by project for the monthly calendar grid
+  monthlyRows = () => {
+    const dates = this.monthDates();
+    const all   = this.timesheets().filter(t => this._inPeriod(t.date, 'monthly', this.tsPeriodOffset()));
+    const map   = new Map<string, { projectName: string; hours: (number|null)[]; tsPerDay: (Timesheet|null)[] }>();
+    for (const ts of all) {
+      const d = new Date(ts.date); d.setHours(0,0,0,0);
+      const idx = dates.findIndex(md => md.getTime() === d.getTime());
+      if (idx === -1) continue;
+      const key = ts.projectName ?? '';
+      if (!map.has(key)) map.set(key, { projectName: key, hours: Array(dates.length).fill(null), tsPerDay: Array(dates.length).fill(null) });
+      map.get(key)!.hours[idx]   = this.parseHours(ts.hoursWorked);
+      map.get(key)!.tsPerDay[idx] = ts;
+    }
+    return [...map.values()];
+  };
+
+  // Format decimal hours → "8h" or "8h 30m" for display
+  fmtH(decimal: number | null): string {
+    if (!decimal) return '';
+    const h = Math.floor(decimal);
+    const m = Math.round((decimal - h) * 60);
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+
+  // Month dates for the top submit section
+  submitMonthDates = () => {
+    const now = new Date();
+    const ref  = new Date(now.getFullYear(), now.getMonth() + this.submitMonthOffset(), 1);
+    const days = new Date(ref.getFullYear(), ref.getMonth() + 1, 0).getDate();
+    return Array.from({ length: days }, (_, i) => new Date(ref.getFullYear(), ref.getMonth(), i + 1));
+  };
+
+  // Monthly rows for the top submit section (read-only overview)
+  submitMonthlyRows = () => {
+    const dates = this.submitMonthDates();
+    const all   = this.timesheets().filter(t => this._inPeriod(t.date, 'monthly', this.submitMonthOffset()));
+    const map   = new Map<string, { projectName: string; hours: (number|null)[]; tsPerDay: (Timesheet|null)[] }>();
+    for (const ts of all) {
+      const d = new Date(ts.date); d.setHours(0,0,0,0);
+      const idx = dates.findIndex(md => md.getTime() === d.getTime());
+      if (idx === -1) continue;
+      const key = ts.projectName ?? '';
+      if (!map.has(key)) map.set(key, { projectName: key, hours: Array(dates.length).fill(null), tsPerDay: Array(dates.length).fill(null) });
+      map.get(key)!.hours[idx]    = this.parseHours(ts.hoursWorked);
+      map.get(key)!.tsPerDay[idx] = ts;
+    }
+    return [...map.values()];
   };
 
   private parseHours(val: any): number {

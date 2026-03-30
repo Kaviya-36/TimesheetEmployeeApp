@@ -1,4 +1,6 @@
-/* ── Manager role pill ───────────────────────────────────────────────────── */
+/* ── Manager role accent ─────────────────────────────────────────────────── */
+:host { --role-color: #2563EB; }
+
 .zmgr-pill {
   background: #EFF6FF; color: #2563EB;
   padding: 6px 16px; border-radius: 20px;
@@ -6,47 +8,32 @@
   border: 1px solid #BFDBFE; letter-spacing: .3px;
 }
 
-/* ── Shared helpers ──────────────────────────────────────────────────────── */
-.ztext-muted   { color: #9CA3AF; }
-.zhours        { color: #2563EB; font-size: 14px; font-weight: 700; }
-.zemp-id       { font-family: monospace; font-size: 11px; color: #2563EB; background: #EFF6FF; padding: 2px 6px; border-radius: 4px; }
-.zcomment-cell { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.zdays-badge   { background: #EFF6FF; color: #2563EB; border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 700; }
 .zlv-type-badge { background: #F5F3FF; color: #7C3AED; border-radius: 6px; padding: 3px 9px; font-size: 12px; font-weight: 600; }
-.zuser-cell    { display: flex; align-items: center; gap: 8px; }
-.zavatar       { background: linear-gradient(135deg, #2563EB, #7C3AED); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; flex-shrink: 0; }
 .zassign-row   { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 
 /* ── Quick approval card ─────────────────────────────────────────────────── */
 .zmgr-quick-card {
-  background: #fff; border-radius: 14px;
-  border: 1px solid #E5E7EB;
-  box-shadow: 0 2px 10px rgba(0,0,0,.05);
-  overflow: hidden; margin-bottom: 16px;
+  background: #fff; border-radius: 14px; border: 1px solid #E5E7EB;
+  box-shadow: 0 2px 10px rgba(0,0,0,.05); overflow: hidden; margin-bottom: 16px;
 }
 .zmgr-quick-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 20px; background: #FAFAFA;
-  border-bottom: 1px solid #F3F4F6;
+  padding: 14px 20px; background: #FAFAFA; border-bottom: 1px solid #F3F4F6;
 }
 .zmgr-quick-title {
   display: flex; align-items: center; gap: 8px;
   font-size: 14px; font-weight: 700; color: #111827;
 }
 .zmgr-quick-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: #2563EB; flex-shrink: 0;
+  width: 8px; height: 8px; border-radius: 50%; background: #2563EB; flex-shrink: 0;
   box-shadow: 0 0 0 3px rgba(37,99,235,.15);
 }
-.zmgr-quick-footer {
-  padding: 12px 20px; border-top: 1px solid #F3F4F6; background: #FAFAFA;
-}
+.zmgr-quick-footer { padding: 12px 20px; border-top: 1px solid #F3F4F6; background: #FAFAFA; }
 
 /* ── Approval row ────────────────────────────────────────────────────────── */
 .zmgr-approval-row {
   display: flex; align-items: center; gap: 12px;
-  padding: 12px 20px; border-bottom: 1px solid #F9FAFB;
-  transition: background .12s;
+  padding: 12px 20px; border-bottom: 1px solid #F9FAFB; transition: background .12s;
 }
 .zmgr-approval-row:last-of-type { border-bottom: none; }
 .zmgr-approval-row:hover { background: #FAFAFA; }
@@ -56,13 +43,8 @@
   color: #fff; font-size: 14px; font-weight: 700;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.zmgr-approval-info {
-  flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;
-}
-.zmgr-approval-name {
-  font-size: 13px; font-weight: 700; color: #111827;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.zmgr-approval-info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.zmgr-approval-name { font-size: 13px; font-weight: 700; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .zmgr-approval-meta { font-size: 12px; color: #6B7280; }
 .zmgr-approval-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
@@ -70,78 +52,36 @@
 .zmgr-approve-btn {
   padding: 5px 12px; border-radius: 7px;
   border: 1.5px solid #BBF7D0; background: #F0FDF4; color: #16A34A;
-  font-size: 12px; font-weight: 700; cursor: pointer;
-  transition: all .14s; white-space: nowrap;
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: all .14s;
 }
-.zmgr-approve-btn:hover {
-  background: #16A34A; color: #fff; border-color: #16A34A;
-  box-shadow: 0 2px 8px rgba(22,163,74,.25);
-}
+.zmgr-approve-btn:hover { background: #16A34A; color: #fff; border-color: #16A34A; box-shadow: 0 2px 8px rgba(22,163,74,.25); }
 .zmgr-reject-btn {
   padding: 5px 12px; border-radius: 7px;
   border: 1.5px solid #FECACA; background: #FEF2F2; color: #DC2626;
-  font-size: 12px; font-weight: 700; cursor: pointer;
-  transition: all .14s; white-space: nowrap;
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: all .14s;
 }
-.zmgr-reject-btn:hover {
-  background: #DC2626; color: #fff; border-color: #DC2626;
-  box-shadow: 0 2px 8px rgba(220,38,38,.25);
-}
+.zmgr-reject-btn:hover { background: #DC2626; color: #fff; border-color: #DC2626; box-shadow: 0 2px 8px rgba(220,38,38,.25); }
 
 /* ── Pending bar ─────────────────────────────────────────────────────────── */
 .zmgr-pending-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 20px;
-  background: linear-gradient(90deg, #FFFBEB, #FEF9EC);
+  padding: 10px 20px; background: linear-gradient(90deg, #FFFBEB, #FEF9EC);
   border-bottom: 1px solid #FDE68A;
 }
-.zmgr-pending-count {
-  font-size: 13px; font-weight: 700; color: #D97706;
-  display: flex; align-items: center; gap: 6px;
-}
-
-/* ── Weekly timesheet table ──────────────────────────────────────────────── */
-.zts-week-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 20px; border-bottom: 1px solid #F3F4F6;
-}
-.zts-week-nav    { display: flex; align-items: center; gap: 10px; }
-.zts-week-table  { min-width: 960px; }
-.zts-project-col { width: 200px; }
-.zts-day-col     { width: 88px; text-align: center; }
-.zts-total-col   { width: 80px; text-align: center; }
-.zts-status-col  { width: 100px; }
-.zts-day-col .zts-day-name { font-size: 10px; font-weight: 800; color: #6B7280; text-transform: uppercase; letter-spacing: .6px; }
-.zts-day-col .zts-day-date { font-size: 13px; font-weight: 600; color: #111827; margin-top: 2px; }
-.zts-today                 { background: #EFF6FF !important; }
-.zts-today .zts-day-name   { color: #2563EB; }
-.zts-today .zts-day-date   { color: #2563EB; }
-.zts-project-cell { font-size: 13px; }
-.zts-hour-cell    { text-align: center; padding: 10px 6px !important; }
-.zts-has-hours    { background: #F0FDF4; }
-.zts-hours-val    { font-size: 13px; font-weight: 700; color: #16A34A; }
-.zts-empty-cell   { color: #D1D5DB; font-size: 13px; }
-.zts-total-cell   { text-align: center; background: #F9FAFB; font-size: 14px; }
-.zts-total-row td { background: #F3F4F6 !important; font-size: 13px; }
-.zts-day-total    { text-align: center; color: #374151; font-weight: 600; }
-.zts-grand-total  { text-align: center; color: #2563EB; font-size: 15px; font-weight: 800; }
+.zmgr-pending-count { font-size: 13px; font-weight: 700; color: #D97706; display: flex; align-items: center; gap: 6px; }
 
 /* ── Team grid ───────────────────────────────────────────────────────────── */
 .zmgr-team-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 16px; padding: 20px;
 }
 .zmgr-team-card {
   background: #fff; border: 1px solid #E5E7EB; border-radius: 14px;
   padding: 20px 18px; display: flex; flex-direction: column;
   align-items: center; gap: 6px; text-align: center;
-  transition: box-shadow .15s, transform .15s;
-  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  transition: box-shadow .15s, transform .15s; box-shadow: 0 1px 4px rgba(0,0,0,.05);
 }
-.zmgr-team-card:hover {
-  box-shadow: 0 6px 20px rgba(37,99,235,.1); transform: translateY(-2px);
-}
+.zmgr-team-card:hover { box-shadow: 0 6px 20px rgba(37,99,235,.1); transform: translateY(-2px); }
 .zmgr-team-avatar {
   width: 52px; height: 52px; border-radius: 50%;
   background: linear-gradient(135deg, #2563EB, #7C3AED);
@@ -157,19 +97,15 @@
 
 /* ── Project grid ────────────────────────────────────────────────────────── */
 .zmgr-project-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px; padding: 4px 0;
 }
 .zmgr-project-card {
   background: #fff; border: 1px solid #E5E7EB; border-radius: 14px;
   padding: 20px; display: flex; flex-direction: column; gap: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.05);
-  transition: box-shadow .15s, transform .15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05); transition: box-shadow .15s, transform .15s;
 }
-.zmgr-project-card:hover {
-  box-shadow: 0 6px 20px rgba(37,99,235,.1); transform: translateY(-2px);
-}
+.zmgr-project-card:hover { box-shadow: 0 6px 20px rgba(37,99,235,.1); transform: translateY(-2px); }
 .zmgr-project-header { display: flex; align-items: flex-start; gap: 12px; }
 .zmgr-project-icon {
   width: 40px; height: 40px; border-radius: 10px;
@@ -178,563 +114,266 @@
   font-size: 18px; flex-shrink: 0; border: 1px solid #BFDBFE;
 }
 .zmgr-project-info { flex: 1; min-width: 0; }
-.zmgr-project-name {
-  font-size: 15px; font-weight: 800; color: #111827;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.zmgr-project-name { font-size: 15px; font-weight: 800; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .zmgr-project-manager { font-size: 12px; color: #6B7280; margin-top: 2px; }
 .zmgr-project-desc {
-  font-size: 13px; color: #6B7280; line-height: 1.5;
-  overflow: hidden; display: -webkit-box;
-  -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;
+  font-size: 13px; color: #6B7280; line-height: 1.5; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;
 }
 .zmgr-project-dates {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 12px; color: #6B7280;
-  background: #F9FAFB; border-radius: 8px;
-  padding: 7px 10px; border: 1px solid #F3F4F6;
+  display: flex; align-items: center; gap: 8px; font-size: 12px; color: #6B7280;
+  background: #F9FAFB; border-radius: 8px; padding: 7px 10px; border: 1px solid #F3F4F6;
 }
 .zmgr-project-members { display: flex; flex-direction: column; gap: 8px; }
-.zmgr-members-label {
-  font-size: 10px; font-weight: 800; color: #9CA3AF;
-  text-transform: uppercase; letter-spacing: .6px;
-}
+.zmgr-members-label { font-size: 10px; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: .6px; }
 .zmgr-members-list { display: flex; flex-wrap: wrap; gap: 6px; }
 
 /* ── User chip ───────────────────────────────────────────────────────────── */
 .user-chip {
-  background: #EFF6FF; color: #1D4ED8;
-  padding: 4px 10px; border-radius: 20px;
-  font-size: 12px; font-weight: 600;
-  display: inline-flex; align-items: center; gap: 5px;
+  background: #EFF6FF; color: #1D4ED8; padding: 4px 10px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;
   border: 1px solid #BFDBFE;
 }
 .user-chip-remove {
-  background: none; border: none; cursor: pointer;
-  color: #93C5FD; font-size: 11px; padding: 0; line-height: 1;
-  border-radius: 50%; width: 14px; height: 14px;
-  display: flex; align-items: center; justify-content: center;
-  transition: all .12s;
+  background: none; border: none; cursor: pointer; color: #93C5FD; font-size: 11px;
+  padding: 0; line-height: 1; border-radius: 50%; width: 14px; height: 14px;
+  display: flex; align-items: center; justify-content: center; transition: all .12s;
 }
 .user-chip-remove:hover { background: #DC2626; color: #fff; }
 
-/* ── Profile card ────────────────────────────────────────────────────────── */
-.zprofile-card  { max-width: 520px; margin: 0 auto; }
-.zprofile-banner {
-  height: 130px; border-radius: 16px 16px 0 0;
-  background: linear-gradient(135deg, #1A1F2E 0%, #1E3A8A 100%);
-}
-.zprofile-body {
-  background: #fff; border-radius: 0 0 16px 16px;
-  border: 1px solid #E5E7EB; border-top: none;
-  padding: 0 32px 36px; text-align: center;
-  display: flex; flex-direction: column; align-items: center;
-}
-.zprofile-avatar-lg {
-  width: 84px; height: 84px; border-radius: 50%;
-  background: linear-gradient(135deg, #2563EB, #7C3AED);
-  color: #fff; font-size: 32px; font-weight: 800;
-  display: flex; align-items: center; justify-content: center;
-  margin: -42px auto 18px; border: 4px solid #fff;
-  box-shadow: 0 4px 20px rgba(37,99,235,.25);
-}
-.zprofile-name { font-size: 22px; font-weight: 800; color: #111827; margin: 0 0 8px; }
-.zprofile-info-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 12px; margin-top: 24px; width: 100%; text-align: left;
-}
-.zprofile-info-item {
-  background: #F9FAFB; border: 1px solid #E5E7EB;
-  border-radius: 10px; padding: 12px 14px;
-}
-.zprofile-info-label {
-  display: block; font-size: 10px; font-weight: 700;
-  color: #9CA3AF; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px;
-}
-.zprofile-info-value { display: block; font-size: 14px; font-weight: 600; color: #111827; }
-
-/* ── Manager Weekly Timesheet Grid (mirrors employee zwts-card) ──────────── */
-.zmgr-wts-wrap { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-
-.zmgr-wts-nav {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  padding: 0 0 4px;
-}
-
-/* Reuse employee nav button styles with blue accent */
-.zwts-nav-btn {
-  padding: 6px 14px; border: 1.5px solid #E5E7EB; border-radius: 8px;
-  background: #fff; font-size: 12px; font-weight: 600; color: #374151;
-  cursor: pointer; transition: all .15s;
-}
-.zwts-nav-btn:hover { border-color: #2563EB; color: #2563EB; }
-.zwts-week-range {
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 14px; border: 1.5px solid #E5E7EB; border-radius: 8px;
-  font-size: 12px; font-weight: 600; color: #374151;
-}
-.zwts-arrow {
-  width: 32px; height: 32px; border: 1.5px solid #E5E7EB; border-radius: 8px;
-  background: #fff; cursor: pointer; font-size: 16px; color: #374151;
-  display: flex; align-items: center; justify-content: center; transition: all .15s;
-}
-.zwts-arrow:hover:not(:disabled) { border-color: #2563EB; color: #2563EB; }
-.zwts-arrow:disabled { opacity: .4; cursor: not-allowed; }
-.zwts-day-name { font-weight: 700; text-transform: uppercase; letter-spacing: .5px; font-size: 10px; }
-.zwts-day-date { font-size: 11px; margin-top: 1px; }
-
-/* Per-employee card */
-.zmgr-wts-card {
-  background: #fff; border-radius: 14px;
-  border: 1px solid #E5E7EB;
-  box-shadow: 0 2px 10px rgba(0,0,0,.05);
-  overflow: hidden;
-}
-
-/* Employee header strip */
-.zmgr-wts-emp-header {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 20px;
-  background: linear-gradient(90deg, #EFF6FF, #F5F3FF);
-  border-bottom: 1px solid #E5E7EB;
-}
-.zmgr-wts-emp-avatar {
-  width: 38px; height: 38px; border-radius: 50%;
-  background: linear-gradient(135deg, #2563EB, #7C3AED);
-  color: #fff; font-size: 16px; font-weight: 800;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; box-shadow: 0 2px 10px rgba(37,99,235,.3);
-}
-.zmgr-wts-emp-info { display: flex; flex-direction: column; gap: 2px; }
-.zmgr-wts-emp-name { font-size: 15px; font-weight: 800; color: #111827; }
-.zmgr-wts-emp-meta { font-size: 12px; color: #6B7280; }
-
-/* Column headers */
-.zmgr-wts-col-headers {
-  display: grid;
-  grid-template-columns: 180px repeat(auto-fill, minmax(60px, 1fr)) 80px 100px;
-  background: #F9FAFB; border-bottom: 1px solid #E5E7EB;
-  padding: 0 16px;
-}
-.zmgr-wts-project-hdr { padding: 10px 8px; font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; }
-.zmgr-wts-day-hdr {
-  padding: 10px 4px; text-align: center;
-  font-size: 11px; color: #6B7280;
-}
-.zmgr-wts-day-hdr.zmgr-wts-today { color: #2563EB; }
-.zmgr-wts-week-hdr  { padding: 10px 4px; text-align: center; font-size: 11px; font-weight: 700; color: #6B7280; }
-.zmgr-wts-action-hdr { padding: 10px 8px; text-align: center; font-size: 11px; font-weight: 700; color: #6B7280; }
-
-/* Project rows */
-.zmgr-wts-row {
-  display: grid;
-  grid-template-columns: 180px repeat(auto-fill, minmax(60px, 1fr)) 80px 100px;
-  border-bottom: 1px solid #F3F4F6;
-  padding: 0 16px; align-items: center;
-  transition: background .12s;
-}
-.zmgr-wts-row:last-child { border-bottom: none; }
-.zmgr-wts-row:hover { background: #FAFAFA; }
-.zmgr-wts-row-pending { background: #FFFBEB !important; }
-.zmgr-wts-row-pending:hover { background: #FEF9EC !important; }
-
-.zmgr-wts-project-cell {
-  display: flex; flex-direction: column; gap: 4px;
-  padding: 10px 8px;
-}
-.zmgr-wts-project-name { font-size: 13px; font-weight: 700; color: #111827; }
-
-.zmgr-wts-cell {
-  padding: 10px 4px; text-align: center; position: relative;
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-}
-.zmgr-wts-cell.zmgr-wts-today { background: rgba(37,99,235,.04); }
-.zmgr-wts-cell.zmgr-wts-has-hours { background: #F0FDF4; }
-.zmgr-wts-hours-val { font-size: 13px; font-weight: 700; color: #16A34A; }
-.zmgr-wts-empty     { font-size: 13px; color: #D1D5DB; }
-.zmgr-wts-note-dot  { font-size: 10px; cursor: default; }
-
-.zmgr-wts-row-total {
-  text-align: center; font-size: 13px; font-weight: 800;
-  color: #2563EB; padding: 10px 4px;
-}
-.zmgr-wts-row-actions {
-  display: flex; gap: 5px; align-items: center; justify-content: center;
-  padding: 8px 4px;
-}
-
-/* Footer totals */
-.zmgr-wts-footer {
-  display: grid;
-  grid-template-columns: 180px repeat(auto-fill, minmax(60px, 1fr)) 80px 100px;
-  padding: 10px 16px;
-  border-top: 2px solid #E5E7EB;
-  background: #F9FAFB; align-items: center;
-}
-.zmgr-wts-footer-label {
-  font-size: 11px; font-weight: 800; color: #6B7280;
-  text-transform: uppercase; letter-spacing: .5px; padding: 0 8px;
-}
-.zmgr-wts-day-total {
-  text-align: center; font-size: 12px; font-weight: 600; color: #374151;
-}
-.zmgr-wts-grand-total {
-  text-align: center; font-size: 14px; font-weight: 800; color: #2563EB;
-}
-
-/* Employee header bulk actions */
-.zmgr-wts-emp-actions {
-  display: flex; gap: 8px; align-items: center; margin-left: auto; flex-shrink: 0;
-}
-
-/* ── Note display in list view ───────────────────────────────────────────── */
+/* ── Note display ────────────────────────────────────────────────────────── */
 .zmgr-note-cell  { max-width: 180px; }
 .zmgr-note-text  {
   font-size: 12px; color: #374151; line-height: 1.4; cursor: default;
-  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
-  -webkit-box-orient: vertical; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .zmgr-comment-text { font-size: 12px; color: #6B7280; font-style: italic; }
-
-/* ── Grid note popover ───────────────────────────────────────────────────── */
 .zmgr-wts-note-dot { cursor: pointer; font-size: 11px; line-height: 1; }
 
+/* ── Grid note popover ───────────────────────────────────────────────────── */
 .zmgr-note-popover {
-  position: absolute; bottom: calc(100% + 6px); left: 50%;
-  transform: translateX(-50%); z-index: 300;
-  background: #fff; border: 1px solid #E5E7EB;
-  border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.12);
-  width: 220px; overflow: hidden;
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  z-index: 300; background: #fff; border: 1px solid #E5E7EB;
+  border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.12); width: 220px; overflow: hidden;
 }
 .zmgr-note-popover-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 12px; background: #F9FAFB;
-  border-bottom: 1px solid #F3F4F6;
-  font-size: 11px; font-weight: 700; color: #374151;
-  text-transform: uppercase; letter-spacing: .5px;
+  padding: 8px 12px; background: #F9FAFB; border-bottom: 1px solid #F3F4F6;
+  font-size: 11px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: .5px;
 }
-.zmgr-note-close {
-  background: none; border: none; cursor: pointer;
-  font-size: 12px; color: #9CA3AF; padding: 0;
-}
+.zmgr-note-close { background: none; border: none; cursor: pointer; font-size: 12px; color: #9CA3AF; padding: 0; }
 .zmgr-note-close:hover { color: #374151; }
-.zmgr-note-popover-body {
-  padding: 10px 12px; font-size: 13px; color: #374151;
-  line-height: 1.5; white-space: pre-wrap;
-}
-
-/* ── Cell task/note text ─────────────────────────────────────────────────── */
-.zmgr-wts-cell { min-height: 52px; flex-direction: column; }
-
-.zmgr-wts-task-text {
-  font-size: 10px; color: #6B7280; line-height: 1.3;
-  max-width: 80px; text-align: center; cursor: pointer;
-  overflow: hidden; display: -webkit-box;
-  -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;
-  padding: 0 2px; margin-top: 2px; border-radius: 3px;
-  transition: background .12s;
-}
-.zmgr-wts-task-text:hover { background: #F3F4F6; color: #374151; }
-
-/* ── Weekend shading (Sat/Sun) ───────────────────────────────────────────── */
-.zmgr-wts-day-hdr.zmgr-wts-weekend  { background: rgba(0,0,0,.03); color: #9CA3AF; }
-.zmgr-wts-cell.zmgr-wts-weekend     { background: rgba(0,0,0,.025) !important; }
-.zmgr-wts-day-total.zmgr-wts-weekend { background: rgba(0,0,0,.03); color: #9CA3AF; }
+.zmgr-note-popover-body { padding: 10px 12px; font-size: 13px; color: #374151; line-height: 1.5; white-space: pre-wrap; }
 
 /* ── Monthly Calendar Grid ───────────────────────────────────────────────── */
 .zmgr-month-wrap { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-
-.zmgr-month-nav {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0 0 4px;
-}
-
-.zmgr-month-card {
-  background: #fff; border-radius: 14px;
-  border: 1px solid #E5E7EB;
-  box-shadow: 0 2px 10px rgba(0,0,0,.05);
-  overflow: hidden;
-}
-
+.zmgr-month-nav  { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0 0 4px; }
+.zmgr-month-card { background: #fff; border-radius: 14px; border: 1px solid #E5E7EB; box-shadow: 0 2px 10px rgba(0,0,0,.05); overflow: hidden; }
 .zmgr-month-scroll { overflow-x: auto; }
-
-/* Dynamic grid: project col + N day cols + total + action */
-.zmgr-month-col-headers,
-.zmgr-month-row,
-.zmgr-month-footer {
-  display: flex; align-items: stretch; min-width: max-content;
-}
-
-.zmgr-month-project-hdr,
-.zmgr-month-project-cell { width: 160px; min-width: 160px; flex-shrink: 0; }
-.zmgr-month-total-hdr,
-.zmgr-month-row-total,
-.zmgr-month-grand-total { width: 70px; min-width: 70px; flex-shrink: 0; text-align: center; }
-.zmgr-month-action-hdr,
-.zmgr-month-row-actions { width: 80px; min-width: 80px; flex-shrink: 0; }
-
-/* Day columns */
-.zmgr-month-day-hdr,
-.zmgr-month-cell,
-.zmgr-month-day-total { width: 52px; min-width: 52px; flex-shrink: 0; }
-
-/* Header row */
-.zmgr-month-col-headers {
-  background: #F9FAFB; border-bottom: 1px solid #E5E7EB;
-}
-.zmgr-month-project-hdr {
-  padding: 10px 12px; font-size: 11px; font-weight: 700;
-  color: #6B7280; text-transform: uppercase; letter-spacing: .5px;
-}
-.zmgr-month-day-hdr {
-  padding: 8px 2px; text-align: center; font-size: 10px; color: #6B7280;
-  border-left: 1px solid #F3F4F6;
-}
+.zmgr-month-col-headers, .zmgr-month-row, .zmgr-month-footer { display: flex; align-items: stretch; min-width: max-content; }
+.zmgr-month-project-hdr, .zmgr-month-project-cell { width: 160px; min-width: 160px; flex-shrink: 0; }
+.zmgr-month-total-hdr, .zmgr-month-row-total, .zmgr-month-grand-total { width: 70px; min-width: 70px; flex-shrink: 0; text-align: center; }
+.zmgr-month-action-hdr, .zmgr-month-row-actions { width: 80px; min-width: 80px; flex-shrink: 0; }
+.zmgr-month-day-hdr, .zmgr-month-cell, .zmgr-month-day-total { width: 52px; min-width: 52px; flex-shrink: 0; }
+.zmgr-month-col-headers { background: #F9FAFB; border-bottom: 1px solid #E5E7EB; }
+.zmgr-month-project-hdr { padding: 10px 12px; font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; }
+.zmgr-month-day-hdr { padding: 8px 2px; text-align: center; font-size: 10px; color: #6B7280; border-left: 1px solid #F3F4F6; }
 .zmgr-month-day-num  { font-weight: 800; font-size: 12px; color: #374151; }
 .zmgr-month-day-name { font-size: 9px; text-transform: uppercase; letter-spacing: .3px; margin-top: 1px; }
-.zmgr-month-total-hdr,
-.zmgr-month-action-hdr {
-  padding: 10px 4px; font-size: 11px; font-weight: 700;
-  color: #6B7280; text-transform: uppercase; letter-spacing: .5px; text-align: center;
-}
-
-/* Today / weekend */
-.zmgr-month-today   { background: #EFF6FF !important; }
-.zmgr-month-today .zmgr-month-day-num  { color: #2563EB; }
-.zmgr-month-today .zmgr-month-day-name { color: #2563EB; }
+.zmgr-month-total-hdr, .zmgr-month-action-hdr { padding: 10px 4px; font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; text-align: center; }
+.zmgr-month-today { background: #EFF6FF !important; }
+.zmgr-month-today .zmgr-month-day-num, .zmgr-month-today .zmgr-month-day-name { color: #2563EB; }
 .zmgr-month-weekend { background: rgba(0,0,0,.025) !important; color: #9CA3AF; }
-
-/* Data rows */
-.zmgr-month-row {
-  border-bottom: 1px solid #F3F4F6; transition: background .12s;
-}
+.zmgr-month-row { border-bottom: 1px solid #F3F4F6; transition: background .12s; }
 .zmgr-month-row:last-child { border-bottom: none; }
 .zmgr-month-row:hover { background: #FAFAFA; }
 .zmgr-month-row-pending { background: #FFFBEB !important; }
-
-.zmgr-month-project-cell {
-  padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;
-  justify-content: center;
-}
-.zmgr-month-cell {
-  padding: 6px 2px; text-align: center; position: relative;
-  display: flex; flex-direction: column; align-items: center; gap: 1px;
-  border-left: 1px solid #F9FAFB;
-}
+.zmgr-month-project-cell { padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+.zmgr-month-cell { padding: 6px 2px; text-align: center; position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; border-left: 1px solid #F9FAFB; }
 .zmgr-month-has { background: #F0FDF4; }
-.zmgr-month-hours {
-  font-size: 11px; font-weight: 700; color: #16A34A;
-  font-family: 'Roboto Mono', monospace;
-}
-.zmgr-month-task {
-  font-size: 9px; color: #6B7280; cursor: pointer;
-  overflow: hidden; display: -webkit-box;
-  -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical;
-  max-width: 48px; text-align: center; border-radius: 2px;
-  transition: background .1s;
-}
+.zmgr-month-hours { font-size: 11px; font-weight: 700; color: #16A34A; font-family: 'Roboto Mono', monospace; }
+.zmgr-month-task { font-size: 9px; color: #6B7280; cursor: pointer; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical; max-width: 48px; text-align: center; border-radius: 2px; transition: background .1s; }
 .zmgr-month-task:hover { background: #F3F4F6; color: #374151; }
+.zmgr-month-row-total { padding: 10px 4px; font-size: 12px; font-weight: 800; color: #2563EB; text-align: center; display: flex; align-items: center; justify-content: center; }
+.zmgr-month-row-actions { padding: 8px 4px; display: flex; gap: 4px; align-items: center; justify-content: center; }
+.zmgr-month-footer { border-top: 2px solid #E5E7EB; background: #F9FAFB; }
+.zmgr-month-footer-label { width: 160px; min-width: 160px; padding: 8px 12px; font-size: 11px; font-weight: 800; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; display: flex; align-items: center; }
+.zmgr-month-day-total { width: 52px; min-width: 52px; padding: 8px 2px; font-size: 10px; font-weight: 600; color: #374151; text-align: center; border-left: 1px solid #F3F4F6; display: flex; align-items: center; justify-content: center; }
+.zmgr-month-grand-total { width: 70px; min-width: 70px; padding: 8px 4px; font-size: 13px; font-weight: 800; color: #2563EB; text-align: center; display: flex; align-items: center; justify-content: center; }
 
-.zmgr-month-row-total {
-  padding: 10px 4px; font-size: 12px; font-weight: 800;
-  color: #2563EB; text-align: center; display: flex; align-items: center; justify-content: center;
+/* ── Manager Timesheets (All view) ───────────────────────────────────────── */
+.zmgr-ts-card {
+  background: #fff; border: 1px solid #E5E7EB;
+  border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06); overflow: hidden;
 }
-.zmgr-month-row-actions {
-  padding: 8px 4px; display: flex; gap: 4px;
-  align-items: center; justify-content: center;
-}
-
-/* Footer */
-.zmgr-month-footer {
-  border-top: 2px solid #E5E7EB; background: #F9FAFB;
-}
-.zmgr-month-footer-label {
-  width: 160px; min-width: 160px; padding: 8px 12px;
-  font-size: 11px; font-weight: 800; color: #6B7280;
-  text-transform: uppercase; letter-spacing: .5px;
-  display: flex; align-items: center;
-}
-.zmgr-month-day-total {
-  width: 52px; min-width: 52px; padding: 8px 2px;
-  font-size: 10px; font-weight: 600; color: #374151;
-  text-align: center; border-left: 1px solid #F3F4F6;
-  display: flex; align-items: center; justify-content: center;
-}
-.zmgr-month-grand-total {
-  width: 70px; min-width: 70px; padding: 8px 4px;
-  font-size: 13px; font-weight: 800; color: #2563EB;
-  text-align: center; display: flex; align-items: center; justify-content: center;
-}
-
-.ztime-cell { font-family: monospace; font-size: 12px; color: #374151; }
-
-/* ── My Timesheet Weekly Grid (mirrors employee zwts-card) ───────────────── */
-.zwts-card {
-  background: #fff; border-radius: 16px;
-  border: 1px solid #E5E7EB; box-shadow: 0 2px 12px rgba(0,0,0,.06);
-  overflow: hidden;
-}
-.zwts-header {
+.zmgr-ts-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 18px 24px; border-bottom: 1px solid #F3F4F6;
+  flex-wrap: wrap; gap: 12px;
+  background: linear-gradient(to right, #EFF6FF, #fff);
 }
-.zwts-title {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 18px; font-weight: 800; color: #111827;
-}
-.zwts-nav { display: flex; align-items: center; gap: 8px; }
-.zwts-nav-btn {
-  padding: 6px 14px; border: 1.5px solid #E5E7EB; border-radius: 8px;
-  background: #fff; font-size: 12px; font-weight: 600; color: #374151;
-  cursor: pointer; transition: all .15s;
-}
-.zwts-nav-btn:hover { border-color: #10B981; color: #10B981; }
-.zwts-week-range {
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 14px; border: 1.5px solid #E5E7EB; border-radius: 8px;
-  font-size: 12px; font-weight: 600; color: #374151;
-}
-.zwts-arrow {
-  width: 32px; height: 32px; border: 1.5px solid #E5E7EB; border-radius: 8px;
-  background: #fff; cursor: pointer; font-size: 16px; color: #374151;
-  display: flex; align-items: center; justify-content: center; transition: all .15s;
-}
-.zwts-arrow:hover:not(:disabled) { border-color: #10B981; color: #10B981; }
-.zwts-arrow:disabled { opacity: .4; cursor: not-allowed; }
-
-.zwts-col-headers {
-  display: grid; grid-template-columns: 200px repeat(7, 1fr) 90px;
-  background: #F9FAFB; border-bottom: 1px solid #E5E7EB; padding: 0 16px;
-}
-.zwts-project-hdr { padding: 12px 8px; font-size: 12px; font-weight: 700; color: #6B7280; }
-.zwts-day-hdr { padding: 10px 4px; text-align: center; font-size: 11px; color: #6B7280; }
-.zwts-day-hdr.zwts-today { color: #10B981; }
-.zwts-day-hdr.zwts-weekend { background: rgba(0,0,0,.03); color: #9CA3AF; }
-.zwts-day-name { font-weight: 700; text-transform: uppercase; letter-spacing: .5px; font-size: 10px; }
-.zwts-day-date { font-size: 11px; margin-top: 1px; }
-.zwts-week-hdr { padding: 10px 4px; text-align: center; font-size: 11px; font-weight: 700; color: #6B7280; }
-
-.zwts-rows { min-height: 80px; }
-.zwts-row {
-  display: grid; grid-template-columns: 200px repeat(7, 1fr) 90px;
-  border-bottom: 1px solid #F3F4F6; padding: 0 16px; align-items: center;
-}
-.zwts-row:hover { background: #FAFAFA; }
-.zwts-project-cell { display: flex; align-items: center; gap: 8px; padding: 10px 8px; }
-.zwts-remove-btn {
-  width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #E5E7EB;
-  background: #fff; cursor: pointer; font-size: 10px; color: #9CA3AF;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s;
-}
-.zwts-remove-btn:hover { border-color: #DC2626; color: #DC2626; }
-.zwts-project-name { font-size: 13px; font-weight: 600; color: #111827; }
-
-.zwts-cell {
-  padding: 6px 4px; text-align: center; position: relative;
-  display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 56px;
-}
-.zwts-cell.zwts-today { background: rgba(16,185,129,.04); }
-.zwts-cell.zwts-weekend { background: rgba(0,0,0,.025) !important; }
-.zwts-cell-empty { padding: 6px 4px; }
-.zwts-cell-approved { background: rgba(16,185,129,.06) !important; }
-
-.zwts-input {
-  width: 80px; padding: 6px 8px; text-align: center;
-  border: 1.5px solid #E5E7EB; border-radius: 8px;
-  font-size: 12px; font-weight: 600; color: #374151;
-  font-family: 'Roboto Mono', monospace; transition: border-color .15s; background: #F9FAFB;
-}
-.zwts-input:focus { outline: none; border-color: #10B981; box-shadow: 0 0 0 3px rgba(16,185,129,.12); background: #fff; }
-.zwts-input::placeholder { color: #D1D5DB; font-weight: 400; }
-
-.zwts-cell-locked { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 4px; width: 100%; }
-.zwts-cell-locked-val { font-size: 12px; font-weight: 700; color: #16A34A; font-family: 'Roboto Mono', monospace; }
-.zwts-cell-locked-badge { font-size: 10px; color: #16A34A; font-weight: 800; background: #DCFCE7; border-radius: 3px; padding: 1px 4px; }
-
-.zwts-cell-note-preview {
-  font-size: 10px; color: #6B7280; line-height: 1.3; max-width: 76px;
-  text-align: center; cursor: pointer; overflow: hidden;
-  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;
-  padding: 0 2px; margin-top: 2px; border-radius: 3px; transition: background .12s;
-}
-.zwts-cell-note-preview:hover { background: #F3F4F6; color: #374151; }
-.zwts-cell-note-add { font-size: 10px; color: #10B981; cursor: pointer; margin-top: 2px; padding: 1px 4px; border-radius: 3px; font-weight: 600; transition: background .12s; }
-.zwts-cell-note-add:hover { background: #F0FDF4; }
-
-.zwts-note-btn {
-  position: absolute; bottom: 4px; right: 4px;
-  width: 18px; height: 18px; border-radius: 4px;
-  border: 1px solid #E5E7EB; background: #F9FAFB;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  color: #9CA3AF; padding: 0; transition: all .15s; opacity: 0;
-}
-.zwts-cell:hover .zwts-note-btn,
-.zwts-note-btn.zwts-note-has { opacity: 1; }
-.zwts-note-btn.zwts-note-has { background: #FEF0EB; border-color: #E05B2B; color: #E05B2B; }
-.zwts-note-btn:hover { background: #FEF0EB; border-color: #E05B2B; color: #E05B2B; }
-
-.zwts-note-popover {
-  position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%);
-  z-index: 200; background: #fff; border: 1px solid #E5E7EB;
-  border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.14); width: 240px; overflow: hidden;
-}
-.zwts-note-popover-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 14px; background: #F9FAFB; border-bottom: 1px solid #F3F4F6;
-  font-size: 11px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: .5px;
-}
-.zwts-note-close { background: none; border: none; cursor: pointer; font-size: 12px; color: #9CA3AF; padding: 0; }
-.zwts-note-close:hover { color: #374151; }
-.zwts-note-textarea {
-  width: 100%; padding: 10px 14px; border: none; resize: none;
-  font-size: 13px; color: #374151; font-family: inherit; background: #fff; outline: none;
-  box-sizing: border-box; line-height: 1.5;
-}
-.zwts-note-footer { padding: 8px 10px; border-top: 1px solid #F3F4F6; background: #FAFAFA; display: flex; justify-content: flex-end; }
-.zwts-note-submit-btn {
-  padding: 5px 14px; background: #10B981; color: #fff;
-  border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .14s;
-}
-.zwts-note-submit-btn:hover { background: #059669; }
-
-.zwts-row-total { text-align: center; font-size: 13px; font-weight: 700; color: #10B981; padding: 10px 4px; }
-
-.zwts-add-row {
-  display: grid; grid-template-columns: 200px repeat(7, 1fr) 90px;
-  padding: 8px 16px; border-bottom: 1px solid #F3F4F6; align-items: center;
-}
-.zwts-add-btn {
+.zmgr-ts-title {
   display: flex; align-items: center; gap: 8px;
-  background: none; border: none; cursor: pointer;
-  font-size: 13px; color: #9CA3AF; padding: 8px; border-radius: 8px; transition: all .15s; width: 100%;
+  font-size: 16px; font-weight: 800; color: #111827;
 }
-.zwts-add-btn:hover { background: #F3F4F6; color: #374151; }
-.zwts-picker {
-  position: absolute; top: 100%; left: 0; z-index: 100;
-  background: #fff; border: 1px solid #E5E7EB; border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.12); min-width: 200px; overflow: hidden;
+.zmgr-ts-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.zmgr-ts-filter-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 14px 24px; border-bottom: 1px solid #F3F4F6; background: #FAFAFA;
 }
-.zwts-picker-item { padding: 10px 16px; font-size: 13px; color: #374151; cursor: pointer; transition: background .1s; }
-.zwts-picker-item:hover { background: #F0FDF4; color: #10B981; }
-.zwts-picker-empty { padding: 12px 16px; font-size: 12px; color: #9CA3AF; }
+.zmgr-ts-list { padding: 4px 0; }
+.zmgr-ts-row {
+  display: grid; grid-template-columns: 200px 1fr 80px 110px 1fr auto;
+  align-items: center; gap: 16px;
+  padding: 13px 24px; border-bottom: 1px solid #F9FAFB;
+  transition: background .12s;
+}
+.zmgr-ts-row:hover { background: #FAFAFA; }
+.zmgr-ts-row:last-child { border-bottom: none; }
+.zmgr-ts-pending  { border-left: 3px solid #F59E0B; }
+.zmgr-ts-approved { border-left: 3px solid #10B981; }
+.zmgr-ts-rejected { border-left: 3px solid #EF4444; }
+.zmgr-ts-emp { display: flex; align-items: center; gap: 10px; }
+.zmgr-ts-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #2563EB, #7C3AED);
+  color: #fff; font-size: 14px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.zmgr-ts-emp-name { font-size: 13px; font-weight: 700; color: #111827; }
+.zmgr-ts-project  { font-size: 13px; font-weight: 600; color: #374151; }
+.zmgr-ts-date     { font-size: 11px; color: #9CA3AF; margin-top: 2px; }
+.zmgr-ts-hours-block { text-align: center; }
+.zmgr-ts-hours-val { font-size: 20px; font-weight: 900; color: #2563EB; line-height: 1; display: block; }
+.zmgr-ts-hours-lbl { font-size: 10px; color: #9CA3AF; font-weight: 500; }
+.zmgr-ts-notes { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.zmgr-ts-note    { font-size: 11px; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zmgr-ts-comment { font-size: 11px; color: #6B7280; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zmgr-ts-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
-.zwts-footer {
-  display: grid; grid-template-columns: 200px repeat(7, 1fr) 90px;
-  padding: 12px 16px; border-top: 2px solid #E5E7EB;
-  background: #F9FAFB; align-items: center;
+/* ── Manager Leaves ──────────────────────────────────────────────────────── */
+.zmgr-lv-card {
+  background: #fff; border: 1px solid #E5E7EB;
+  border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06); overflow: hidden;
 }
-.zwts-footer-actions { display: flex; gap: 8px; align-items: center; }
-.zwts-submit-btn {
-  padding: 8px 22px; background: #10B981; color: #fff;
-  border: none; border-radius: 8px; font-size: 13px; font-weight: 800;
-  cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 6px; letter-spacing: .3px;
+.zmgr-lv-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px; border-bottom: 1px solid #F3F4F6;
+  flex-wrap: wrap; gap: 12px;
 }
-.zwts-submit-btn:hover:not(:disabled) { background: #059669; box-shadow: 0 2px 10px rgba(16,185,129,.3); }
-.zwts-submit-btn:disabled { opacity: .4; cursor: not-allowed; }
-.zwts-day-total { text-align: center; font-size: 13px; font-weight: 600; color: #374151; }
-.zwts-day-total.zwts-weekend { background: rgba(0,0,0,.03); color: #9CA3AF; }
-.zwts-grand-total { text-align: center; font-size: 14px; font-weight: 800; color: #10B981; }
+.zmgr-lv-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 16px; font-weight: 800; color: #111827;
+}
+.zmgr-lv-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.zmgr-lv-list { padding: 4px 0; }
+.zmgr-lv-row {
+  display: grid; grid-template-columns: 200px 1fr 64px auto auto;
+  align-items: center; gap: 16px;
+  padding: 13px 24px; border-bottom: 1px solid #F9FAFB;
+  transition: background .12s;
+}
+.zmgr-lv-row:hover { background: #FAFAFA; }
+.zmgr-lv-row:last-child { border-bottom: none; }
+.zmgr-lv-pending  { border-left: 3px solid #F59E0B; }
+.zmgr-lv-approved { border-left: 3px solid #10B981; }
+.zmgr-lv-rejected { border-left: 3px solid #EF4444; }
+.zmgr-lv-emp { display: flex; align-items: center; gap: 10px; }
+.zmgr-lv-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #F59E0B, #EF4444);
+  color: #fff; font-size: 14px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.zmgr-lv-emp-name { font-size: 13px; font-weight: 700; color: #111827; }
+.zmgr-lv-range  { font-size: 13px; font-weight: 600; color: #374151; }
+.zmgr-lv-reason { font-size: 11px; color: #9CA3AF; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.zmgr-lv-days { text-align: center; }
+.zmgr-lv-days-val { font-size: 20px; font-weight: 900; color: #7C3AED; line-height: 1; display: block; }
+.zmgr-lv-days-lbl { font-size: 10px; color: #9CA3AF; font-weight: 500; }
+.zmgr-lv-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
-/* Override: inline [style] on col-headers/row/footer sets exact column count */
-.zmgr-wts-col-headers,
-.zmgr-wts-row,
-.zmgr-wts-footer { grid-template-columns: 180px repeat(5, 1fr) 80px 100px; }
+/* ── Manager Attendance ──────────────────────────────────────────────────── */
+.zmgr-att-card {
+  background: #fff; border: 1px solid #E5E7EB;
+  border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06); overflow: hidden;
+}
+.zmgr-att-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px; border-bottom: 1px solid #F3F4F6;
+  flex-wrap: wrap; gap: 12px;
+}
+.zmgr-att-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 16px; font-weight: 800; color: #111827;
+}
+.zmgr-att-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.zmgr-att-period   { display: flex; align-items: center; gap: 6px; padding-left: 10px; border-left: 1px solid #E5E7EB; }
+.zmgr-att-list { padding: 4px 0; }
+.zmgr-att-row {
+  display: grid; grid-template-columns: 180px 80px 40px 1fr 80px 110px;
+  align-items: center; gap: 14px;
+  padding: 12px 24px; border-bottom: 1px solid #F9FAFB;
+  transition: background .12s;
+}
+.zmgr-att-row:hover { background: #FAFAFA; }
+.zmgr-att-row:last-child { border-bottom: none; }
+.zmgr-att-late { border-left: 3px solid #F59E0B; }
+.zmgr-att-emp { display: flex; align-items: center; gap: 10px; }
+.zmgr-att-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, #4F46E5, #818CF8);
+  color: #fff; font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.zmgr-att-emp-name { font-size: 13px; font-weight: 700; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zmgr-att-date-block { text-align: center; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 10px; padding: 6px 4px; }
+.zmgr-att-date-day { font-size: 9px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: .5px; }
+.zmgr-att-date-num { font-size: 18px; font-weight: 800; color: #111827; line-height: 1.1; }
+.zmgr-att-date-mon { font-size: 9px; color: #6B7280; margin-top: 1px; }
+.zmgr-att-times { display: flex; align-items: center; gap: 12px; }
+.zmgr-att-time-item { display: flex; flex-direction: column; gap: 1px; }
+.zmgr-att-time-lbl { font-size: 9px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: .4px; }
+.zmgr-att-time-val { font-size: 14px; font-weight: 700; color: #111827; font-family: 'Roboto Mono', monospace; }
+.zmgr-att-time-sep { font-size: 14px; color: #D1D5DB; }
+.zmgr-att-hours { text-align: center; }
+.zmgr-att-hours-val { font-size: 18px; font-weight: 900; color: #4F46E5; line-height: 1; }
+.zmgr-att-hours-lbl { font-size: 10px; color: #9CA3AF; font-weight: 500; }
+
+/* ── Manager Profile (scoped) ────────────────────────────────────────────── */
+.zprofile-card {
+  max-width: 680px; margin: 0 auto;
+  border-radius: 20px; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,.1);
+}
+.zprofile-banner {
+  height: 160px;
+  background: linear-gradient(135deg, #0F172A 0%, var(--role-color, #2563EB) 100%);
+}
+.zprofile-body {
+  background: #fff; border: 1px solid #E5E7EB; border-top: none;
+  padding: 0 36px 36px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.zprofile-avatar-lg {
+  width: 96px; height: 96px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--role-color, #2563EB), #60A5FA);
+  color: #fff; font-size: 36px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  margin: -48px auto 16px; border: 5px solid #fff;
+  box-shadow: 0 6px 24px rgba(0,0,0,.18); position: relative; z-index: 1;
+}
+.zprofile-name { font-size: 24px; font-weight: 900; color: #111827; margin: 0 0 6px; }
+.zprofile-info-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-top: 24px; width: 100%; text-align: left;
+}
+.zprofile-info-item {
+  background: #F9FAFB; border: 1px solid #E5E7EB;
+  border-radius: 12px; padding: 14px 16px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.zprofile-info-item:hover { border-color: var(--role-color, #2563EB); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.zprofile-info-label { display: block; font-size: 10px; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 5px; }
+.zprofile-info-value { display: block; font-size: 14px; font-weight: 700; color: #111827; }
+.zprofile-footer { width: 100%; margin-top: 28px; padding-top: 20px; border-top: 1px solid #F3F4F6; display: flex; justify-content: center; }

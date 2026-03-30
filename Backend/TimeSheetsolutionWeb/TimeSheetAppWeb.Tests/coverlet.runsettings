@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <!-- Only measure coverage of Service classes -->
+          <Include>[TimeSheetAppWeb]TimeSheetAppWeb.Services.*</Include>
+          <!-- Exclude everything else -->
+          <Exclude>
+            [TimeSheetAppWeb]TimeSheetAppWeb.Controllers.*,
+            [TimeSheetAppWeb]TimeSheetAppWeb.Model.*,
+            [TimeSheetAppWeb]TimeSheetAppWeb.Contexts.*,
+            [TimeSheetAppWeb]TimeSheetAppWeb.Exceptions.*,
+            [TimeSheetAppWeb]TimeSheetAppWeb.Migrations.*,
+            [TimeSheetAppWeb]TimeSheetAppWeb.Program,
+            [TimeSheetAppWeb]TimeSheetAppWeb.NotificationHub
+          </Exclude>
+          <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+          <SingleHit>false</SingleHit>
+          <UseSourceLink>true</UseSourceLink>
+          <IncludeTestAssembly>false</IncludeTestAssembly>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
