@@ -48,25 +48,25 @@ namespace TimeSheetAppWeb.Contexts
                 .HasMany(u => u.Timesheets)
                 .WithOne(t => t.User)
                 .HasForeignKey(t => t.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<User>()
                 .HasMany(u => u.LeaveRequests)
                 .WithOne(l => l.User)
                 .HasForeignKey(l => l.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Attendances)
                 .WithOne(a => a.User)
                 .HasForeignKey(a => a.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<User>()
                 .HasMany(u => u.ProjectAssignments)
                 .WithOne(pa => pa.User)
                 .HasForeignKey(pa => pa.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // DEPARTMENT
             modelBuilder.Entity<Department>()
@@ -85,13 +85,13 @@ namespace TimeSheetAppWeb.Contexts
                 .HasMany(p => p.ProjectAssignments)
                 .WithOne(pa => pa.Project)
                 .HasForeignKey(pa => pa.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Project>()
                 .HasMany(p => p.Timesheets)
                 .WithOne(t => t.Project)
                 .HasForeignKey(t => t.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // TIMESHEET
             modelBuilder.Entity<Timesheet>()
@@ -112,7 +112,7 @@ namespace TimeSheetAppWeb.Contexts
                 .HasOne(it => it.Intern)
                 .WithMany()
                 .HasForeignKey(it => it.InternId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // PAYROLL
             modelBuilder.Entity<Payroll>(entity =>
@@ -129,7 +129,7 @@ namespace TimeSheetAppWeb.Contexts
                 entity.HasOne(e => e.User)
                       .WithMany()
                       .HasForeignKey(e => e.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                      .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(e => e.Mentor)
                       .WithMany()
