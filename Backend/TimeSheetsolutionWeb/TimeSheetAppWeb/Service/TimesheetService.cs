@@ -49,7 +49,7 @@ namespace TimeSheetAppWeb.Services
                 var allProjects = (await _projectRepository.GetAllAsync() ?? Enumerable.Empty<Project>()).ToList();
                 var allTs       = (await _timesheetRepository.GetAllAsync() ?? Enumerable.Empty<Timesheet>()).ToList();
 
-                // ── Pre-validate: check daily 12-hour cap across the whole batch ──
+                // ── Pre-validate: check daily 18-hour cap across the whole batch ──
                 var batchByDate = request.Entries
                     .Where(e => e.Hours > 0 && DateTime.TryParse(e.WorkDate, out _))
                     .GroupBy(e => DateTime.Parse(e.WorkDate).Date);
@@ -82,7 +82,7 @@ namespace TimeSheetAppWeb.Services
                         {
                             Success = false,
                             Message = $"Daily limit exceeded for {dayGroup.Key:dd MMM}: " +
-                                      $"total would be {batchTotal + existingOtherHours:F1}h (max 12h per day)."
+                                      $"total would be {batchTotal + existingOtherHours:F1}h (max 18h per day)."
                         };
                     }
                 }
@@ -133,13 +133,13 @@ namespace TimeSheetAppWeb.Services
                     var existing = allTs.FirstOrDefault(t =>
                         t.UserId == userId && t.ProjectId == project.Id && t.WorkDate.Date == workDate.Date);
 
-                    // ── Daily 12-hour cap: sum existing hours for this day across all projects ──
+                    // ── Daily 18-hour cap: sum existing hours for this day across all projects ──
                     var existingDayHours = allTs
                         .Where(t => t.UserId == userId && t.WorkDate.Date == workDate.Date && t.Status != TimesheetStatus.Rejected)
                         .Sum(t => t.TotalHours);
                     // Subtract existing entry for this project (it will be replaced)
                     if (existing != null) existingDayHours -= existing.TotalHours;
-                    if (existingDayHours + entry.Hours > 18)
+                    if (existingDayHours + entry.Hours > 12)
                     {
                         result.Errors.Add($"Daily limit exceeded for {workDate:dd MMM}: total would be {existingDayHours + entry.Hours:F1}h (max 12h).");
                         result.Skipped++;
@@ -269,7 +269,7 @@ namespace TimeSheetAppWeb.Services
                     };
                 }
 
-                // ❌ Daily 12-hour cap
+                // ❌ Daily 18-hour cap
                 var dayHours = allExisting
                     .Where(t => t.UserId == userId && t.WorkDate.Date == request.WorkDate.Date && t.Status != TimesheetStatus.Rejected)
                     .Sum(t => t.TotalHours);
@@ -295,7 +295,7 @@ namespace TimeSheetAppWeb.Services
                     };
                 }
 
-                // ❌ Daily 12-hour cap check
+                // ❌ Daily 18-hour cap check
                 if (dayHours + totalHours > 12)
                 {
                     return new ApiResponse<TimesheetResponse>
