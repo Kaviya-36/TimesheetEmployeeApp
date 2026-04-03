@@ -295,8 +295,8 @@ describe('MentorDashboardComponent', () => {
   // ── confirmDeleteTask ─────────────────────────────────────────────────────
   it('confirmDeleteTask should open confirm dialog', () => {
     component.confirmDeleteTask(makeTask());
-    expect(component.cfgVisible()).toBeTrue();
-    expect(component.cfgTitle()).toContain('Delete Task');
+    expect(component.confirmVisible()).toBeTrue();
+    expect(component.confirmTitle()).toContain('Delete Task');
   });
 
   it('onCfgOk after confirmDeleteTask should call intSvc.deleteTask', fakeAsync(() => {
@@ -305,7 +305,7 @@ describe('MentorDashboardComponent', () => {
     intSpy.deleteTask.and.returnValue(of({}));
     intSpy.getTasks.and.returnValue(of([]));
     component.confirmDeleteTask(makeTask());
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     expect(intSpy.deleteTask).toHaveBeenCalledWith(1);
     expect(toastSpy.success).toHaveBeenCalled();
@@ -315,7 +315,7 @@ describe('MentorDashboardComponent', () => {
     component.selectedIntern.set(makeUser());
     intSpy.deleteTask.and.returnValue(throwError(() => ({ error: { message: 'Fail' } })));
     component.confirmDeleteTask(makeTask());
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     expect(toastSpy.error).toHaveBeenCalled();
   }));
@@ -417,15 +417,15 @@ describe('MentorDashboardComponent', () => {
   // ── confirmDeleteTs ────────────────────────────────────────────────────────
   it('confirmDeleteTs should open confirm dialog', () => {
     component.confirmDeleteTs(makeTs());
-    expect(component.cfgVisible()).toBeTrue();
-    expect(component.cfgTitle()).toContain('Delete Timesheet');
+    expect(component.confirmVisible()).toBeTrue();
+    expect(component.confirmTitle()).toContain('Delete Timesheet');
   });
 
   it('onCfgOk after confirmDeleteTs should call tsSvc.delete', fakeAsync(() => {
     tsSpy.delete.and.returnValue(of({}));
     tsSpy.getByUser.and.returnValue(of([]));
     component.confirmDeleteTs(makeTs());
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     expect(tsSpy.delete).toHaveBeenCalledWith(1);
     expect(toastSpy.success).toHaveBeenCalled();
@@ -477,12 +477,12 @@ describe('MentorDashboardComponent', () => {
   });
 
   // ── stText / stClass / taskStatusClass ────────────────────────────────────
-  it('stText(0) → Pending',  () => expect(component.stText(0)).toBe('Pending'));
-  it('stText(1) → Approved', () => expect(component.stText(1)).toBe('Approved'));
-  it('stText(2) → Rejected', () => expect(component.stText(2)).toBe('Rejected'));
-  it('stClass(0) contains "pending"',  () => expect(component.stClass(0)).toContain('pending'));
-  it('stClass(1) contains "approved"', () => expect(component.stClass(1)).toContain('approved'));
-  it('stClass(2) contains "rejected"', () => expect(component.stClass(2)).toContain('rejected'));
+  it('stText(0) → Pending',  () => expect(component.getStatusText(0)).toBe('Pending'));
+  it('stText(1) → Approved', () => expect(component.getStatusText(1)).toBe('Approved'));
+  it('stText(2) → Rejected', () => expect(component.getStatusText(2)).toBe('Rejected'));
+  it('stClass(0) contains "pending"',  () => expect(component.getStatusClass(0)).toContain('pending'));
+  it('stClass(1) contains "approved"', () => expect(component.getStatusClass(1)).toContain('approved'));
+  it('stClass(2) contains "rejected"', () => expect(component.getStatusClass(2)).toContain('rejected'));
   it('taskStatusClass Completed → approved badge', () => expect(component.taskStatusClass('Completed')).toContain('approved'));
   it('taskStatusClass InProgress → info badge',    () => expect(component.taskStatusClass('InProgress')).toContain('info'));
   it('taskStatusClass Pending → pending badge',    () => expect(component.taskStatusClass('Pending')).toContain('pending'));
@@ -500,8 +500,8 @@ describe('MentorDashboardComponent', () => {
 
   // ── onCfgCancel ───────────────────────────────────────────────────────────
   it('onCfgCancel should close confirm dialog', () => {
-    component.cfgVisible.set(true);
-    component.onCfgCancel();
-    expect(component.cfgVisible()).toBeFalse();
+    component.confirmVisible.set(true);
+    component.onConfirmCancel();
+    expect(component.confirmVisible()).toBeFalse();
   });
 });

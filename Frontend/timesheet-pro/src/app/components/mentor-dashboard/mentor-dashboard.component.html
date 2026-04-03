@@ -68,7 +68,6 @@
             <div class="zcard-header">
               <span class="zcard-title">Interns</span>
               <div class="zaction-row">
-                <button class="zbtn zbtn-success zbtn-sm" (click)="showAddLeaveModal.set(true)">+ My Leave</button>
               </div>
               <span class="zresult-count">{{ filteredInterns().length }}</span>
             </div>
@@ -135,6 +134,61 @@
             }
           </div>
 
+        </div>
+      }
+
+      <!-- ═══ LEAVE TAB ═══ -->
+      @if (activeTab()==='leave') {
+        <!-- Leave Balance -->
+        @if (leaveBalance().length > 0) {
+          <div class="zlv-balance-grid">
+            @for (b of leaveBalance(); track b.leaveType) {
+              <div class="zlv-balance-card" [class.zlv-balance-low]="b.remaining <= 3" [class.zlv-balance-empty]="b.remaining === 0">
+                <div class="zlv-balance-type">{{ b.leaveType }}</div>
+                <div class="zlv-balance-bar-track">
+                  <div class="zlv-balance-bar-fill"
+                    [style.width.%]="b.total > 0 ? (b.remaining / b.total) * 100 : 0"
+                    [class.zlv-balance-bar-low]="b.remaining <= 3">
+                  </div>
+                </div>
+                <div class="zlv-balance-nums">
+                  <span class="zlv-balance-remaining" [class.zlv-balance-remaining-low]="b.remaining <= 3">{{ b.remaining }} left</span>
+                  <span class="zlv-balance-total">/ {{ b.total }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+        <div class="zsection-card">
+          <div class="zsection-header">
+            <div class="zsection-title">
+              <svg width="18" height="18" fill="none" stroke="#10B981" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              My Leave Requests
+            </div>
+            <button class="zbtn zbtn-primary zbtn-sm" (click)="showAddLeaveModal.set(true)">+ Apply Leave</button>
+          </div>
+          <div class="zlv-list">
+            @for (l of myLeaves(); track l.id) {
+              <div class="zlv-list-row" [class.zlv-row-pending]="l.status===0" [class.zlv-row-approved]="l.status===1" [class.zlv-row-rejected]="l.status===2">
+                <div>
+                  <div class="zlv-date-range">{{ l.leaveType }}</div>
+                  <div class="zlv-reason">{{ l.fromDate | date:'dd MMM' }} → {{ l.toDate | date:'dd MMM yyyy' }}</div>
+                </div>
+                <div class="zlv-days-cell">
+                  <span class="zlv-days-val">{{ leaveDays(l) }}</span>
+                  <span class="zlv-days-lbl">days</span>
+                </div>
+                <div class="zlv-reason">{{ l.reason || '—' }}</div>
+                <div><span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span></div>
+                @if (l.managerComment) {
+                  <div style="font-size:11px;color:#6B7280;font-style:italic">💬 {{ l.managerComment }}</div>
+                } @else { <div></div> }
+              </div>
+            }
+            @if (myLeaves().length === 0) {
+              <div class="zempty" style="padding:40px"><span class="zempty-icon">🌴</span><span class="zempty-title">No leave requests yet</span></div>
+            }
+          </div>
         </div>
       }
 
@@ -211,9 +265,60 @@
   </div>
 }
 
+<!-- Missed Checkout Modal -->
+@if (showMissedCheckoutModal()) {
+  <div class="zmodal-overlay" (click)="showMissedCheckoutModal.set(false)">
+    <div class="zmco-modal" (click)="$event.stopPropagation()">
+      <div class="zmco-icon">⏰</div>
+      <h3 class="zmco-title">Missed Check-Out</h3>
+      <div class="zmco-body">
+        You forgot to check out <strong>yesterday</strong>. Your attendance has been automatically calculated as <strong>check-in + 8 hours</strong>.
+      </div>
+      <button class="zbtn zbtn-primary zmco-close-btn" (click)="showMissedCheckoutModal.set(false)">Got it</button>
+    </div>
+  </div>
+}
+
 <!-- Confirm Dialog -->
-<app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()"
-  (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />
+<app-confirm [visible]="confirmVisible()" [title]="confirmTitle()" [message]="confirmMessage()"
+  (confirmed)="onConfirmOk()" (cancelled)="onConfirmCancel()" />
+
+<!-- Leave Balance Modal -->
+@if (showLeaveBalanceModal()) {
+  <div class="zmodal-overlay" (click)="showLeaveBalanceModal.set(false)">
+    <div class="zlb-modal" (click)="$event.stopPropagation()">
+      <div class="zlb-icon">🌴</div>
+      <h3 class="zlb-title">Leave Applied!</h3>
+      <p class="zlb-sub">Your request has been submitted for approval.</p>
+      @if (leaveBalanceResult(); as bal) {
+        <div class="zlb-type">{{ bal.leaveType }}</div>
+        <div class="zlb-bar-wrap">
+          <div class="zlb-bar-track">
+            <div class="zlb-bar-fill" [style.width.%]="bal.total > 0 ? (bal.remaining / bal.total) * 100 : 0" [class.zlb-bar-low]="bal.remaining <= 3"></div>
+          </div>
+          <div class="zlb-bar-labels">
+            <span class="zlb-used">{{ bal.total - bal.remaining }} used</span>
+            <span class="zlb-remaining" [class.zlb-remaining-low]="bal.remaining <= 3">{{ bal.remaining }} remaining</span>
+          </div>
+        </div>
+        <div class="zlb-stats">
+          <div class="zlb-stat"><div class="zlb-stat-val">{{ bal.total }}</div><div class="zlb-stat-lbl">Total</div></div>
+          <div class="zlb-stat-sep"></div>
+          <div class="zlb-stat"><div class="zlb-stat-val" style="color:#DC2626">{{ bal.total - bal.remaining }}</div><div class="zlb-stat-lbl">Used</div></div>
+          <div class="zlb-stat-sep"></div>
+          <div class="zlb-stat"><div class="zlb-stat-val" [style.color]="bal.remaining <= 3 ? '#DC2626' : '#16A34A'">{{ bal.remaining }}</div><div class="zlb-stat-lbl">Remaining</div></div>
+        </div>
+        @if (bal.remaining <= 3 && bal.remaining > 0) {
+          <div class="zlb-warning">⚠ Only {{ bal.remaining }} day(s) left for {{ bal.leaveType }}</div>
+        }
+        @if (bal.remaining === 0) {
+          <div class="zlb-warning zlb-warning-empty">❌ No {{ bal.leaveType }} days remaining this year</div>
+        }
+      }
+      <button class="zbtn zbtn-primary zlb-close-btn" (click)="showLeaveBalanceModal.set(false)">Got it</button>
+    </div>
+  </div>
+}
 
 <!-- Apply My Leave Modal -->
 @if (showAddLeaveModal()) {

@@ -94,3 +94,154 @@
 
 input[type="time"].zform-control { -webkit-appearance: none; appearance: none; }
 .uPS { display: none; }
+
+/* ── Admin Section Card (shared wrapper) ─────────────────────────────────── */
+.zadm-section-card {
+  background: #fff; border: 1px solid #E5E7EB;
+  border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06); overflow: hidden;
+}
+.zadm-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px; border-bottom: 1px solid #F3F4F6;
+  flex-wrap: wrap; gap: 12px;
+}
+.zadm-section-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 16px; font-weight: 800; color: #111827;
+}
+.zadm-section-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.zadm-section-filter {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 12px 24px; border-bottom: 1px solid #F3F4F6; background: #FAFAFA;
+}
+
+/* ── Projects list ───────────────────────────────────────────────────────── */
+.zadm-project-list { padding: 4px 0; }
+.zadm-project-row {
+  display: grid; grid-template-columns: 44px 1fr 160px 220px auto;
+  align-items: center; gap: 16px;
+  padding: 14px 24px; border-bottom: 1px solid #F9FAFB;
+  transition: background .12s;
+}
+.zadm-project-row:hover { background: #FAFAFA; }
+.zadm-project-row:last-child { border-bottom: none; }
+.zadm-project-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: linear-gradient(135deg, #FEF0EB, #FDDCCC);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0; border: 1px solid #FDDCCC;
+}
+.zadm-project-name { font-size: 14px; font-weight: 700; color: #111827; }
+.zadm-project-meta { font-size: 12px; color: #9CA3AF; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zadm-project-meta-lbl { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: .4px; }
+.zadm-project-meta-val { font-size: 13px; font-weight: 600; color: #374151; margin-top: 2px; }
+.zadm-project-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+/* ── Leaves list (uses shared zlv-* from styles.css) ─────────────────────── */
+.zlv-list { padding: 4px 0; }
+.zlv-list-row {
+  display: grid; grid-template-columns: 200px 1fr 64px auto auto;
+  align-items: center; gap: 16px;
+  padding: 13px 24px; border-bottom: 1px solid #F9FAFB;
+  transition: background .12s;
+}
+.zlv-list-row:hover { background: #FAFAFA; }
+.zlv-list-row:last-child { border-bottom: none; }
+.zlv-row-pending  { border-left: 3px solid #F59E0B; }
+.zlv-row-approved { border-left: 3px solid #10B981; }
+.zlv-row-rejected { border-left: 3px solid #EF4444; }
+.zlv-emp-cell { display: flex; align-items: center; gap: 10px; }
+.zlv-emp-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #E05B2B, #F07A4A);
+  color: #fff; font-size: 14px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.zlv-emp-name  { font-size: 13px; font-weight: 700; color: #111827; }
+.zlv-type-name { font-size: 11px; color: #6B7280; margin-top: 2px; }
+.zlv-date-range { font-size: 13px; font-weight: 600; color: #374151; }
+.zlv-reason     { font-size: 11px; color: #9CA3AF; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zlv-days-cell  { text-align: center; }
+.zlv-days-val   { font-size: 20px; font-weight: 900; color: #7C3AED; line-height: 1; display: block; }
+.zlv-days-lbl   { font-size: 10px; color: #9CA3AF; font-weight: 500; }
+
+/* ── Audit log list ──────────────────────────────────────────────────────── */
+.zadm-audit-list { padding: 4px 0; }
+.zadm-audit-row {
+  display: grid; grid-template-columns: 110px 130px 1fr 180px;
+  align-items: center; gap: 16px;
+  padding: 12px 24px; border-bottom: 1px solid #F9FAFB;
+  transition: background .12s;
+}
+.zadm-audit-row:hover { background: #FAFAFA; }
+.zadm-audit-row:last-child { border-bottom: none; }
+.zadm-audit-badge {
+  display: inline-flex; align-items: center;
+  padding: 4px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.zadm-audit-added    { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; }
+.zadm-audit-modified { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+.zadm-audit-deleted  { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+.zadm-audit-code {
+  font-family: 'Roboto Mono', monospace; font-size: 11px;
+  color: #374151; background: #F3F4F6; padding: 3px 8px;
+  border-radius: 4px; display: block; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+}
+.zadm-audit-user { font-size: 12px; font-weight: 600; color: #374151; }
+.zadm-audit-time { font-size: 11px; color: #9CA3AF; margin-top: 2px; }
+
+/* ── Shared pagination for admin ─────────────────────────────────────────── */
+.zts-list-pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; border-top: 1px solid #F3F4F6; background: #F9FAFB;
+}
+.zts-list-pagination-info { font-size: 12px; color: #6B7280; font-weight: 500; }
+.zts-list-pagination-btns { display: flex; align-items: center; gap: 8px; }
+.zts-pg-btn {
+  width: 32px; height: 32px; border: 1.5px solid #E5E7EB; border-radius: 6px;
+  background: #fff; cursor: pointer; font-size: 14px; color: #374151;
+  display: flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.zts-pg-btn:hover:not(:disabled) { border-color: #E05B2B; color: #E05B2B; background: #FEF0EB; }
+.zts-pg-btn:disabled { opacity: .35; cursor: not-allowed; }
+.zts-pg-label { font-size: 13px; color: #6B7280; padding: 0 4px; min-width: 60px; text-align: center; }
+
+/* ── Profile (scoped) ────────────────────────────────────────────────────── */
+.zprofile-card {
+  max-width: 680px; margin: 0 auto;
+  border-radius: 20px; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,.1);
+}
+.zprofile-banner {
+  height: 160px;
+  background: linear-gradient(135deg, #0F172A 0%, var(--role-color, #E05B2B) 100%);
+}
+.zprofile-body {
+  background: #fff; border: 1px solid #E5E7EB; border-top: none;
+  padding: 0 36px 36px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.zprofile-avatar-lg {
+  width: 96px; height: 96px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--role-color, #E05B2B), #F07A4A);
+  color: #fff; font-size: 36px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  margin: -48px auto 16px; border: 5px solid #fff;
+  box-shadow: 0 6px 24px rgba(0,0,0,.18); position: relative; z-index: 1;
+}
+.zprofile-name { font-size: 24px; font-weight: 900; color: #111827; margin: 0 0 6px; }
+.zprofile-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; width: 100%; text-align: left; }
+.zprofile-info-item { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 14px 16px; transition: border-color .15s, box-shadow .15s; }
+.zprofile-info-item:hover { border-color: var(--role-color, #E05B2B); box-shadow: 0 0 0 3px rgba(224,91,43,.1); }
+.zprofile-info-label { display: block; font-size: 10px; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 5px; }
+.zprofile-info-value { display: block; font-size: 14px; font-weight: 700; color: #111827; }
+.zprofile-footer { width: 100%; margin-top: 28px; padding-top: 20px; border-top: 1px solid #F3F4F6; display: flex; justify-content: center; }
+
+@media (max-width: 900px) {
+  .zadm-project-row { grid-template-columns: 44px 1fr auto; grid-template-rows: auto auto; }
+  .zadm-project-manager, .zadm-project-dates { grid-column: 2; }
+  .zadm-audit-row { grid-template-columns: 110px 1fr; grid-template-rows: auto auto; }
+  .zadm-audit-key, .zadm-audit-meta { grid-column: 1 / -1; }
+}

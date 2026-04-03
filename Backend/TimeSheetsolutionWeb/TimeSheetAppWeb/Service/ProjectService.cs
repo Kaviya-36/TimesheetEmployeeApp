@@ -244,41 +244,6 @@ namespace TimeSheetAppWeb.Services
             }
         }
 
-        // ---------------- GET PROJECT BY ID ----------------
-        public async Task<ApiResponse<ProjectResponse>> GetProjectByIdAsync(int projectId)
-        {
-            try
-            {
-                _logger.LogInformation("Fetching project by ID {ProjectId}", projectId);
-
-                var project = await _projectRepository.GetByIdAsync(projectId);
-                if (project == null)
-                {
-                    _logger.LogWarning("Project with ID {ProjectId} not found", projectId);
-                    return new ApiResponse<ProjectResponse> { Success = false, Message = "Project not found" };
-                }
-
-                User? manager = null;
-                if (project.ManagerId.HasValue)
-                    manager = await _userRepository.GetByIdAsync(project.ManagerId.Value);
-
-                return new ApiResponse<ProjectResponse>
-                {
-                    Success = true,
-                    Data = MapToDto(project, manager)
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching project ID {ProjectId}", projectId);
-                return new ApiResponse<ProjectResponse>
-                {
-                    Success = false,
-                    Message = $"An error occurred while fetching the project: {ex.Message}"
-                };
-            }
-        }
-
         // ---------------- GET ALL PROJECTS ----------------
         public async Task<ApiResponse<IEnumerable<ProjectResponse>>> GetAllProjectsAsync(
             int pageNumber = 1,
@@ -360,6 +325,17 @@ namespace TimeSheetAppWeb.Services
                 {
                     _logger.LogWarning("User with ID {UserId} not found", request.UserId);
                     return new ApiResponse<ProjectAssignmentResponse> { Success = false, Message = "User not found" };
+                }
+
+                // Reject inactive users
+                if (!user.IsActive)
+                {
+                    _logger.LogWarning("User ID {UserId} is inactive and cannot be assigned to a project", request.UserId);
+                    return new ApiResponse<ProjectAssignmentResponse>
+                    {
+                        Success = false,
+                        Message = "Cannot assign an inactive user to a project"
+                    };
                 }
 
                 // Allow only Employees and Managers
@@ -569,43 +545,6 @@ namespace TimeSheetAppWeb.Services
                 };
             }
         }
-        public async Task<ApiResponse<IEnumerable<ProjectResponse>>> GetMyProjectsAsync(int userId)
-        {
-            try
-            {
-                _logger.LogInformation("Fetching projects for user ID {UserId}", userId);
-
-                var allProjects = (await _projectRepository.GetAllAsync()) ?? Enumerable.Empty<Project>();
-                var assignments = (await _assignmentRepository.GetAllAsync())!.Where(a => a.UserId == userId);
-                var addedIds    = new HashSet<int>();
-                var result      = new List<ProjectResponse>();
-
-                // Projects assigned via assignment table
-                foreach (var a in assignments)
-                {
-                    var project = await _projectRepository.GetByIdAsync(a.ProjectId);
-                    if (project == null) continue;
-                    addedIds.Add(project.Id);
-                    User? manager = project.ManagerId.HasValue ? await _userRepository.GetByIdAsync(project.ManagerId.Value) : null;
-                    result.Add(MapToDto(project, manager));
-                }
-
-                // Projects where user is the manager
-                foreach (var project in allProjects.Where(p => p.ManagerId == userId && !addedIds.Contains(p.Id)))
-                {
-                    var manager = await _userRepository.GetByIdAsync(userId);
-                    result.Add(MapToDto(project, manager));
-                }
-
-                return new ApiResponse<IEnumerable<ProjectResponse>> { Success = true, Data = result };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching projects for user ID {UserId}", userId);
-                return new ApiResponse<IEnumerable<ProjectResponse>> { Success = false, Message = $"Error fetching user projects: {ex.Message}" };
-            }
-        }
-
         // ---------------- HELPER: MAP PROJECT TO DTO ----------------
         private ProjectResponse MapToDto(Project project, User? manager)
         {

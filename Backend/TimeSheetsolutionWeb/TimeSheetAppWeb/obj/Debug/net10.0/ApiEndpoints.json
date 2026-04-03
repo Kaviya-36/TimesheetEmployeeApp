@@ -486,6 +486,27 @@
   },
   {
     "ContainingType": "TimeSheetAppWeb.Controllers.InternTaskController",
+    "Method": "UpdateStatus",
+    "RelativePath": "api/InternTask/status/{taskId}",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "taskId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "UpdateTaskStatusRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TimeSheetAppWeb.Controllers.InternTaskController",
     "Method": "UpdateTask",
     "RelativePath": "api/InternTask/update/{taskId}",
     "HttpMethod": "PUT",
@@ -548,6 +569,22 @@
       {
         "Name": "request",
         "Type": "TimeSheetAppWeb.Model.DTOs.LeaveApprovalRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TimeSheetAppWeb.Controllers.LeaveController",
+    "Method": "GetLeaveBalance",
+    "RelativePath": "api/Leave/balance/{userId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
         "IsRequired": true
       }
     ],
@@ -840,22 +877,6 @@
   },
   {
     "ContainingType": "TimeSheetAppWeb.Controllers.ProjectController",
-    "Method": "GetProjectById",
-    "RelativePath": "api/Project/{projectId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "projectId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "TimeSheetAppWeb.Controllers.ProjectController",
     "Method": "GetProjectAssignments",
     "RelativePath": "api/Project/{projectId}/assignments",
     "HttpMethod": "GET",
@@ -910,16 +931,6 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "TimeSheetAppWeb.Controllers.ProjectController",
-    "Method": "GetMyProjects",
-    "RelativePath": "api/Project/my",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
     "ReturnTypes": []
   },
   {

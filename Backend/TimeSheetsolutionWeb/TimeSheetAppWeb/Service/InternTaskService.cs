@@ -246,7 +246,8 @@ namespace TimeSheetAppWeb.Services
                 InternName = intern.Name,
                 Title = task.Title ?? string.Empty,
                 Description = task.Description,
-                DueDate = task.DueDate ?? DateTime.MinValue
+                DueDate = task.DueDate ?? DateTime.MinValue,
+                Status = (int)task.Status
             };
         }
     }

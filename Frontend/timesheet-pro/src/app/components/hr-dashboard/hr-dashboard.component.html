@@ -35,24 +35,24 @@
       <div class="stat-card"><div class="stat-icon-wrap">👥</div><div class="stat-body"><div class="stat-value">{{ employees().length }}</div><div class="stat-label">Total Employees</div></div></div>
       <div class="stat-card sc-success"><div class="stat-icon-wrap">✅</div><div class="stat-body"><div class="stat-value">{{ activeCount() }}</div><div class="stat-label">Active</div></div></div>
       <div class="stat-card sc-warning"><div class="stat-icon-wrap">⚠</div><div class="stat-body"><div class="stat-value">{{ lateToday() }}</div><div class="stat-label">Late Today</div></div></div>
-      <div class="stat-card sc-info"><div class="stat-icon-wrap">🌴</div><div class="stat-body"><div class="stat-value">{{ pendingLv() }}</div><div class="stat-label">Pending Leaves</div></div></div>
+      <div class="stat-card sc-info"><div class="stat-icon-wrap">🌴</div><div class="stat-body"><div class="stat-value">{{ pendingLeavesCount() }}</div><div class="stat-label">Pending Leaves</div></div></div>
     </div>
     <div class="zcard">
-      <div class="zcard-header"><span class="zcard-title">Employee Directory</span><div class="zaction-row"><button class="zbtn zbtn-primary zbtn-sm" (click)="showAddTimesheetModal.set(true)">+ My Timesheet</button></div></div>
+      <div class="zcard-header"><span class="zcard-title">Employee Directory</span></div>
       <div class="zfilter-bar">
-        <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="empSearch()" (ngModelChange)="empSearch.set($event);empPage.set(1)" placeholder="Search name, email, ID..." /></div>
-        <select class="zfilter-select" [ngModel]="empRoleF()" (ngModelChange)="empRoleF.set($event);empPage.set(1)">
+        <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="employeeSearch()" (ngModelChange)="employeeSearch.set($event);employeePage.set(1)" placeholder="Search name, email, ID..." /></div>
+        <select class="zfilter-select" [ngModel]="employeeRoleFilter()" (ngModelChange)="employeeRoleFilter.set($event);employeePage.set(1)">
           <option value="all">All Roles</option>@for (r of roleOptions;track r){<option [value]="r">{{ r }}</option>}
         </select>
-        <select class="zfilter-select" [ngModel]="empStatusF()" (ngModelChange)="empStatusF.set($event);empPage.set(1)">
+        <select class="zfilter-select" [ngModel]="employeeStatusFilter()" (ngModelChange)="employeeStatusFilter.set($event);employeePage.set(1)">
           <option value="all">All Status</option><option value="active">Active</option><option value="inactive">Inactive</option>
         </select>
-        <span class="zresult-count">{{ filteredEmps().length }} employees</span>
+        <span class="zresult-count">{{ filteredEmployees().length }} employees</span>
       </div>
       <div class="ztable-wrap"><table class="ztable">
         <thead><tr><th>Employee</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
         <tbody>
-          @for (u of pagedEmps(); track u.id) {
+          @for (u of pagedEmployees(); track u.id) {
             <tr>
               <td><div class="zuser-cell"><div class="zhr-av">{{ (u.name??'U')[0].toUpperCase() }}</div><div><strong>{{ u.name }}</strong><br><code class="zemp-id">{{ u.employeeId }}</code></div></div></td>
               <td class="ztext-muted">{{ u.email }}</td><td class="ztext-muted">{{ u.phone||'—' }}</td>
@@ -67,17 +67,17 @@
               </div></td>
             </tr>
           }
-          @if (pagedEmps().length===0) { <tr class="empty-row"><td colspan="7">No employees found.</td></tr> }
+          @if (pagedEmployees().length===0) { <tr class="empty-row"><td colspan="7">No employees found.</td></tr> }
         </tbody>
       </table></div>
       <div class="zpagination">
-        <span class="zpagination-info">{{ filteredEmps().length }} employees</span>
+        <span class="zpagination-info">{{ filteredEmployees().length }} employees</span>
         <div class="zpagination-btns">
-          <button class="zpg-btn" (click)="empPage.set(1)" [disabled]="empPage()===1">«</button>
-          <button class="zpg-btn" (click)="empPage.update(p=>p-1)" [disabled]="empPage()===1">‹</button>
-          @for (p of pages(empTotalPages());track p){@if(p===empPage()||p===1||p===empTotalPages()||(p>=empPage()-1&&p<=empPage()+1)){<button class="zpg-btn" [class.active]="p===empPage()" (click)="empPage.set(p)">{{ p }}</button>}}
-          <button class="zpg-btn" (click)="empPage.update(p=>p+1)" [disabled]="empPage()===empTotalPages()">›</button>
-          <button class="zpg-btn" (click)="empPage.set(empTotalPages())" [disabled]="empPage()===empTotalPages()">»</button>
+          <button class="zpg-btn" (click)="employeePage.set(1)" [disabled]="employeePage()===1">«</button>
+          <button class="zpg-btn" (click)="employeePage.update(p=>p-1)" [disabled]="employeePage()===1">‹</button>
+          @for (p of pages(employeeTotalPages());track p){@if(p===employeePage()||p===1||p===employeeTotalPages()||(p>=employeePage()-1&&p<=employeePage()+1)){<button class="zpg-btn" [class.active]="p===employeePage()" (click)="employeePage.set(p)">{{ p }}</button>}}
+          <button class="zpg-btn" (click)="employeePage.update(p=>p+1)" [disabled]="employeePage()===employeeTotalPages()">›</button>
+          <button class="zpg-btn" (click)="employeePage.set(employeeTotalPages())" [disabled]="employeePage()===employeeTotalPages()">»</button>
         </div>
       </div>
     </div>
@@ -118,11 +118,6 @@
         <div class="zhr-att-stat-val">{{ lateToday() }}</div>
         <div class="zhr-att-stat-lbl">Late</div>
       </div>
-      <div class="zhr-att-stat zhr-att-stat-purple">
-        <div class="zhr-att-stat-icon">⏱</div>
-        <div class="zhr-att-stat-val">{{ avgHrsPerDay() }}h</div>
-        <div class="zhr-att-stat-lbl">Avg Hours/Day</div>
-      </div>
     </div>
 
     <!-- Attendance history card -->
@@ -134,27 +129,27 @@
         </div>
         <div class="zhr-att-controls">
           <div class="zfilter-wrap">
-            <input class="zfilter-input" [ngModel]="attSearch()" (ngModelChange)="attSearch.set($event);attPage.set(1)" placeholder="Search employee..." />
+            <input class="zfilter-input" [ngModel]="attendanceSearch()" (ngModelChange)="attendanceSearch.set($event);attendancePage.set(1)" placeholder="Search employee..." />
           </div>
           <div class="zview-toggle">
-            <button class="zview-btn" [class.active]="attViewMode()==='all'"     (click)="attViewMode.set('all');attPeriodOffset.set(0);attPage.set(1)">All</button>
-            <button class="zview-btn" [class.active]="attViewMode()==='weekly'"  (click)="attViewMode.set('weekly');attPeriodOffset.set(0);attPage.set(1)">Week</button>
-            <button class="zview-btn" [class.active]="attViewMode()==='monthly'" (click)="attViewMode.set('monthly');attPeriodOffset.set(0);attPage.set(1)">Month</button>
+            <button class="zview-btn" [class.active]="attViewMode()==='all'"     (click)="attViewMode.set('all');attPeriodOffset.set(0);attendancePage.set(1)">All</button>
+            <button class="zview-btn" [class.active]="attViewMode()==='weekly'"  (click)="attViewMode.set('weekly');attPeriodOffset.set(0);attendancePage.set(1)">Week</button>
+            <button class="zview-btn" [class.active]="attViewMode()==='monthly'" (click)="attViewMode.set('monthly');attPeriodOffset.set(0);attendancePage.set(1)">Month</button>
           </div>
           @if (attViewMode() !== 'all') {
             <div class="zhr-ts-period-group">
-              <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o-1);attPage.set(1)">‹</button>
+              <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o-1);attendancePage.set(1)">‹</button>
               <span class="zts-period-label">{{ attPeriodLabel() }}</span>
-              <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o+1);attPage.set(1)" [disabled]="attPeriodOffset()>=0">›</button>
+              <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o+1);attendancePage.set(1)" [disabled]="attPeriodOffset()>=0">›</button>
             </div>
           }
-          <span class="zatt-count-pill">{{ filteredAtt().length }} records</span>
+          <span class="zatt-count-pill">{{ filteredAttendances().length }} records</span>
         </div>
       </div>
 
       <!-- Rows -->
       <div class="zhr-att-list">
-        @for (a of pagedAtt(); track a.id) {
+        @for (a of pagedAttendances(); track a.id) {
           <div class="zhr-att-row" [class.zhr-att-late]="a.isLate">
             <!-- Employee -->
             <div class="zhr-att-emp">
@@ -200,7 +195,7 @@
             </div>
           </div>
         }
-        @if (pagedAtt().length === 0) {
+        @if (pagedAttendances().length === 0) {
           <div class="zempty" style="padding:48px">
             <span class="zempty-icon">📭</span>
             <span class="zempty-title">No attendance records found</span>
@@ -210,11 +205,11 @@
 
       <!-- Pagination -->
       <div class="zpagination">
-        <span class="zpagination-info">{{ filteredAtt().length }} records</span>
+        <span class="zpagination-info">{{ filteredAttendances().length }} records</span>
         <div class="zpagination-btns">
-          <button class="zpg-btn" (click)="attPage.update(p=>p-1)" [disabled]="attPage()===1">‹</button>
-          <span style="padding:0 12px;font-size:13px;color:#6B7280">{{ attPage() }} / {{ attTotalPages() }}</span>
-          <button class="zpg-btn" (click)="attPage.update(p=>p+1)" [disabled]="attPage()===attTotalPages()">›</button>
+          <button class="zpg-btn" (click)="attendancePage.update(p=>p-1)" [disabled]="attendancePage()===1">‹</button>
+          <span style="padding:0 12px;font-size:13px;color:#6B7280">{{ attendancePage() }} / {{ attendanceTotalPages() }}</span>
+          <button class="zpg-btn" (click)="attendancePage.update(p=>p+1)" [disabled]="attendancePage()===attendanceTotalPages()">›</button>
         </div>
       </div>
     </div>
@@ -231,7 +226,7 @@
       </div>
       <div class="zhr-lv-stat zhr-lv-stat-pending">
         <div class="zhr-lv-stat-icon">⏳</div>
-        <div class="zhr-lv-stat-val">{{ pendingLv() }}</div>
+        <div class="zhr-lv-stat-val">{{ pendingLeavesCount() }}</div>
         <div class="zhr-lv-stat-lbl">Pending</div>
       </div>
       <div class="zhr-lv-stat zhr-lv-stat-approved">
@@ -247,6 +242,26 @@
     </div>
 
     <!-- Leave management card -->
+    <!-- Leave Balance -->
+    @if (leaveBalance().length > 0) {
+      <div class="zlv-balance-grid">
+        @for (b of leaveBalance(); track b.leaveType) {
+          <div class="zlv-balance-card" [class.zlv-balance-low]="b.remaining <= 3" [class.zlv-balance-empty]="b.remaining === 0">
+            <div class="zlv-balance-type">{{ b.leaveType }}</div>
+            <div class="zlv-balance-bar-track">
+              <div class="zlv-balance-bar-fill"
+                [style.width.%]="b.total > 0 ? (b.remaining / b.total) * 100 : 0"
+                [class.zlv-balance-bar-low]="b.remaining <= 3">
+              </div>
+            </div>
+            <div class="zlv-balance-nums">
+              <span class="zlv-balance-remaining" [class.zlv-balance-remaining-low]="b.remaining <= 3">{{ b.remaining }} left</span>
+              <span class="zlv-balance-total">/ {{ b.total }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
     <div class="zhr-lv-card">
       <div class="zhr-lv-header">
         <div class="zhr-lv-title">
@@ -254,8 +269,8 @@
           Leave Management
         </div>
         <div class="zhr-lv-controls">
-          <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="lvSearch()" (ngModelChange)="lvSearch.set($event);lvPage.set(1)" placeholder="Search employee..." /></div>
-          <select class="zfilter-select" [ngModel]="lvStatusF()" (ngModelChange)="lvStatusF.set($event);lvPage.set(1)">
+          <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="leaveSearch()" (ngModelChange)="leaveSearch.set($event);leavePage.set(1)" placeholder="Search employee..." /></div>
+          <select class="zfilter-select" [ngModel]="leaveStatusFilter()" (ngModelChange)="leaveStatusFilter.set($event);leavePage.set(1)">
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
@@ -267,7 +282,7 @@
 
       <!-- Leave rows -->
       <div class="zhr-lv-list">
-        @for (l of pagedLv(); track l.id) {
+        @for (l of pagedLeaves(); track l.id) {
           <div class="zhr-lv-row" [class.zhr-lv-pending]="l.status===0" [class.zhr-lv-approved]="l.status===1" [class.zhr-lv-rejected]="l.status===2">
 
             <!-- Employee -->
@@ -287,7 +302,7 @@
 
             <!-- Status + comment -->
             <div class="zhr-lv-status-col">
-              <span class="zbadge" [class]="stClass(l.status)">{{ stText(l.status) }}</span>
+              <span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span>
               @if (l.managerComment) {
                 <span class="zhr-lv-comment" [title]="l.managerComment">💬 {{ l.managerComment }}</span>
               }
@@ -308,7 +323,7 @@
             </div>
           </div>
         }
-        @if (pagedLv().length === 0) {
+        @if (pagedLeaves().length === 0) {
           <div class="zempty" style="padding:40px">
             <span class="zempty-icon">🌴</span>
             <span class="zempty-title">No leave requests found</span>
@@ -318,11 +333,11 @@
 
       <!-- Pagination -->
       <div class="zpagination">
-        <span class="zpagination-info">{{ filteredLv().length }} records</span>
+        <span class="zpagination-info">{{ filteredLeaves().length }} records</span>
         <div class="zpagination-btns">
-          <button class="zpg-btn" (click)="lvPage.update(p=>p-1)" [disabled]="lvPage()===1">‹</button>
-          <span style="padding:0 12px;font-size:13px;color:#6B7280">{{ lvPage() }} / {{ lvTotalPages() }}</span>
-          <button class="zpg-btn" (click)="lvPage.update(p=>p+1)" [disabled]="lvPage()===lvTotalPages()">›</button>
+          <button class="zpg-btn" (click)="leavePage.update(p=>p-1)" [disabled]="leavePage()===1">‹</button>
+          <span style="padding:0 12px;font-size:13px;color:#6B7280">{{ leavePage() }} / {{ leaveTotalPages() }}</span>
+          <button class="zpg-btn" (click)="leavePage.update(p=>p+1)" [disabled]="leavePage()===leaveTotalPages()">›</button>
         </div>
       </div>
     </div>
@@ -378,9 +393,9 @@
         </div>
         <div class="zhr-ts-controls">
           <div class="zview-toggle">
-            <button class="zview-btn" [class.active]="tsViewMode()==='weekly'"  (click)="tsViewMode.set('weekly'); tsPeriodOffset.set(0); tsPage.set(1)">Weekly Grid</button>
-            <button class="zview-btn" [class.active]="tsViewMode()==='monthly'" (click)="tsViewMode.set('monthly'); tsPeriodOffset.set(0); tsPage.set(1)">Month</button>
-            <button class="zview-btn" [class.active]="tsViewMode()==='all'"     (click)="tsViewMode.set('all'); tsPeriodOffset.set(0); tsPage.set(1)">All</button>
+            <button class="zview-btn" [class.active]="tsViewMode()==='weekly'"  (click)="tsViewMode.set('weekly'); tsPeriodOffset.set(0); timesheetPage.set(1)">Weekly Grid</button>
+            <button class="zview-btn" [class.active]="tsViewMode()==='monthly'" (click)="tsViewMode.set('monthly'); tsPeriodOffset.set(0); timesheetPage.set(1)">Month</button>
+            <button class="zview-btn" [class.active]="tsViewMode()==='all'"     (click)="tsViewMode.set('all'); tsPeriodOffset.set(0); timesheetPage.set(1)">All</button>
           </div>
           @if (tsViewMode() !== 'all') {
             <div class="zhr-ts-period-group">
@@ -406,7 +421,7 @@
                 <div class="zmgr-wts-emp-avatar">{{ group.employeeName[0].toUpperCase() }}</div>
                 <div class="zmgr-wts-emp-info">
                   <span class="zmgr-wts-emp-name">{{ group.employeeName }}</span>
-                  <span class="zmgr-wts-emp-meta">{{ group.rows.length }} project{{ group.rows.length > 1 ? 's' : '' }} · {{ fmtH(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }} total</span>
+                  <span class="zmgr-wts-emp-meta">{{ group.rows.length }} project{{ group.rows.length > 1 ? 's' : '' }} · {{ formatHours(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }} total</span>
                 </div>
               </div>
               <div class="zmgr-wts-col-headers" [style.grid-template-columns]="'180px repeat(' + visibleWeekDates().length + ', 1fr) 80px 100px'">
@@ -426,14 +441,14 @@
                   @for (h of row.hours; track $index) {
                     <div class="zmgr-wts-cell" [class.zmgr-wts-today]="toDateStr(visibleWeekDates()[$index])===todayDateStr" [class.zmgr-wts-has-hours]="h !== null" [class.zmgr-wts-weekend]="$index>=5">
                       @if (h !== null) {
-                        <span class="zmgr-wts-hours-val">{{ fmtH(h) }}</span>
+                        <span class="zmgr-wts-hours-val">{{ formatHours(h) }}</span>
                         @if (row.tsPerDay[$index]?.description) {
                           <span class="zmgr-wts-task-text" [title]="row.tsPerDay[$index]?.description ?? ''">{{ row.tsPerDay[$index]?.description }}</span>
                         }
                       } @else { <span class="zmgr-wts-empty">—</span> }
                     </div>
                   }
-                  <div class="zmgr-wts-row-total">{{ fmtH(row.hours.reduce((s,h)=>s+(h||0),0)) }}</div>
+                  <div class="zmgr-wts-row-total">{{ formatHours(row.hours.reduce((s,h)=>s+(h||0),0)) }}</div>
                   <div class="zmgr-wts-row-actions">
                     <span class="zbadge" [class]="row.tsPerDay.some(t=>t&&Number(t.status)===0)?'zbadge-pending':row.tsPerDay.some(t=>t&&Number(t.status)===1)?'zbadge-approved':'zbadge-rejected'" style="font-size:11px">
                       {{ row.tsPerDay.some(t=>t&&Number(t.status)===0)?'Pending':row.tsPerDay.some(t=>t&&Number(t.status)===1)?'Approved':'Rejected' }}
@@ -444,9 +459,9 @@
               <div class="zmgr-wts-footer" [style.grid-template-columns]="'180px repeat(' + visibleWeekDates().length + ', 1fr) 80px 100px'">
                 <div class="zmgr-wts-footer-label">Day Total</div>
                 @for (d of visibleWeekDates(); track d.getTime(); let i = $index) {
-                  <div class="zmgr-wts-day-total" [class.zmgr-wts-weekend]="i>=5">{{ fmtH(group.rows.reduce((s,r)=>s+(r.hours[i]||0),0)) }}</div>
+                  <div class="zmgr-wts-day-total" [class.zmgr-wts-weekend]="i>=5">{{ formatHours(group.rows.reduce((s,r)=>s+(r.hours[i]||0),0)) }}</div>
                 }
-                <div class="zmgr-wts-grand-total">{{ fmtH(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</div>
+                <div class="zmgr-wts-grand-total">{{ formatHours(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</div>
                 <div></div>
               </div>
             </div>
@@ -465,7 +480,7 @@
                 <div class="zmgr-wts-emp-avatar">{{ group.employeeName[0].toUpperCase() }}</div>
                 <div class="zmgr-wts-emp-info">
                   <span class="zmgr-wts-emp-name">{{ group.employeeName }}</span>
-                  <span class="zmgr-wts-emp-meta">{{ group.rows.length }} project{{ group.rows.length > 1 ? 's' : '' }} · {{ fmtH(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }} total</span>
+                  <span class="zmgr-wts-emp-meta">{{ group.rows.length }} project{{ group.rows.length > 1 ? 's' : '' }} · {{ formatHours(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }} total</span>
                 </div>
               </div>
               <div style="overflow-x:auto">
@@ -485,24 +500,24 @@
                     @for (d of monthDates(); track d.getTime(); let di = $index) {
                       <div class="zmgr-month-cell" [class.zmgr-month-today]="toDateStr(d)===todayDateStr" [class.zmgr-month-weekend]="d.getDay()===0||d.getDay()===6" [class.zmgr-month-has]="row.hours[di] !== null">
                         @if (row.hours[di] !== null) {
-                          <span class="zmgr-month-hours">{{ fmtH(row.hours[di]!) }}</span>
+                          <span class="zmgr-month-hours">{{ formatHours(row.hours[di]!) }}</span>
                           @if (row.tsPerDay[di]?.description) {
                             <span class="zmgr-month-task" [title]="row.tsPerDay[di]?.description ?? ''">{{ row.tsPerDay[di]?.description }}</span>
                           }
                         }
                       </div>
                     }
-                    <div class="zmgr-month-row-total">{{ fmtH(row.hours.reduce((s,h)=>s+(h||0),0)) }}</div>
+                    <div class="zmgr-month-row-total">{{ formatHours(row.hours.reduce((s,h)=>s+(h||0),0)) }}</div>
                   </div>
                 }
                 <div class="zmgr-month-footer">
                   <div class="zmgr-month-footer-label">Total</div>
                   @for (d of monthDates(); track d.getTime(); let di = $index) {
                     <div class="zmgr-month-day-total" [class.zmgr-month-weekend]="d.getDay()===0||d.getDay()===6">
-                      {{ group.rows.reduce((s,r)=>s+(r.hours[di]||0),0) > 0 ? fmtH(group.rows.reduce((s,r)=>s+(r.hours[di]||0),0)) : '' }}
+                      {{ group.rows.reduce((s,r)=>s+(r.hours[di]||0),0) > 0 ? formatHours(group.rows.reduce((s,r)=>s+(r.hours[di]||0),0)) : '' }}
                     </div>
                   }
-                  <div class="zmgr-month-grand-total">{{ fmtH(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</div>
+                  <div class="zmgr-month-grand-total">{{ formatHours(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</div>
                 </div>
               </div>
             </div>
@@ -512,17 +527,17 @@
 
       @if (tsViewMode() === 'all') {
         <div class="zhr-ts-filter-bar">
-          <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="tsSearch()" (ngModelChange)="tsSearch.set($event);tsPage.set(1)" placeholder="Search employee or project..." /></div>
-          <select class="zfilter-select" [ngModel]="tsStatus()" (ngModelChange)="tsStatus.set($event);tsPage.set(1)">
+          <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="timesheetSearch()" (ngModelChange)="timesheetSearch.set($event);timesheetPage.set(1)" placeholder="Search employee or project..." /></div>
+          <select class="zfilter-select" [ngModel]="timesheetStatusFilter()" (ngModelChange)="timesheetStatusFilter.set($event);timesheetPage.set(1)">
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
           </select>
-          <span class="zresult-count">{{ filteredTs().length }} records</span>
+          <span class="zresult-count">{{ filteredTimesheets().length }} records</span>
         </div>
         <div class="zhr-ts-list">
-          @for (ts of pagedTs(); track ts.id) {
+          @for (ts of pagedTimesheets(); track ts.id) {
             <div class="zhr-ts-row" [class.zhr-ts-pending]="ts.status===0" [class.zhr-ts-approved]="ts.status===1" [class.zhr-ts-rejected]="ts.status===2">
               <div class="zhr-ts-emp">
                 <div class="zhr-ts-avatar">{{ (ts.employeeName ?? 'U')[0].toUpperCase() }}</div>
@@ -536,11 +551,11 @@
                 <div class="zhr-ts-date">{{ ts.date | date:'EEE, dd MMM yyyy' }}</div>
               </div>
               <div class="zhr-ts-hours-block">
-                <span class="zhr-ts-hours-val">{{ fmtH(parseHoursPublic(ts.hoursWorked)) }}</span>
+                <span class="zhr-ts-hours-val">{{ formatHours(parseHoursPublic(ts.hoursWorked)) }}</span>
                 <span class="zhr-ts-hours-lbl">hours</span>
               </div>
               <div class="zhr-ts-status-col">
-                <span class="zbadge" [class]="stClass(ts.status)">{{ stText(ts.status) }}</span>
+                <span class="zbadge" [class]="getStatusClass(ts.status)">{{ getStatusText(ts.status) }}</span>
               </div>
               <div class="zhr-ts-notes">
                 @if (ts.description) {
@@ -552,7 +567,7 @@
               </div>
             </div>
           }
-          @if (pagedTs().length === 0) {
+          @if (pagedTimesheets().length === 0) {
             <div class="zempty" style="padding:48px">
               <span class="zempty-icon">📋</span>
               <span class="zempty-title">No timesheets found</span>
@@ -560,11 +575,11 @@
           }
         </div>
         <div class="zpagination">
-          <span class="zpagination-info">{{ filteredTs().length }} records</span>
+          <span class="zpagination-info">{{ filteredTimesheets().length }} records</span>
           <div class="zpagination-btns">
-            <button class="zpg-btn" (click)="tsPage.update(p=>p-1)" [disabled]="tsPage()===1">‹</button>
-            <span style="padding:0 12px;font-size:13px;color:#6B7280">{{ tsPage() }} / {{ tsTotalPages() }}</span>
-            <button class="zpg-btn" (click)="tsPage.update(p=>p+1)" [disabled]="tsPage()===tsTotalPages()">›</button>
+            <button class="zpg-btn" (click)="timesheetPage.update(p=>p-1)" [disabled]="timesheetPage()===1">‹</button>
+            <span style="padding:0 12px;font-size:13px;color:#6B7280">{{ timesheetPage() }} / {{ timesheetTotalPages() }}</span>
+            <button class="zpg-btn" (click)="timesheetPage.update(p=>p+1)" [disabled]="timesheetPage()===timesheetTotalPages()">›</button>
           </div>
         </div>
       }
@@ -603,13 +618,13 @@
 
     <!-- Search -->
     <div class="zfilter-bar" style="margin-bottom:16px">
-      <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="paySearch()" (ngModelChange)="paySearch.set($event);payPage.set(1)" placeholder="Search employee..." /></div>
-      <span class="zresult-count">{{ filteredPay().length }} records</span>
+      <div class="zfilter-wrap"><input class="zfilter-input" [ngModel]="payrollSearch()" (ngModelChange)="payrollSearch.set($event);payrollPage.set(1)" placeholder="Search employee..." /></div>
+      <span class="zresult-count">{{ filteredPayrolls().length }} records</span>
     </div>
 
     <!-- Payroll Cards -->
     <div class="zpay-cards-grid">
-      @for (p of pagedPay(); track p.payrollId) {
+      @for (p of pagedPayrolls(); track p.payrollId) {
         <div class="zpay-card">
           <div class="zpay-card-header">
             <div class="zpay-card-avatar">{{ (p.employeeName??'E')[0].toUpperCase() }}</div>
@@ -639,7 +654,7 @@
           </div>
         </div>
       }
-      @if (pagedPay().length === 0) {
+      @if (pagedPayrolls().length === 0) {
         <div class="zempty" style="grid-column:1/-1">
           <span class="zempty-icon">💰</span>
           <span class="zempty-title">No payroll records</span>
@@ -650,11 +665,11 @@
 
     <!-- Pagination -->
     <div class="zpagination" style="margin-top:16px">
-      <span class="zpagination-info">{{ filteredPay().length }} records</span>
+      <span class="zpagination-info">{{ filteredPayrolls().length }} records</span>
       <div class="zpagination-btns">
-        <button class="zpg-btn" (click)="payPage.update(p=>p-1)" [disabled]="payPage()===1">‹ Prev</button>
-        <span style="padding:0 12px;font-size:13px;color:#6B7280">Page {{ payPage() }}/{{ payTotalPages() }}</span>
-        <button class="zpg-btn" (click)="payPage.update(p=>p+1)" [disabled]="payPage()===payTotalPages()">Next ›</button>
+        <button class="zpg-btn" (click)="payrollPage.update(p=>p-1)" [disabled]="payrollPage()===1">‹ Prev</button>
+        <span style="padding:0 12px;font-size:13px;color:#6B7280">Page {{ payrollPage() }}/{{ payrollTotalPages() }}</span>
+        <button class="zpg-btn" (click)="payrollPage.update(p=>p+1)" [disabled]="payrollPage()===payrollTotalPages()">Next ›</button>
       </div>
     </div>
 
@@ -671,7 +686,9 @@
           </div>
           <div class="zgrid-2">
             <div class="zform-group"><label class="zform-label">Deductions</label><input formControlName="deductions" type="number" class="zform-control" placeholder="0" /></div>
-            <div class="zform-group"><label class="zform-label">Salary Month *</label><input formControlName="salaryMonth" type="month" class="zform-control" [min]="currentMonth" [max]="currentMonth" [attr.value]="currentMonth" /></div>
+            <div class="zform-group"><label class="zform-label">Salary Month *</label>
+              <input formControlName="salaryMonth" type="month" class="zform-control" [min]="lastMonth" [max]="currentMonth" />
+            </div>
           </div>
         </form></div>
         <div class="zmodal-footer"><button class="zbtn zbtn-outline" (click)="showPayrollModal.set(false)">Cancel</button><button class="zbtn zbtn-primary" [disabled]="payrollForm.invalid" (click)="generatePayroll()">Generate</button></div>
@@ -715,8 +732,8 @@
       <div class="zreport-card">
         <div class="zreport-card-header"><span class="zreport-card-icon">🌴</span><span class="zreport-card-title">Leaves</span></div>
         <div class="zreport-stat"><span>Total</span><strong>{{ allLeaves().length }}</strong></div>
-        <div class="zreport-stat"><span>Pending</span><strong class="orange">{{ pendingLv() }}</strong></div>
-        <div class="zreport-stat"><span>Approved</span><strong class="green">{{ allLeaves().length - pendingLv() }}</strong></div>
+        <div class="zreport-stat"><span>Pending</span><strong class="orange">{{ pendingLeavesCount() }}</strong></div>
+        <div class="zreport-stat"><span>Approved</span><strong class="green">{{ allLeaves().length - pendingLeavesCount() }}</strong></div>
         <div class="zreport-card-actions">
           <button class="zbtn zbtn-outline zbtn-sm" (click)="openPreview('leaves')">👁 Preview</button>
           <button class="zbtn zbtn-success zbtn-sm" (click)="exportLeavesExcel()">⬇ Excel</button>
@@ -811,37 +828,54 @@
   }
 
 </div></div></div>
-<app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()" [type]="cfgType()" (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />
+<!-- Missed Checkout Modal -->
+@if (showMissedCheckoutModal()) {
+  <div class="zmodal-overlay" (click)="showMissedCheckoutModal.set(false)">
+    <div class="zmco-modal" (click)="$event.stopPropagation()">
+      <div class="zmco-icon">⏰</div>
+      <h3 class="zmco-title">Missed Check-Out</h3>
+      <div class="zmco-body">
+        You forgot to check out <strong>yesterday</strong>. Your attendance has been automatically calculated as <strong>check-in + 8 hours</strong>.
+      </div>
+      <button class="zbtn zbtn-primary zmco-close-btn" (click)="showMissedCheckoutModal.set(false)">Got it</button>
+    </div>
+  </div>
+}
+<app-confirm [visible]="confirmVisible()" [title]="confirmTitle()" [message]="confirmMessage()" [type]="confirmType()" (confirmed)="onConfirmOk()" (cancelled)="onConfirmCancel()" />
 
-<!-- Add My Timesheet Modal -->
-@if (showAddTimesheetModal()) {
-  <div class="zmodal-overlay" (click)="showAddTimesheetModal.set(false)">
-    <div class="zmodal" (click)="$event.stopPropagation()">
-      <div class="zmodal-header">
-        <span class="zmodal-title">📋 Add My Timesheet</span>
-        <button class="zmodal-close" (click)="showAddTimesheetModal.set(false)">✕</button>
-      </div>
-      <div class="zmodal-body">
-        <form [formGroup]="addTimesheetForm" novalidate>
-          <div class="zform-group"><label class="zform-label">Project <span class="req">*</span></label>
-            <select formControlName="projectId" class="zform-control">
-              <option value="">— Select Project —</option>
-              @for (p of projects(); track p.id) { <option [value]="p.id">{{ p.projectName }}</option> }
-            </select>
+<!-- Leave Balance Modal -->
+@if (showLeaveBalanceModal()) {
+  <div class="zmodal-overlay" (click)="showLeaveBalanceModal.set(false)">
+    <div class="zlb-modal" (click)="$event.stopPropagation()">
+      <div class="zlb-icon">🌴</div>
+      <h3 class="zlb-title">Leave Applied!</h3>
+      <p class="zlb-sub">Your request has been submitted for approval.</p>
+      @if (leaveBalanceResult(); as bal) {
+        <div class="zlb-type">{{ bal.leaveType }}</div>
+        <div class="zlb-bar-wrap">
+          <div class="zlb-bar-track">
+            <div class="zlb-bar-fill" [style.width.%]="bal.total > 0 ? (bal.remaining / bal.total) * 100 : 0" [class.zlb-bar-low]="bal.remaining <= 3"></div>
           </div>
-          <div class="zform-group"><label class="zform-label">Work Date <span class="req">*</span></label><input formControlName="workDate" type="date" class="zform-control" /></div>
-          <div class="zgrid-3">
-            <div class="zform-group"><label class="zform-label">Start <span class="req">*</span></label><input formControlName="startTime" type="time" class="zform-control" /></div>
-            <div class="zform-group"><label class="zform-label">End <span class="req">*</span></label><input formControlName="endTime" type="time" class="zform-control" /></div>
-            <div class="zform-group"><label class="zform-label">Break</label><input formControlName="breakTime" type="time" class="zform-control" /></div>
+          <div class="zlb-bar-labels">
+            <span class="zlb-used">{{ bal.total - bal.remaining }} used</span>
+            <span class="zlb-remaining" [class.zlb-remaining-low]="bal.remaining <= 3">{{ bal.remaining }} remaining</span>
           </div>
-          <div class="zform-group"><label class="zform-label">Description</label><textarea formControlName="taskDescription" class="zform-control" rows="2"></textarea></div>
-        </form>
-      </div>
-      <div class="zmodal-footer">
-        <button class="zbtn zbtn-outline" (click)="showAddTimesheetModal.set(false)">Cancel</button>
-        <button class="zbtn zbtn-primary" [disabled]="addTimesheetForm.invalid" (click)="addTimesheetForSelf()">Submit</button>
-      </div>
+        </div>
+        <div class="zlb-stats">
+          <div class="zlb-stat"><div class="zlb-stat-val">{{ bal.total }}</div><div class="zlb-stat-lbl">Total</div></div>
+          <div class="zlb-stat-sep"></div>
+          <div class="zlb-stat"><div class="zlb-stat-val" style="color:#DC2626">{{ bal.total - bal.remaining }}</div><div class="zlb-stat-lbl">Used</div></div>
+          <div class="zlb-stat-sep"></div>
+          <div class="zlb-stat"><div class="zlb-stat-val" [style.color]="bal.remaining <= 3 ? '#DC2626' : '#16A34A'">{{ bal.remaining }}</div><div class="zlb-stat-lbl">Remaining</div></div>
+        </div>
+        @if (bal.remaining <= 3 && bal.remaining > 0) {
+          <div class="zlb-warning">⚠ Only {{ bal.remaining }} day(s) left for {{ bal.leaveType }}</div>
+        }
+        @if (bal.remaining === 0) {
+          <div class="zlb-warning zlb-warning-empty">❌ No {{ bal.leaveType }} days remaining this year</div>
+        }
+      }
+      <button class="zbtn zbtn-primary zlb-close-btn" (click)="showLeaveBalanceModal.set(false)">Got it</button>
     </div>
   </div>
 }
@@ -965,7 +999,7 @@
                   <td>{{ l.toDate | date:'dd MMM yyyy' }}</td>
                   <td><span class="zdays-badge">{{ leaveDays(l) }}d</span></td>
                   <td class="ztext-muted">{{ l.reason || '—' }}</td>
-                  <td><span class="zbadge" [class]="stClass(l.status)">{{ stText(l.status) }}</span></td>
+                  <td><span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span></td>
                 </tr>
               }
             </tbody>

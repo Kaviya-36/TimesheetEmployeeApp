@@ -99,6 +99,7 @@ export class LeaveService {
   }
   getLeaveTypes(): Observable<any> { return this.http.get<any>(`${this.api}/types`); }
   deleteLeave(leaveId: number): Observable<any> { return this.http.delete<any>(`${this.api}/${leaveId}`); }
+  getLeaveBalance(userId: number): Observable<any> { return this.http.get<any>(`${this.api}/balance/${userId}`); }
 }
 
 // ── Project ────────────────────────────────────────────────────────────────
@@ -112,14 +113,10 @@ export class ProjectService {
   getAll(page = 1, pageSize = 200): Observable<any> {
     return this.http.get<any>(this.api, { params: buildParams({ pageNumber: page, pageSize }) });
   }
-  getById(id: number): Observable<any> { return this.http.get<any>(`${this.api}/${id}`); }
   update(id: number, req: Partial<ProjectCreateRequest>): Observable<any> {
     return this.http.put<any>(`${this.api}/${id}`, req);
   }
   delete(id: number): Observable<any> { return this.http.delete<any>(`${this.api}/${id}`); }
-  assignEmployee(projectId: number, userId: number): Observable<any> {
-    return this.http.post<any>(`${this.api}/assign`, { projectId, userId });
-  }
   getUserAssignments(userId: number, pageNumber: number, pageSize: number): Observable<any> {
     return this.http.get<any>(`${this.api}/user/${userId}/assignments`, { params: buildParams({ pageNumber, pageSize }) });
   }
@@ -175,6 +172,7 @@ export class InternService {
   getTasks(internId: number): Observable<any>            { return this.http.get<any>(`${this.api}/intern/${internId}`); }
   createTask(req: InternTaskCreateRequest): Observable<any> { return this.http.post<any>(`${this.api}/create`, req); }
   updateTask(taskId: number, req: any)                   { return this.http.put(`${this.api}/update/${taskId}`, { request: req }); }
+  updateStatus(taskId: number, status: number)           { return this.http.patch(`${this.api}/status/${taskId}`, { status }); }
   deleteTask(taskId: number): Observable<any>            { return this.http.delete<any>(`${this.api}/delete/${taskId}`); }
 }
 

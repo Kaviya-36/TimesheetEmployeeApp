@@ -8,7 +8,6 @@ namespace TimeSheetAppWeb.Interface
         Task<ApiResponse<ProjectResponse>> CreateProjectAsync(ProjectCreateRequest request);
         Task<ApiResponse<ProjectResponse>> UpdateProjectAsync(int projectId, ProjectUpdateRequest request);
         Task<ApiResponse<bool>> DeleteProjectAsync(int projectId);
-        Task<ApiResponse<ProjectResponse>> GetProjectByIdAsync(int projectId);
 
         Task<ApiResponse<IEnumerable<ProjectResponse>>> GetAllProjectsAsync(
             int pageNumber = 1,
@@ -18,8 +17,6 @@ namespace TimeSheetAppWeb.Interface
             DateTime? startTo = null,
             DateTime? endFrom = null,
             DateTime? endTo = null);
-
-        Task<ApiResponse<IEnumerable<ProjectResponse>>> GetMyProjectsAsync(int userId);
 
         Task<ApiResponse<ProjectAssignmentResponse>> AssignUserToProjectAsync(ProjectAssignRequest request);
         Task<ApiResponse<bool>> RemoveUserFromProjectAsync(int assignmentId);

@@ -98,3 +98,34 @@
 .modal-actions button:last-child  { background: #E5E7EB; color: #374151; }
 .modal-actions button:hover { opacity: .9; }
 @keyframes fadeIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ── Profile (scoped) ────────────────────────────────────────────────────── */
+.zprofile-card {
+  max-width: 680px; margin: 0 auto;
+  border-radius: 20px; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,.1);
+}
+.zprofile-banner {
+  height: 160px;
+  background: linear-gradient(135deg, #0F172A 0%, var(--role-color, #7C3AED) 100%);
+}
+.zprofile-body {
+  background: #fff; border: 1px solid #E5E7EB; border-top: none;
+  padding: 0 36px 36px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.zprofile-avatar-lg {
+  width: 96px; height: 96px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--role-color, #7C3AED), #9F67FA);
+  color: #fff; font-size: 36px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  margin: -48px auto 16px; border: 5px solid #fff;
+  box-shadow: 0 6px 24px rgba(0,0,0,.18); position: relative; z-index: 1;
+}
+.zprofile-name { font-size: 24px; font-weight: 900; color: #111827; margin: 0 0 6px; }
+.zprofile-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; width: 100%; text-align: left; }
+.zprofile-info-item { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 14px 16px; transition: border-color .15s, box-shadow .15s; }
+.zprofile-info-item:hover { border-color: var(--role-color, #7C3AED); box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+.zprofile-info-label { display: block; font-size: 10px; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 5px; }
+.zprofile-info-value { display: block; font-size: 14px; font-weight: 700; color: #111827; }
+.zprofile-footer { width: 100%; margin-top: 28px; padding-top: 20px; border-top: 1px solid #F3F4F6; display: flex; justify-content: center; }

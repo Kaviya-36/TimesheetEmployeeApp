@@ -2,145 +2,9 @@
 :host { --role-color: #F97316; }
 
 .zintern-pill { background: #FFFBEB; color: #D97706; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid #FDE68A; }
+.zintern-task-count { background: #F5F3FF; color: #7C3AED; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 700; }
 
-/* ── Task list ───────────────────────────────────────────────────────────── */
-.ztask-list { display: flex; flex-direction: column; gap: 10px; }
-.ztask-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: #F9FAFB; border-radius: 10px; border: 1px solid #E5E7EB; }
-.ztask-icon  { font-size: 18px; flex-shrink: 0; }
-.ztask-info  { flex: 1; }
-.ztask-title { font-weight: 600; font-size: 14px; color: #111827; }
-.ztask-desc  { font-size: 12px; margin-top: 2px; }
-.ztask-meta  { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.ztask-due   { font-size: 11px; color: #6B7280; }
-
-/* ── Intern Attendance ───────────────────────────────────────────────────── */
-.zintern-att-stats {
-  display: grid; grid-template-columns: repeat(3, 1fr);
-  gap: 14px; margin-bottom: 20px;
-}
-.zintern-att-stat {
-  border-radius: 14px; padding: 20px 22px;
-  display: flex; align-items: center; gap: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.07);
-  transition: transform .15s, box-shadow .15s;
-}
-.zintern-att-stat:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.1); }
-.zintern-att-stat-blue  { background: linear-gradient(135deg, #1D4ED8, #3B82F6); color: #fff; }
-.zintern-att-stat-green { background: linear-gradient(135deg, #047857, #10B981); color: #fff; }
-.zintern-att-stat-amber { background: linear-gradient(135deg, #B45309, #F59E0B); color: #fff; }
-.zintern-att-stat-icon { font-size: 26px; }
-.zintern-att-stat-val  { font-size: 32px; font-weight: 900; line-height: 1; }
-.zintern-att-stat-lbl  { font-size: 12px; opacity: .85; font-weight: 500; margin-top: 2px; }
-
-.zintern-att-card2 {
-  background: #fff; border: 1px solid #E5E7EB;
-  border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06); overflow: hidden;
-}
-.zintern-att-header2 {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 24px; border-bottom: 1px solid #F3F4F6;
-  flex-wrap: wrap; gap: 12px;
-}
-.zintern-att-title2 {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 16px; font-weight: 800; color: #111827;
-}
-.zintern-att-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.zintern-att-period   { display: flex; align-items: center; gap: 6px; padding-left: 10px; border-left: 1px solid #E5E7EB; }
-
-.zintern-att-list { padding: 4px 0; }
-.zintern-att-row {
-  display: grid; grid-template-columns: 80px 40px 1fr 80px 110px;
-  align-items: center; gap: 14px;
-  padding: 12px 24px; border-bottom: 1px solid #F9FAFB;
-  transition: background .12s;
-}
-.zintern-att-row:hover { background: #FAFAFA; }
-.zintern-att-row:last-child { border-bottom: none; }
-.zintern-att-late { border-left: 3px solid #F59E0B; }
-
-.zintern-att-date-block { text-align: center; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 10px; padding: 6px 4px; }
-.zintern-att-date-day { font-size: 9px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: .5px; }
-.zintern-att-date-num { font-size: 18px; font-weight: 800; color: #111827; line-height: 1.1; }
-.zintern-att-date-mon { font-size: 9px; color: #6B7280; margin-top: 1px; }
-
-.zintern-att-times { display: flex; align-items: center; gap: 12px; }
-.zintern-att-time-item { display: flex; flex-direction: column; gap: 1px; }
-.zintern-att-time-lbl { font-size: 9px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: .4px; }
-.zintern-att-time-val { font-size: 14px; font-weight: 700; color: #111827; font-family: 'Roboto Mono', monospace; }
-.zintern-att-time-sep { font-size: 14px; color: #D1D5DB; }
-
-.zintern-att-hours { text-align: center; }
-.zintern-att-hours-val { font-size: 18px; font-weight: 900; color: #4F46E5; line-height: 1; }
-.zintern-att-hours-lbl { font-size: 10px; color: #9CA3AF; font-weight: 500; }
-
-/* ── Intern Leave ────────────────────────────────────────────────────────── */
-.zintern-lv-card {
-  background: #fff; border: 1px solid #E5E7EB;
-  border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06); overflow: hidden;
-}
-.zintern-lv-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 24px; border-bottom: 1px solid #F3F4F6;
-}
-.zintern-lv-title {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 16px; font-weight: 800; color: #111827;
-}
-.zintern-lv-list { padding: 4px 0; }
-.zintern-lv-row {
-  display: grid; grid-template-columns: 1fr 60px 1fr auto auto;
-  align-items: center; gap: 16px;
-  padding: 13px 24px; border-bottom: 1px solid #F9FAFB;
-  transition: background .12s;
-}
-.zintern-lv-row:hover { background: #FAFAFA; }
-.zintern-lv-row:last-child { border-bottom: none; }
-.zintern-lv-pending  { border-left: 3px solid #F59E0B; }
-.zintern-lv-approved { border-left: 3px solid #10B981; }
-.zintern-lv-rejected { border-left: 3px solid #EF4444; }
-.zintern-lv-type-name { font-size: 14px; font-weight: 700; color: #111827; }
-.zintern-lv-dates     { font-size: 12px; color: #6B7280; margin-top: 2px; }
-.zintern-lv-days { text-align: center; }
-.zintern-lv-days-val { font-size: 20px; font-weight: 900; color: #7C3AED; line-height: 1; display: block; }
-.zintern-lv-days-lbl { font-size: 10px; color: #9CA3AF; font-weight: 500; }
-.zintern-lv-reason { font-size: 12px; color: #9CA3AF; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* ── Intern Tasks ────────────────────────────────────────────────────────── */
-.zintern-task-card {
-  background: #fff; border: 1px solid #E5E7EB;
-  border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06); overflow: hidden;
-}
-.zintern-task-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 24px; border-bottom: 1px solid #F3F4F6;
-}
-.zintern-task-title {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 16px; font-weight: 800; color: #111827;
-}
-.zintern-task-count {
-  background: #F5F3FF; color: #7C3AED;
-  border-radius: 20px; padding: 4px 12px;
-  font-size: 12px; font-weight: 700;
-}
-.zintern-task-list { padding: 8px 0; }
-.zintern-task-item {
-  display: flex; align-items: flex-start; gap: 14px;
-  padding: 14px 24px; border-bottom: 1px solid #F9FAFB;
-  transition: background .12s;
-}
-.zintern-task-item:hover { background: #FAFAFA; }
-.zintern-task-item:last-child { border-bottom: none; }
-.zintern-task-done { opacity: .6; }
-.zintern-task-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
-.zintern-task-body { flex: 1; min-width: 0; }
-.zintern-task-name { font-size: 14px; font-weight: 700; color: #111827; }
-.zintern-task-desc { font-size: 12px; color: #6B7280; margin-top: 3px; line-height: 1.4; }
-.zintern-task-due  { font-size: 11px; color: #9CA3AF; margin-top: 4px; }
-.zintern-task-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
-
-/* ── Intern Profile (scoped) ─────────────────────────────────────────────── */
+/* ── Profile (scoped) ────────────────────────────────────────────────────── */
 .zprofile-card {
   max-width: 680px; margin: 0 auto;
   border-radius: 20px; overflow: hidden;
@@ -164,76 +28,175 @@
   box-shadow: 0 6px 24px rgba(0,0,0,.18); position: relative; z-index: 1;
 }
 .zprofile-name { font-size: 24px; font-weight: 900; color: #111827; margin: 0 0 6px; }
-.zprofile-info-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 10px; margin-top: 24px; width: 100%; text-align: left;
-}
-.zprofile-info-item {
-  background: #F9FAFB; border: 1px solid #E5E7EB;
-  border-radius: 12px; padding: 14px 16px;
-  transition: border-color .15s, box-shadow .15s;
-}
+.zprofile-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; width: 100%; text-align: left; }
+.zprofile-info-item { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 14px 16px; transition: border-color .15s, box-shadow .15s; }
 .zprofile-info-item:hover { border-color: var(--role-color, #F97316); box-shadow: 0 0 0 3px rgba(249,115,22,.1); }
 .zprofile-info-label { display: block; font-size: 10px; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 5px; }
 .zprofile-info-value { display: block; font-size: 14px; font-weight: 700; color: #111827; }
 .zprofile-footer { width: 100%; margin-top: 28px; padding-top: 20px; border-top: 1px solid #F3F4F6; display: flex; justify-content: center; }
 
-/* ── Intern Dashboard Grid ───────────────────────────────────────────────── */
-.zintern-dash-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 16px; margin-top: 20px;
-}
-.zintern-dash-card {
+/* ── Timesheet History (scoped — mirrors employee dashboard) ─────────────── */
+.zts-history-wrap {
   background: #fff; border: 1px solid #E5E7EB;
-  border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06);
-  overflow: hidden;
+  border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06); overflow: hidden;
 }
-.zintern-dash-card-header {
+.zts-history-head {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 20px; border-bottom: 1px solid #F3F4F6;
+  padding: 18px 24px; border-bottom: 1px solid #F3F4F6;
+  flex-wrap: wrap; gap: 12px; background: #fff;
 }
-.zintern-dash-card-title { font-size: 14px; font-weight: 800; color: #111827; }
-.zintern-dash-empty { padding: 32px; text-align: center; color: #9CA3AF; font-size: 13px; }
-.zintern-dash-more {
-  padding: 10px 20px; font-size: 12px; font-weight: 600;
-  color: #7C3AED; cursor: pointer; text-align: center;
-  border-top: 1px solid #F3F4F6;
-  transition: background .12s;
+.zts-history-head-left {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 16px; font-weight: 800; color: #111827;
 }
-.zintern-dash-more:hover { background: #F5F3FF; }
+.zts-history-filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.zts-period-nav  { display: flex; align-items: center; gap: 6px; }
+.zts-period-label { font-size: 13px; font-weight: 600; color: #374151; min-width: 140px; text-align: center; }
 
-/* Task list */
-.zintern-dash-task-list { padding: 4px 0; }
-.zintern-dash-task-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 20px; border-bottom: 1px solid #F9FAFB;
-  transition: background .12s;
+/* ── Weekly history grid ── */
+.zts-hist-week-wrap { overflow-x: auto; border: 1px solid #E5E7EB; border-radius: 10px; margin: 0 4px 8px; }
+.zts-hist-col-headers {
+  display: grid; grid-template-columns: 160px repeat(7, 1fr) 90px;
+  background: #F9FAFB; border-bottom: 2px solid #E5E7EB; min-width: max-content;
 }
-.zintern-dash-task-row:hover { background: #FAFAFA; }
-.zintern-dash-task-row:last-child { border-bottom: none; }
-.zintern-dash-task-done { opacity: .55; }
-.zintern-dash-task-icon { font-size: 16px; flex-shrink: 0; }
-.zintern-dash-task-info { flex: 1; min-width: 0; }
-.zintern-dash-task-name { font-size: 13px; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.zintern-dash-task-due  { font-size: 11px; color: #9CA3AF; margin-top: 1px; }
+.zts-hist-project-hdr, .zts-hist-total-hdr {
+  padding: 10px; font-size: 11px; font-weight: 700; color: #6B7280;
+  text-transform: uppercase; letter-spacing: .4px;
+}
+.zts-hist-project-hdr { position: sticky; left: 0; z-index: 3; background: #F9FAFB; }
+.zts-hist-day-hdr {
+  padding: 8px 4px; text-align: center; font-size: 10px; color: #6B7280;
+  border-left: 1px solid #F3F4F6;
+}
+.zts-hist-day-name { font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.zts-hist-day-date { font-size: 11px; margin-top: 1px; }
+.zts-hist-day-hdr.zts-hist-today { background: #EFF6FF; color: #2563EB; }
+.zts-hist-day-hdr.zts-hist-weekend { background: rgba(0,0,0,.025); color: #9CA3AF; }
+.zts-hist-row {
+  display: grid; grid-template-columns: 160px repeat(7, 1fr) 90px;
+  border-bottom: 1px solid #F3F4F6; min-width: max-content;
+}
+.zts-hist-row:last-child { border-bottom: none; }
+.zts-hist-project-cell {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px; font-size: 12px; font-weight: 600; color: #374151;
+  background: #FAFAFA; border-right: 1px solid #E5E7EB;
+  position: sticky; left: 0; z-index: 1;
+}
+.zts-hist-cell {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 6px 4px; min-height: 52px; border-left: 1px solid #F3F4F6; gap: 2px;
+}
+.zts-hist-cell.zts-hist-today    { background: #EFF6FF; }
+.zts-hist-cell.zts-hist-weekend  { background: rgba(0,0,0,.02); }
+.zts-hist-cell.zts-hist-approved { background: #F0FDF4; }
+.zts-hist-cell.zts-hist-pending  { background: #FFFBEB; }
+.zts-hist-cell.zts-hist-rejected { background: #FEF2F2; }
+.zts-hist-hours { font-size: 12px; font-weight: 700; color: #2563EB; font-family: 'Roboto Mono', monospace; }
+.zts-hist-badge { font-size: 9px; font-weight: 800; border-radius: 3px; padding: 1px 4px; }
+.zts-hist-badge-approved { background: #DCFCE7; color: #16A34A; }
+.zts-hist-badge-rejected { background: #FEE2E2; color: #DC2626; }
+.zts-hist-row-total { display: flex; align-items: center; justify-content: center; padding: 4px 6px; border-left: 1px solid #E5E7EB; }
+.zts-hist-footer {
+  display: grid; grid-template-columns: 160px repeat(7, 1fr) 90px;
+  background: #F9FAFB; border-top: 2px solid #E5E7EB; min-width: max-content;
+}
+.zts-hist-footer-label {
+  padding: 8px 10px; font-size: 11px; font-weight: 700; color: #6B7280;
+  text-transform: uppercase; position: sticky; left: 0; z-index: 1; background: #F9FAFB;
+}
+.zts-hist-day-total { text-align: center; padding: 8px 4px; font-size: 11px; font-weight: 600; color: #374151; border-left: 1px solid #F3F4F6; }
+.zts-hist-day-total.zts-hist-weekend { color: #9CA3AF; }
+.zts-hist-grand-total { display: flex; align-items: center; justify-content: center; padding: 4px 6px; border-left: 1px solid #E5E7EB; }
 
-/* Timesheet list */
-.zintern-dash-ts-list { padding: 4px 0; }
-.zintern-dash-ts-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 20px; border-bottom: 1px solid #F9FAFB;
-  transition: background .12s;
+/* ── Monthly calendar grid ── */
+.zts-month-wrap { padding: 0 4px 8px; }
+.zts-month-scroll { overflow-x: auto; border: 1px solid #E5E7EB; border-radius: 10px; }
+.zts-month-col-headers {
+  display: grid; grid-template-columns: 150px repeat(var(--month-days, 31), 44px) 72px;
+  background: #F9FAFB; border-bottom: 2px solid #E5E7EB; width: max-content; min-width: 100%;
 }
-.zintern-dash-ts-row:hover { background: #FAFAFA; }
-.zintern-dash-ts-row:last-child { border-bottom: none; }
-.zintern-dash-ts-info { flex: 1; min-width: 0; }
-.zintern-dash-ts-project { font-size: 13px; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.zintern-dash-ts-date   { font-size: 11px; color: #9CA3AF; margin-top: 1px; }
-.zintern-dash-ts-hours  {
-  font-size: 14px; font-weight: 800; color: #F97316;
-  font-family: 'Roboto Mono', monospace; flex-shrink: 0;
+.zts-month-project-hdr, .zts-month-total-hdr {
+  padding: 8px 10px; font-size: 11px; font-weight: 700; color: #6B7280;
+  text-transform: uppercase; letter-spacing: .4px;
 }
+.zts-month-project-hdr { position: sticky; left: 0; z-index: 3; background: #F9FAFB; }
+.zts-month-day-hdr { padding: 6px 2px; text-align: center; font-size: 10px; color: #6B7280; border-left: 1px solid #F3F4F6; }
+.zts-month-day-num  { font-weight: 700; font-size: 12px; color: #374151; }
+.zts-month-day-name { font-size: 9px; color: #9CA3AF; }
+.zts-month-day-hdr.zts-month-today   { background: #EFF6FF; color: #2563EB; }
+.zts-month-day-hdr.zts-month-weekend { background: rgba(0,0,0,.025); color: #9CA3AF; }
+.zts-month-row {
+  display: grid; grid-template-columns: 150px repeat(var(--month-days, 31), 44px) 72px;
+  border-bottom: 1px solid #F3F4F6; width: max-content; min-width: 100%;
+}
+.zts-month-row:last-child { border-bottom: none; }
+.zts-month-project-cell {
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px;
+  font-size: 12px; font-weight: 600; color: #374151;
+  background: #FAFAFA; border-right: 1px solid #E5E7EB;
+  position: sticky; left: 0; z-index: 1;
+}
+.zts-month-cell {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 4px 2px; min-height: 44px; border-left: 1px solid #F3F4F6; font-size: 11px; gap: 2px;
+}
+.zts-month-cell.zts-month-today    { background: #EFF6FF; }
+.zts-month-cell.zts-month-weekend  { background: rgba(0,0,0,.02); }
+.zts-month-cell.zts-month-approved { background: #F0FDF4; }
+.zts-month-cell.zts-month-pending  { background: #FFFBEB; }
+.zts-month-cell.zts-month-rejected { background: #FEF2F2; }
+.zts-month-hours { font-weight: 700; font-size: 12px; color: #2563EB; }
+.zts-month-row-total { display: flex; align-items: center; justify-content: center; padding: 4px 6px; border-left: 1px solid #E5E7EB; }
+.zts-month-footer {
+  display: grid; grid-template-columns: 150px repeat(var(--month-days, 31), 44px) 72px;
+  background: #F9FAFB; border-top: 2px solid #E5E7EB; width: max-content; min-width: 100%;
+}
+.zts-month-footer-label {
+  padding: 8px 10px; font-size: 11px; font-weight: 700; color: #6B7280;
+  text-transform: uppercase; position: sticky; left: 0; z-index: 1; background: #F9FAFB;
+}
+.zts-month-day-total { text-align: center; padding: 8px 2px; font-size: 11px; font-weight: 600; color: #374151; border-left: 1px solid #F3F4F6; }
+.zts-month-day-total.zts-month-weekend { color: #9CA3AF; }
+.zts-month-grand-total { display: flex; align-items: center; justify-content: center; padding: 4px 6px; border-left: 1px solid #E5E7EB; }
 
-@media (max-width: 768px) {
-  .zintern-dash-grid { grid-template-columns: 1fr; }
+/* ── List view table ── */
+.zts-list-table-wrap { overflow-x: auto; }
+.zts-list-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.zts-list-table thead tr { background: #F9FAFB; border-bottom: 2px solid #E5E7EB; }
+.zts-list-table thead th { padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+.zts-list-table tbody tr { border-bottom: 1px solid #F3F4F6; transition: background .12s; }
+.zts-list-table tbody tr:last-child { border-bottom: none; }
+.zts-list-table tbody tr:hover { background: #FAFAFA; }
+.zts-list-table tbody tr.zts-row-pending  { background: #FFFDF0; }
+.zts-list-table tbody tr.zts-row-rejected { background: #FFF5F5; }
+.zts-list-table td { padding: 12px 16px; color: #374151; vertical-align: middle; }
+.zts-list-table .empty-row td { text-align: center; padding: 40px; color: #9CA3AF; font-size: 13px; }
+.zts-list-project-cell { display: flex; align-items: center; gap: 10px; }
+.zts-list-project-name { font-weight: 700; color: #111827; font-size: 13px; }
+.zts-list-date { color: #6B7280; font-size: 12px; }
+.zts-list-pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; border-top: 1px solid #F3F4F6; background: #F9FAFB;
+}
+.zts-list-pagination-info { font-size: 12px; color: #6B7280; font-weight: 500; }
+.zts-list-pagination-btns { display: flex; align-items: center; gap: 8px; }
+.zts-pg-btn {
+  width: 32px; height: 32px; border: 1.5px solid #E5E7EB; border-radius: 6px;
+  background: #fff; cursor: pointer; font-size: 14px; color: #374151;
+  display: flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.zts-pg-btn:hover:not(:disabled) { border-color: #7C3AED; color: #7C3AED; background: #F5F3FF; }
+.zts-pg-btn:disabled { opacity: .35; cursor: not-allowed; }
+.zts-pg-label { font-size: 13px; color: #6B7280; padding: 0 4px; min-width: 60px; text-align: center; }
+
+/* Shared helpers needed in this component */
+.zts-project-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.zts-dot-pending  { background: #D97706; }
+.zts-dot-approved { background: #16A34A; }
+.zts-dot-rejected { background: #DC2626; }
+.zts-hours-chip {
+  display: inline-block; background: #EFF6FF; color: #2563EB;
+  border: 1px solid #BFDBFE; border-radius: 6px;
+  padding: 2px 10px; font-size: 12px; font-weight: 700; font-family: 'Roboto Mono', monospace;
 }

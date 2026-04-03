@@ -61,6 +61,7 @@ export interface LeaveApprovalRequest {
 export interface Leave {
   id: number; userId?: number; employeeName: string; leaveType: string; fromDate: string; toDate: string;
   reason?: number; status: Number; approvedById?: number; approvedDate?: string; managerComment?: string;
+  remainingLeaves?: number;
 }
 export interface LeaveType { id: number; name: string; maxDaysPerYear: number; isActive: boolean; }
 
@@ -85,7 +86,7 @@ export interface Payroll {
 }
 
 // Intern
-export interface InternTask { id: number; taskTitle?: string; title?: string; description?: string; status: string; dueDate?: string; }
+export interface InternTask { id: number; taskTitle?: string; title?: string; description?: string; status: number; dueDate?: string; }
 export interface InternTaskCreateRequest { internId: number; taskTitle: string; description?: string; dueDate?: string; }
 
 // Analytics

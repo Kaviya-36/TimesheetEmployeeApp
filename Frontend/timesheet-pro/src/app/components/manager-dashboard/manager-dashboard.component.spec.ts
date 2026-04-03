@@ -98,24 +98,24 @@ describe('ManagerDashboardComponent', () => {
   });
 
   it('setTab should reset all pages to 1', () => {
-    component.tsPage.set(3);
-    component.lvPage.set(2);
+    component.timesheetPage.set(3);
+    component.leavePage.set(2);
     component.teamPage.set(4);
     component.setTab('dashboard');
-    expect(component.tsPage()).toBe(1);
-    expect(component.lvPage()).toBe(1);
+    expect(component.timesheetPage()).toBe(1);
+    expect(component.leavePage()).toBe(1);
     expect(component.teamPage()).toBe(1);
   });
 
   // ── Computed stats ─────────────────────────────────────────────────────────
   it('pendingTs should return only status=0 timesheets', () => {
     component.allTimesheets.set([makeTs({ status: 0 }), makeTs({ id: 2, status: 1 })]);
-    expect(component.pendingTs().length).toBe(1);
+    expect(component.pendingTimesheets().length).toBe(1);
   });
 
   it('pendingLv should return only status=0 leaves', () => {
     component.allLeaves.set([makeLeave({ status: 0 }), makeLeave({ id: 2, status: 1 })]);
-    expect(component.pendingLv().length).toBe(1);
+    expect(component.pendingLeaves().length).toBe(1);
   });
 
   it('totalHours should sum approved timesheet hours', () => {
@@ -124,53 +124,53 @@ describe('ManagerDashboardComponent', () => {
       makeTs({ id: 2, status: 1, hoursWorked: 7 }),
       makeTs({ id: 3, status: 0, hoursWorked: 6 })
     ]);
-    expect(component.totalHours()).toBe('15.0');
+    expect(component.totalHoursLogged()).toBe('15.0');
   });
 
   // ── Timesheet filtering ────────────────────────────────────────────────────
   it('filteredTs should filter by employee name search', () => {
     component.allTimesheets.set([makeTs({ employeeName: 'Alice' }), makeTs({ id: 2, employeeName: 'Bob' })]);
-    component.tsSearch.set('alice');
-    expect(component.filteredTs().length).toBe(1);
+    component.timesheetSearch.set('alice');
+    expect(component.filteredTimesheets().length).toBe(1);
   });
 
   it('filteredTs should filter by project name search', () => {
     component.allTimesheets.set([makeTs({ projectName: 'Alpha' }), makeTs({ id: 2, projectName: 'Beta' })]);
-    component.tsSearch.set('beta');
-    expect(component.filteredTs().length).toBe(1);
-    expect(component.filteredTs()[0].projectName).toBe('Beta');
+    component.timesheetSearch.set('beta');
+    expect(component.filteredTimesheets().length).toBe(1);
+    expect(component.filteredTimesheets()[0].projectName).toBe('Beta');
   });
 
   it('filteredTs should filter by status=pending', () => {
     component.allTimesheets.set([makeTs({ status: 0 }), makeTs({ id: 2, status: 1 })]);
-    component.tsStatus.set('pending');
-    expect(component.filteredTs().length).toBe(1);
-    expect(Number(component.filteredTs()[0].status)).toBe(0);
+    component.timesheetStatusFilter.set('pending');
+    expect(component.filteredTimesheets().length).toBe(1);
+    expect(Number(component.filteredTimesheets()[0].status)).toBe(0);
   });
 
   it('filteredTs should filter by status=approved', () => {
     component.allTimesheets.set([makeTs({ status: 0 }), makeTs({ id: 2, status: 1 })]);
-    component.tsStatus.set('approved');
-    expect(component.filteredTs().length).toBe(1);
+    component.timesheetStatusFilter.set('approved');
+    expect(component.filteredTimesheets().length).toBe(1);
   });
 
   it('filteredTs returns all when status is "all"', () => {
     component.allTimesheets.set([makeTs({ status: 0 }), makeTs({ id: 2, status: 1 })]);
-    component.tsStatus.set('all');
-    expect(component.filteredTs().length).toBe(2);
+    component.timesheetStatusFilter.set('all');
+    expect(component.filteredTimesheets().length).toBe(2);
   });
 
   // ── Leave filtering ────────────────────────────────────────────────────────
   it('filteredLv should filter by employee name', () => {
     component.allLeaves.set([makeLeave({ employeeName: 'Alice' }), makeLeave({ id: 2, employeeName: 'Bob' })]);
-    component.lvSearch.set('bob');
-    expect(component.filteredLv().length).toBe(1);
+    component.leaveSearch.set('bob');
+    expect(component.filteredLeaves().length).toBe(1);
   });
 
   it('filteredLv should filter by status=pending', () => {
     component.allLeaves.set([makeLeave({ status: 0 }), makeLeave({ id: 2, status: 1 })]);
-    component.lvStatus.set('pending');
-    expect(component.filteredLv().length).toBe(1);
+    component.leaveStatusFilter.set('pending');
+    expect(component.filteredLeaves().length).toBe(1);
   });
 
   // ── Team filtering ─────────────────────────────────────────────────────────
@@ -188,45 +188,45 @@ describe('ManagerDashboardComponent', () => {
 
   // ── Sorting ────────────────────────────────────────────────────────────────
   it('sortTs should toggle direction on same column', () => {
-    component.tsSortCol.set('date');
-    component.tsSortDir.set('asc');
-    component.sortTs('date');
-    expect(component.tsSortDir()).toBe('desc');
+    component.timesheetSortColumn.set('date');
+    component.timesheetSortDirection.set('asc');
+    component.sortTimesheets('date');
+    expect(component.timesheetSortDirection()).toBe('desc');
   });
 
   it('sortTs should change column and reset to asc', () => {
-    component.sortTs('employee');
-    expect(component.tsSortCol()).toBe('employee');
-    expect(component.tsSortDir()).toBe('asc');
+    component.sortTimesheets('employee');
+    expect(component.timesheetSortColumn()).toBe('employee');
+    expect(component.timesheetSortDirection()).toBe('asc');
   });
 
   // ── Pagination ─────────────────────────────────────────────────────────────
   it('tsTotalPages is 1 for empty list', () => {
     component.allTimesheets.set([]);
-    expect(component.tsTotalPages()).toBe(1);
+    expect(component.timesheetTotalPages()).toBe(1);
   });
 
   it('tsTotalPages calculates correctly for tsPS=8', () => {
     component.allTimesheets.set(Array.from({ length: 20 }, (_, i) => makeTs({ id: i + 1 })));
-    expect(component.tsTotalPages()).toBe(3);
+    expect(component.timesheetTotalPages()).toBe(3);
   });
 
   it('pagedTs returns max tsPS items', () => {
     component.allTimesheets.set(Array.from({ length: 20 }, (_, i) => makeTs({ id: i + 1 })));
-    expect(component.pagedTs().length).toBe(8);
+    expect(component.pagedTimesheets().length).toBe(8);
   });
 
   // ── reviewTs ──────────────────────────────────────────────────────────────
   it('reviewTs should open confirm dialog', () => {
     component.reviewTs(makeTs(), true);
-    expect(component.cfgVisible()).toBeTrue();
+    expect(component.confirmVisible()).toBeTrue();
   });
 
   it('reviewTs confirm approve should call tsSvc.approveOrReject with isApproved=true', fakeAsync(() => {
     tsSpy.approveOrReject.and.returnValue(of({}));
     tsSpy.getAll.and.returnValue(of({ data: { data: [] } }));
     component.reviewTs(makeTs(), true);
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     const call = tsSpy.approveOrReject.calls.mostRecent().args[0];
     expect(call.isApproved).toBeTrue();
@@ -237,7 +237,7 @@ describe('ManagerDashboardComponent', () => {
     tsSpy.approveOrReject.and.returnValue(of({}));
     tsSpy.getAll.and.returnValue(of({ data: { data: [] } }));
     component.reviewTs(makeTs(), false);
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     const call = tsSpy.approveOrReject.calls.mostRecent().args[0];
     expect(call.isApproved).toBeFalse();
@@ -246,7 +246,7 @@ describe('ManagerDashboardComponent', () => {
   it('reviewTs should show error on API failure', fakeAsync(() => {
     tsSpy.approveOrReject.and.returnValue(throwError(() => ({ error: { message: 'Fail' } })));
     component.reviewTs(makeTs(), true);
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     expect(toastSpy.error).toHaveBeenCalled();
   }));
@@ -254,14 +254,14 @@ describe('ManagerDashboardComponent', () => {
   // ── reviewLeave ───────────────────────────────────────────────────────────
   it('reviewLeave should open confirm dialog', () => {
     component.reviewLeave(makeLeave(), true);
-    expect(component.cfgVisible()).toBeTrue();
+    expect(component.confirmVisible()).toBeTrue();
   });
 
   it('reviewLeave confirm approve should call lvSvc.approveOrReject with isApproved=true', fakeAsync(() => {
     lvSpy.approveOrReject.and.returnValue(of({}));
     lvSpy.getAll.and.returnValue(of([]));
     component.reviewLeave(makeLeave(), true);
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     const call = lvSpy.approveOrReject.calls.mostRecent().args[0];
     expect(call.isApproved).toBeTrue();
@@ -271,7 +271,7 @@ describe('ManagerDashboardComponent', () => {
     lvSpy.approveOrReject.and.returnValue(of({}));
     lvSpy.getAll.and.returnValue(of([]));
     component.reviewLeave(makeLeave(), false);
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     const call = lvSpy.approveOrReject.calls.mostRecent().args[0];
     expect(call.isApproved).toBeFalse();
@@ -321,19 +321,19 @@ describe('ManagerDashboardComponent', () => {
 
   // ── onCfgCancel ───────────────────────────────────────────────────────────
   it('onCfgCancel should close confirm dialog', () => {
-    component.cfgVisible.set(true);
-    component.onCfgCancel();
-    expect(component.cfgVisible()).toBeFalse();
+    component.confirmVisible.set(true);
+    component.onConfirmCancel();
+    expect(component.confirmVisible()).toBeFalse();
   });
 
   // ── stText / stClass / ico / pages ────────────────────────────────────────
-  it('stText(0) → Pending',  () => expect(component.stText(0)).toBe('Pending'));
-  it('stText(1) → Approved', () => expect(component.stText(1)).toBe('Approved'));
-  it('stText(2) → Rejected', () => expect(component.stText(2)).toBe('Rejected'));
-  it('stClass(0) contains "pending"',  () => expect(component.stClass(0)).toContain('pending'));
-  it('stClass(1) contains "approved"', () => expect(component.stClass(1)).toContain('approved'));
-  it('ico(false,…) returns ⇅',  () => expect(component.ico(false,'asc')).toBe('⇅'));
-  it('ico(true,asc) returns ↑', () => expect(component.ico(true,'asc')).toBe('↑'));
-  it('ico(true,desc) returns ↓',() => expect(component.ico(true,'desc')).toBe('↓'));
+  it('stText(0) → Pending',  () => expect(component.getStatusText(0)).toBe('Pending'));
+  it('stText(1) → Approved', () => expect(component.getStatusText(1)).toBe('Approved'));
+  it('stText(2) → Rejected', () => expect(component.getStatusText(2)).toBe('Rejected'));
+  it('stClass(0) contains "pending"',  () => expect(component.getStatusClass(0)).toContain('pending'));
+  it('stClass(1) contains "approved"', () => expect(component.getStatusClass(1)).toContain('approved'));
+  it('ico(false,…) returns ⇅',  () => expect(component.getSortIcon(false,'asc')).toBe('⇅'));
+  it('ico(true,asc) returns ↑', () => expect(component.getSortIcon(true,'asc')).toBe('↑'));
+  it('ico(true,desc) returns ↓',() => expect(component.getSortIcon(true,'desc')).toBe('↓'));
   it('pages(3) returns [1,2,3]', () => expect(component.pages(3)).toEqual([1,2,3]));
 });

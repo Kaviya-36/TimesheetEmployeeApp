@@ -95,15 +95,15 @@ describe('HrDashboardComponent', () => {
   });
 
   it('setTab should reset all pages to 1', () => {
-    component.empPage.set(3);
-    component.attPage.set(2);
-    component.lvPage.set(4);
-    component.payPage.set(5);
+    component.employeePage.set(3);
+    component.attendancePage.set(2);
+    component.leavePage.set(4);
+    component.payrollPage.set(5);
     component.setTab('employees');
-    expect(component.empPage()).toBe(1);
-    expect(component.attPage()).toBe(1);
-    expect(component.lvPage()).toBe(1);
-    expect(component.payPage()).toBe(1);
+    expect(component.employeePage()).toBe(1);
+    expect(component.attendancePage()).toBe(1);
+    expect(component.leavePage()).toBe(1);
+    expect(component.payrollPage()).toBe(1);
   });
 
   // ── Computed stats ─────────────────────────────────────────────────────────
@@ -124,7 +124,7 @@ describe('HrDashboardComponent', () => {
 
   it('pendingLv should count leaves with status 0', () => {
     component.allLeaves.set([makeLeave({ status: 0 }), makeLeave({ id: 2, status: 1 })]);
-    expect(component.pendingLv()).toBe(1);
+    expect(component.pendingLeavesCount()).toBe(1);
   });
 
   it('totalPayroll should sum all netSalary', () => {
@@ -135,8 +135,8 @@ describe('HrDashboardComponent', () => {
   // ── Employee filtering ─────────────────────────────────────────────────────
   it('filteredEmps should filter by name', () => {
     component.employees.set([makeUser({ name: 'Alice' }), makeUser({ id: 2, name: 'Bob' })]);
-    component.empSearch.set('alice');
-    expect(component.filteredEmps().length).toBe(1);
+    component.employeeSearch.set('alice');
+    expect(component.filteredEmployees().length).toBe(1);
   });
 
   it('filteredEmps should filter by email', () => {
@@ -144,43 +144,43 @@ describe('HrDashboardComponent', () => {
       makeUser({ email: 'alice@test.com' }),
       makeUser({ id: 2, email: 'bob@test.com' })
     ]);
-    component.empSearch.set('bob@');
-    expect(component.filteredEmps().length).toBe(1);
+    component.employeeSearch.set('bob@');
+    expect(component.filteredEmployees().length).toBe(1);
   });
 
   it('filteredEmps should filter by employeeId', () => {
     component.employees.set([makeUser({ employeeId: 'EMP001' }), makeUser({ id: 2, employeeId: 'EMP002' })]);
-    component.empSearch.set('emp001');
-    expect(component.filteredEmps().length).toBe(1);
+    component.employeeSearch.set('emp001');
+    expect(component.filteredEmployees().length).toBe(1);
   });
 
   it('filteredEmps should filter by role', () => {
     component.employees.set([makeUser({ role: 'Employee' }), makeUser({ id: 2, role: 'HR' })]);
-    component.empRoleF.set('HR');
-    expect(component.filteredEmps().length).toBe(1);
-    expect(component.filteredEmps()[0].role).toBe('HR');
+    component.employeeRoleFilter.set('HR');
+    expect(component.filteredEmployees().length).toBe(1);
+    expect(component.filteredEmployees()[0].role).toBe('HR');
   });
 
   it('filteredEmps should filter by active status', () => {
     component.employees.set([makeUser({ status: 'Active' }), makeUser({ id: 2, status: 'Inactive' })]);
-    component.empStatusF.set('active');
-    expect(component.filteredEmps().length).toBe(1);
-    expect(component.filteredEmps()[0].status).toBe('Active');
+    component.employeeStatusFilter.set('active');
+    expect(component.filteredEmployees().length).toBe(1);
+    expect(component.filteredEmployees()[0].status).toBe('Active');
   });
 
   it('filteredEmps should filter by inactive status', () => {
     component.employees.set([makeUser({ status: 'Active' }), makeUser({ id: 2, status: 'Inactive' })]);
-    component.empStatusF.set('inactive');
-    expect(component.filteredEmps().length).toBe(1);
-    expect(component.filteredEmps()[0].status).toBe('Inactive');
+    component.employeeStatusFilter.set('inactive');
+    expect(component.filteredEmployees().length).toBe(1);
+    expect(component.filteredEmployees()[0].status).toBe('Inactive');
   });
 
   it('filteredEmps returns all when filter is all', () => {
     component.employees.set([makeUser(), makeUser({ id: 2 })]);
-    component.empSearch.set('');
-    component.empRoleF.set('all');
-    component.empStatusF.set('all');
-    expect(component.filteredEmps().length).toBe(2);
+    component.employeeSearch.set('');
+    component.employeeRoleFilter.set('all');
+    component.employeeStatusFilter.set('all');
+    expect(component.filteredEmployees().length).toBe(2);
   });
 
   // ── Attendance filtering ───────────────────────────────────────────────────
@@ -189,57 +189,57 @@ describe('HrDashboardComponent', () => {
       makeAtt({ employeeName: 'Alice' }),
       makeAtt({ id: 2, employeeName: 'Bob' })
     ]);
-    component.attSearch.set('bob');
-    expect(component.filteredAtt().length).toBe(1);
+    component.attendanceSearch.set('bob');
+    expect(component.filteredAttendances().length).toBe(1);
   });
 
   // ── Leave filtering ────────────────────────────────────────────────────────
   it('filteredLv should filter by employee name', () => {
     component.allLeaves.set([makeLeave({ employeeName: 'Alice' }), makeLeave({ id: 2, employeeName: 'Charlie' })]);
-    component.lvSearch.set('charlie');
-    expect(component.filteredLv().length).toBe(1);
+    component.leaveSearch.set('charlie');
+    expect(component.filteredLeaves().length).toBe(1);
   });
 
   it('filteredLv should filter by pending status', () => {
     component.allLeaves.set([makeLeave({ status: 0 }), makeLeave({ id: 2, status: 1 })]);
-    component.lvStatusF.set('pending');
-    expect(component.filteredLv().length).toBe(1);
+    component.leaveStatusFilter.set('pending');
+    expect(component.filteredLeaves().length).toBe(1);
   });
 
   it('filteredLv should filter by approved status', () => {
     component.allLeaves.set([makeLeave({ status: 0 }), makeLeave({ id: 2, status: 1 })]);
-    component.lvStatusF.set('approved');
-    expect(component.filteredLv().length).toBe(1);
-    expect(Number(component.filteredLv()[0].status)).toBe(1);
+    component.leaveStatusFilter.set('approved');
+    expect(component.filteredLeaves().length).toBe(1);
+    expect(Number(component.filteredLeaves()[0].status)).toBe(1);
   });
 
   // ── Payroll filtering ──────────────────────────────────────────────────────
   it('filteredPay should filter by employee name', () => {
     component.payrolls.set([makePayroll({ employeeName: 'Alice' }), makePayroll({ payrollId: 2, employeeName: 'Bob' })]);
-    component.paySearch.set('bob');
-    expect(component.filteredPay().length).toBe(1);
+    component.payrollSearch.set('bob');
+    expect(component.filteredPayrolls().length).toBe(1);
   });
 
   it('filteredPay should filter by employee ID', () => {
     component.payrolls.set([makePayroll({ employeeId: 'E001' }), makePayroll({ payrollId: 2, employeeId: 'E002' })]);
-    component.paySearch.set('e002');
-    expect(component.filteredPay().length).toBe(1);
+    component.payrollSearch.set('e002');
+    expect(component.filteredPayrolls().length).toBe(1);
   });
 
   // ── Pagination ─────────────────────────────────────────────────────────────
   it('empTotalPages calculates correctly for empPS=8', () => {
     component.employees.set(Array.from({ length: 20 }, (_, i) => makeUser({ id: i + 1 })));
-    expect(component.empTotalPages()).toBe(3);
+    expect(component.employeeTotalPages()).toBe(3);
   });
 
   it('pagedEmps returns max empPS items', () => {
     component.employees.set(Array.from({ length: 20 }, (_, i) => makeUser({ id: i + 1 })));
-    expect(component.pagedEmps().length).toBe(8);
+    expect(component.pagedEmployees().length).toBe(8);
   });
 
   it('payTotalPages calculates for payPS=8', () => {
     component.payrolls.set(Array.from({ length: 17 }, (_, i) => makePayroll({ payrollId: i + 1 })));
-    expect(component.payTotalPages()).toBe(3);
+    expect(component.payrollTotalPages()).toBe(3);
   });
 
   // ── openEdit ──────────────────────────────────────────────────────────────
@@ -280,14 +280,14 @@ describe('HrDashboardComponent', () => {
   // ── confirmToggle ──────────────────────────────────────────────────────────
   it('confirmToggle should open confirm dialog for Active user', () => {
     component.confirmToggle(makeUser({ status: 'Active' }));
-    expect(component.cfgVisible()).toBeTrue();
-    expect(component.cfgTitle()).toContain('Deactivate');
+    expect(component.confirmVisible()).toBeTrue();
+    expect(component.confirmTitle()).toContain('Deactivate');
   });
 
   it('confirmToggle should open confirm dialog for Inactive user', () => {
     component.confirmToggle(makeUser({ status: 'Inactive' }));
-    expect(component.cfgVisible()).toBeTrue();
-    expect(component.cfgTitle()).toContain('Activate');
+    expect(component.confirmVisible()).toBeTrue();
+    expect(component.confirmTitle()).toContain('Activate');
   });
 
   it('confirmToggle onCfgOk should call usrSvc.setActive with false for Active user', fakeAsync(() => {
@@ -297,7 +297,7 @@ describe('HrDashboardComponent', () => {
     lvSpy.getAll.and.returnValue(of([]));
     paySpy.getAll.and.returnValue(of([]));
     component.confirmToggle(makeUser({ status: 'Active' }));
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     expect(usrSpy.setActive).toHaveBeenCalledWith(1, false);
     expect(toastSpy.success).toHaveBeenCalled();
@@ -310,7 +310,7 @@ describe('HrDashboardComponent', () => {
     lvSpy.getAll.and.returnValue(of([]));
     paySpy.getAll.and.returnValue(of([]));
     component.confirmToggle(makeUser({ status: 'Inactive' }));
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     expect(usrSpy.setActive).toHaveBeenCalledWith(1, true);
   }));
@@ -318,8 +318,8 @@ describe('HrDashboardComponent', () => {
   // ── confirmDelete ─────────────────────────────────────────────────────────
   it('confirmDelete should open confirm dialog', () => {
     component.confirmDelete(makeUser());
-    expect(component.cfgVisible()).toBeTrue();
-    expect(component.cfgTitle()).toContain('Delete');
+    expect(component.confirmVisible()).toBeTrue();
+    expect(component.confirmTitle()).toContain('Delete');
   });
 
   it('confirmDelete onCfgOk should call usrSvc.delete', fakeAsync(() => {
@@ -329,7 +329,7 @@ describe('HrDashboardComponent', () => {
     lvSpy.getAll.and.returnValue(of([]));
     paySpy.getAll.and.returnValue(of([]));
     component.confirmDelete(makeUser());
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     expect(usrSpy.delete).toHaveBeenCalledWith(1);
     expect(toastSpy.success).toHaveBeenCalled();
@@ -385,17 +385,17 @@ describe('HrDashboardComponent', () => {
 
   // ── onCfgCancel ───────────────────────────────────────────────────────────
   it('onCfgCancel should close confirm dialog', () => {
-    component.cfgVisible.set(true);
-    component.onCfgCancel();
-    expect(component.cfgVisible()).toBeFalse();
+    component.confirmVisible.set(true);
+    component.onConfirmCancel();
+    expect(component.confirmVisible()).toBeFalse();
   });
 
   // ── stText / stClass / pages ──────────────────────────────────────────────
-  it('stText(0) → Pending',  () => expect(component.stText(0)).toBe('Pending'));
-  it('stText(1) → Approved', () => expect(component.stText(1)).toBe('Approved'));
-  it('stText(2) → Rejected', () => expect(component.stText(2)).toBe('Rejected'));
-  it('stClass(0) contains "pending"',  () => expect(component.stClass(0)).toContain('pending'));
-  it('stClass(1) contains "approved"', () => expect(component.stClass(1)).toContain('approved'));
-  it('stClass(2) contains "rejected"', () => expect(component.stClass(2)).toContain('rejected'));
+  it('stText(0) → Pending',  () => expect(component.getStatusText(0)).toBe('Pending'));
+  it('stText(1) → Approved', () => expect(component.getStatusText(1)).toBe('Approved'));
+  it('stText(2) → Rejected', () => expect(component.getStatusText(2)).toBe('Rejected'));
+  it('stClass(0) contains "pending"',  () => expect(component.getStatusClass(0)).toContain('pending'));
+  it('stClass(1) contains "approved"', () => expect(component.getStatusClass(1)).toContain('approved'));
+  it('stClass(2) contains "rejected"', () => expect(component.getStatusClass(2)).toContain('rejected'));
   it('pages(4) returns [1,2,3,4]', () => expect(component.pages(4)).toEqual([1,2,3,4]));
 });

@@ -31,19 +31,19 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
 
   readonly auth  = inject(AuthService);
   private  toast = inject(ToastService);
-  private  bc    = inject(BreadcrumbService);
-  private  notif = inject(NotificationService);
-  private  tsSvc  = inject(TimesheetService);
-  private  lvSvc  = inject(LeaveService);
-  private  usrSvc = inject(UserService);
-  private  prjSvc = inject(ProjectService);
-  private  attSvc = inject(AttendanceService);
-  private  fb     = inject(FormBuilder);
-  private  tabSvc = inject(TabService);
+  private  breadcrumbService    = inject(BreadcrumbService);
+  private  notificationService = inject(NotificationService);
+  private  timesheetService  = inject(TimesheetService);
+  private  leaveService  = inject(LeaveService);
+  private  userService = inject(UserService);
+  private  projectService = inject(ProjectService);
+  private  attendanceService = inject(AttendanceService);
+  private  formBuilder     = inject(FormBuilder);
+  private  tabService = inject(TabService);
 
   constructor() {
     effect(() => {
-      const t = this.tabSvc.activeTab();
+      const t = this.tabService.activeTab();
       if (t && t !== this.activeTab()) this.setTab(t as ManagerTab);
     });
   }
@@ -69,12 +69,12 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   userProfile   = signal<UserProfile | null>(null);
 
   // ── TS filter/sort/page ────────────────────────────────────────────────────
-  tsSearch  = signal('');
-  tsStatus  = signal('all');
-  tsSortCol = signal<'date' | 'hours' | 'employee'>('date');
-  tsSortDir = signal<'asc' | 'desc'>('desc');
-  tsPage    = signal(1);
-  tsPS = 8;
+  timesheetSearch  = signal('');
+  timesheetStatusFilter  = signal('all');
+  timesheetSortColumn = signal<'date' | 'hours' | 'employee'>('date');
+  timesheetSortDirection = signal<'asc' | 'desc'>('desc');
+  timesheetPage    = signal(1);
+  timesheetsPageSize = 8;
 
   // ── View mode ─────────────────────────────────────────────────────────────
   tsViewMode      = signal<'all'|'weekly'|'monthly'>('all');
@@ -106,17 +106,17 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
     return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
   }
 
-  filteredTs = computed(() => {
+  filteredTimesheets = computed(() => {
     let d = this.allTimesheets();
-    const q = this.tsSearch().toLowerCase();
+    const q = this.timesheetSearch().toLowerCase();
     if (q) d = d.filter(t => (t.employeeName ?? '').toLowerCase().includes(q)
                            || (t.projectName ?? '').toLowerCase().includes(q));
-    if (this.tsStatus() !== 'all') {
+    if (this.timesheetStatusFilter() !== 'all') {
       const sv: Record<string, number> = { pending: 0, approved: 1, rejected: 2 };
-      d = d.filter(t => Number(t.status) === sv[this.tsStatus()]);
+      d = d.filter(t => Number(t.status) === sv[this.timesheetStatusFilter()]);
     }
     d = d.filter(t => this._inPeriod(t.date, this.tsViewMode(), this.tsPeriodOffset()));
-    const col = this.tsSortCol(); const dir = this.tsSortDir();
+    const col = this.timesheetSortColumn(); const dir = this.timesheetSortDirection();
     d = [...d].sort((a, b) => {
       const v = col === 'date'     ? new Date(a.date).getTime() - new Date(b.date).getTime()
               : col === 'hours'    ? (a.hoursWorked ?? 0) - (b.hoursWorked ?? 0)
@@ -125,8 +125,8 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
     });
     return d;
   });
-  tsTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredTs().length / this.tsPS)));
-  pagedTs      = computed(() => { const s = (this.tsPage()-1)*this.tsPS; return this.filteredTs().slice(s,s+this.tsPS); });
+  timesheetTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredTimesheets().length / this.timesheetsPageSize)));
+  pagedTimesheets      = computed(() => { const s = (this.timesheetPage()-1)*this.timesheetsPageSize; return this.filteredTimesheets().slice(s,s+this.timesheetsPageSize); });
 
   // Parse hoursWorked which comes as "HH:mm" string or number from backend
   private parseHours(val: any): number {
@@ -141,7 +141,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   parseHoursPublic = (val: any) => this.parseHours(val);
 
   // Format decimal hours → "8h 30m" for display
-  fmtH(decimal: number): string {
+  formatHours(decimal: number): string {
     if (!decimal) return '—';
     const h = Math.floor(decimal);
     const m = Math.round((decimal - h) * 60);
@@ -252,7 +252,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
         }
       };
       for (const ts of allPending) {
-        this.tsSvc.approveOrReject({
+        this.timesheetService.approveOrReject({
           timesheetId: ts.id, approvedById: uid, isApproved: approve,
           managerComment: comment || (approve ? 'Approved by Manager' : 'Rejected by Manager')
         }).subscribe({ next: finish, error: finish });
@@ -274,7 +274,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
         }
       };
       for (const ts of allPending) {
-        this.tsSvc.approveOrReject({
+        this.timesheetService.approveOrReject({
           timesheetId: ts.id, approvedById: uid, isApproved: approve,
           managerComment: comment || (approve ? 'Approved by Manager' : 'Rejected by Manager')
         }).subscribe({ next: finish, error: finish });
@@ -296,7 +296,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
         }
       };
       for (const ts of pending) {
-        this.tsSvc.approveOrReject({
+        this.timesheetService.approveOrReject({
           timesheetId: ts.id, approvedById: uid, isApproved: approve,
           managerComment: comment || (approve ? 'Approved by Manager' : 'Rejected by Manager')
         }).subscribe({ next: finish, error: finish });
@@ -319,7 +319,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
         }
       };
       for (const ts of pending) {
-        this.tsSvc.approveOrReject({
+        this.timesheetService.approveOrReject({
           timesheetId: ts.id, approvedById: uid, isApproved: approve,
           managerComment: comment || (approve ? 'Approved by Manager' : 'Rejected by Manager')
         }).subscribe({ next: finish, error: finish });
@@ -329,59 +329,61 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
 
   // ── Attendance filter/page ────────────────────────────────────────────────
   attSearch  = signal('');
-  attPage    = signal(1);
-  attPS = 10;
+  attendancePage    = signal(1);
+  attendancePageSize = 10;
   attViewMode     = signal<'all'|'weekly'|'monthly'>('all');
   attPeriodOffset = signal(0);
 
   attPeriodLabel = () => this._periodLabel(this.attViewMode(), this.attPeriodOffset());
 
-  filteredAtt = computed(() => {
+  filteredAttendances = computed(() => {
     let d = this.allAttendance();
     const q = this.attSearch().toLowerCase();
     if (q) d = d.filter(a => (a.employeeName ?? '').toLowerCase().includes(q));
     d = d.filter(a => this._inPeriod(a.date, this.attViewMode(), this.attPeriodOffset()));
     return d;
   });
-  attTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredAtt().length / this.attPS)));
-  pagedAtt      = computed(() => { const s = (this.attPage()-1)*this.attPS; return this.filteredAtt().slice(s, s+this.attPS); });
+  attendanceTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredAttendances().length / this.attendancePageSize)));
+  pagedAttendances      = computed(() => { const s = (this.attendancePage()-1)*this.attendancePageSize; return this.filteredAttendances().slice(s, s+this.attendancePageSize); });
+
+  leaveBalance = signal<{ leaveType: string; total: number; used: number; remaining: number }[]>([]);
 
   // ── Leave filter/page ──────────────────────────────────────────────────────
-  lvSearch  = signal('');
-  lvStatus  = signal('all');
-  lvPage    = signal(1);
-  lvPS = 8;
+  leaveSearch  = signal('');
+  leaveStatusFilter  = signal('all');
+  leavePage    = signal(1);
+  leavesPageSize = 8;
 
-  filteredLv = computed(() => {
+  filteredLeaves = computed(() => {
     let d = this.allLeaves();
-    const q = this.lvSearch().toLowerCase();
+    const q = this.leaveSearch().toLowerCase();
     if (q) d = d.filter(l => (l.employeeName ?? '').toLowerCase().includes(q));
-    if (this.lvStatus() !== 'all') {
+    if (this.leaveStatusFilter() !== 'all') {
       const sv: Record<string, number> = { pending: 0, approved: 1, rejected: 2 };
-      d = d.filter(l => Number(l.status) === sv[this.lvStatus()]);
+      d = d.filter(l => Number(l.status) === sv[this.leaveStatusFilter()]);
     }
     return d;
   });
-  lvTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredLv().length / this.lvPS)));
-  pagedLv      = computed(() => { const s = (this.lvPage()-1)*this.lvPS; return this.filteredLv().slice(s,s+this.lvPS); });
+  leaveTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredLeaves().length / this.leavesPageSize)));
+  pagedLeaves      = computed(() => { const s = (this.leavePage()-1)*this.leavesPageSize; return this.filteredLeaves().slice(s,s+this.leavesPageSize); });
 
   // ── Team filter/page ───────────────────────────────────────────────────────
   teamSearch = signal('');
   teamPage   = signal(1);
-  teamPS = 8;
+  teamPageSize = 8;
 
   filteredTeam = computed(() => {
     const q = this.teamSearch().toLowerCase();
     if (!q) return this.teamMembers();
     return this.teamMembers().filter(u => (u.name??'').toLowerCase().includes(q) || (u.role??'').toLowerCase().includes(q));
   });
-  teamTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredTeam().length / this.teamPS)));
-  pagedTeam      = computed(() => { const s=(this.teamPage()-1)*this.teamPS; return this.filteredTeam().slice(s,s+this.teamPS); });
+  teamTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredTeam().length / this.teamPageSize)));
+  pagedTeam      = computed(() => { const s=(this.teamPage()-1)*this.teamPageSize; return this.filteredTeam().slice(s,s+this.teamPageSize); });
 
   // ── Stats ─────────────────────────────────────────────────────────────────
-  pendingTs  = computed(() => this.allTimesheets().filter(t => Number(t.status) === 0));
-  pendingLv  = computed(() => this.allLeaves().filter(l => Number(l.status) === 0));
-  totalHours = computed(() => {
+  pendingTimesheets  = computed(() => this.allTimesheets().filter(t => Number(t.status) === 0));
+  pendingLeaves  = computed(() => this.allLeaves().filter(l => Number(l.status) === 0));
+  totalHoursLogged = computed(() => {
     const total = this.allTimesheets()
       .filter(t => Number(t.status) === 1)
       .reduce((s, t) => s + this.parseHours(t?.hoursWorked), 0);
@@ -400,11 +402,11 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   closeGridNote() { this.activeGridNote.set(null); }
 
   // ── Confirm ───────────────────────────────────────────────────────────────
-  cfgVisible = signal(false);
-  cfgTitle   = signal('');
-  cfgMsg     = signal('');
-  cfgType    = signal<'danger'|'warning'|'info'>('info');
-  private cfgAction: (() => void) | null = null;
+  confirmVisible = signal(false);
+  confirmTitle   = signal('');
+  confirmMessage     = signal('');
+  confirmType    = signal<'danger'|'warning'|'info'>('info');
+  private confirmAction: (() => void) | null = null;
 
   // ── Review modal (approve/reject with comment) ────────────────────────────
   reviewModal      = signal(false);
@@ -440,8 +442,9 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   readonly todayDate = this.toDateStr(new Date());
 
   // ── Self timesheet / leave ────────────────────────────────────────────────
-  showAddTimesheetModal = signal(false);
-  showAddLeaveModal     = signal(false);
+  showAddTimesheetModal    = signal(false);
+  showAddLeaveModal        = signal(false);
+  showMissedCheckoutModal  = signal(false);
   leaveTypes            = signal<LeaveType[]>([]);
 
   // ── My Weekly Timesheet Grid ──────────────────────────────────────────────
@@ -485,7 +488,8 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
     for (const ts of all) {
       const d = new Date(ts.date); d.setHours(0,0,0,0);
       if (!dates.some(wd => wd.getTime() === d.getTime())) continue;
-      const key = `${ts.projectId ?? 0}|${ts.projectName}`;
+      const key = ts.projectName ?? String(ts.projectId ?? 0);
+      if (!key || key === '0') continue; // skip entries with no project name
       if (!rowMap.has(key)) rowMap.set(key, { projectId: ts.projectId??0, projectName: ts.projectName, hours:{}, notes:{}, tsPerDay:{} });
       const ds = this.toDateStr(d);
       rowMap.get(key).hours[ds] = this.myToHHmm(this.myParseHoursVal(ts.hoursWorked));
@@ -496,7 +500,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   }
 
   myAvailableProjects = () => this.myProjectAssign().filter(a =>
-    !this.myGridRows().some(r => r.projectId === a.projectId && r.projectName === a.projectName)
+    !this.myGridRows().some(r => r.projectName === a.projectName)
   );
 
   myAddRow(asgn: any) {
@@ -561,7 +565,19 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
       }
     }
     if (!entries.length) { this.toast.warning('Nothing to submit','Fill in at least one entry.'); this.myGridSaving.set(false); return; }
-    this.tsSvc.submitWeekly(uid, { entries, submit: true }).subscribe({
+
+    // ── Frontend daily 12-hour cap check ──
+    const byDate = new Map<string, number>();
+    for (const e of entries) byDate.set(e.workDate, (byDate.get(e.workDate) ?? 0) + e.hours);
+    for (const [date, total] of byDate) {
+      if (total > 12) {
+        this.toast.error('Daily Limit Exceeded',
+          `${new Date(date).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' })}: ${total.toFixed(1)}h exceeds the 12h daily maximum.`);
+        this.myGridSaving.set(false);
+        return;
+      }
+    }
+    this.timesheetService.submitWeekly(uid, { entries, submit: true }).subscribe({
       next: (res: any) => {
         const d = res?.data;
         const parts = [];
@@ -579,7 +595,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
             );
           }
         }
-        this.tsSvc.getByUser(uid).subscribe((r: any) => { this.myTimesheets.set(this.toArr(r)); this.myInitGrid(); });
+        this.timesheetService.getByUser(uid).subscribe((r: any) => { this.myTimesheets.set(this.extractArray(r)); this.myInitGrid(); });
       },
       error: (e: any) => this.toast.error('Error', e?.error?.message ?? ''),
       complete: () => this.myGridSaving.set(false)
@@ -588,11 +604,11 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
 
   loadMyTimesheet() {
     const uid = this.auth.currentUser(); if (!uid) return;
-    this.tsSvc.getByUser(uid).subscribe((r: any) => { this.myTimesheets.set(this.toArr(r)); this.myInitGrid(); });
-    this.prjSvc.getUserAssignments(uid, 1, 50).subscribe((r: any) => this.myProjectAssign.set(this.toArr(r)));
+    this.timesheetService.getByUser(uid).subscribe((r: any) => { this.myTimesheets.set(this.extractArray(r)); this.myInitGrid(); });
+    this.projectService.getUserAssignments(uid, 1, 50).subscribe((r: any) => this.myProjectAssign.set(this.extractArray(r)));
   }
 
-  addTimesheetForm = this.fb.group({
+  addTimesheetForm = this.formBuilder.group({
     projectId:       ['', Validators.required],
     workDate:        [this.toDateStr(new Date()), Validators.required],
     startTime:       ['09:00', Validators.required],
@@ -601,7 +617,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
     taskDescription: [''],
   });
 
-  addLeaveForm = this.fb.group({
+  addLeaveForm = this.formBuilder.group({
     leaveTypeId: ['', Validators.required],
     fromDate:    ['', Validators.required],
     toDate:      ['', Validators.required],
@@ -609,17 +625,17 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
-    this.bc.set([{ label: 'Manager Dashboard' }, { label: 'Overview' }]);
-    this.tabSvc.setTab('dashboard');
+    this.breadcrumbService.set([{ label: 'Manager Dashboard' }, { label: 'Overview' }]);
+    this.tabService.setTab('dashboard');
     this.loadAll();
     this.refreshToday();
-    this.usrSvc.getProfile().subscribe({ next:(r:any)=>this.userProfile.set(r?.data??r), error:()=>{} });
-    this.lvSvc.getLeaveTypes().subscribe({ next:(r:any)=>this.leaveTypes.set(this.toArr<LeaveType>(r)), error:()=>{} });
+    this.userService.getProfile().subscribe({ next:(r:any)=>this.userProfile.set(r?.data??r), error:()=>{} });
+    this.leaveService.getLeaveTypes().subscribe({ next:(r:any)=>this.leaveTypes.set(this.extractArray<LeaveType>(r)), error:()=>{} });
   }
 
   ngOnDestroy() { if (this.timerInterval) clearInterval(this.timerInterval); }
 
-  private toArr<T>(r: any): T[] {
+  private extractArray<T>(r: any): T[] {
     if (Array.isArray(r)) return r;
     if (Array.isArray(r?.data)) return r.data;
     if (Array.isArray(r?.data?.data)) return r.data.data;
@@ -627,43 +643,45 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   }
 
   loadAll() {
-    this.tsSvc.getAll().subscribe({
+    this.timesheetService.getAll().subscribe({
       next: (r: any) => {
         const d = r?.data?.data ?? r?.data ?? r ?? [];
         this.allTimesheets.set((Array.isArray(d) ? d : []).filter((t: any) => t?.id && t?.employeeName));
       }, error: () => {}
     });
-    this.lvSvc.getAll().subscribe({
+    this.leaveService.getAll().subscribe({
       next: (r: any) => {
         const d = r?.data?.data ?? r?.data ?? r ?? [];
         this.allLeaves.set((Array.isArray(d) ? d : []).filter((l: any) => l?.id && l?.employeeName));
       }, error: () => {}
     });
-    this.attSvc.getAll().subscribe({
-      next: (r: any) => this.allAttendance.set(this.toArr<Attendance>(r)),
+    this.attendanceService.getAll().subscribe({
+      next: (r: any) => this.allAttendance.set(this.extractArray<Attendance>(r)),
       error: () => {}
     });
-    this.usrSvc.getAll().subscribe({
+    this.userService.getAll().subscribe({
       next: (r: any) => {
-        const d = this.toArr<User>(r);
+        const d = this.extractArray<User>(r);
         this.teamMembers.set(d.filter(u => ['Employee'].includes(u.role)));
       }, error: () => {}
     });
-   this.prjSvc.getAll().subscribe({
+   this.projectService.getAll().subscribe({
   next: (r: any) => {
-    const projects = this.toArr<Project>(r);
+    const projects = this.extractArray<Project>(r);
     this.projects.set(projects);
 
     // 🔥 load assignments for each project
     projects.forEach(p => this.loadAssignments(p.id));
   }
 });
+    const uid = this.auth.currentUser();
+    if (uid) this.leaveService.getLeaveBalance(uid).subscribe((r: any) => this.leaveBalance.set(r?.data ?? []));
   }
 
   private refreshToday(): void {
     const uid = this.auth.currentUser(); if (!uid) return;
-    this.attSvc.getTodayStatus(uid).subscribe({
-      next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); if(d?.missedCheckout) this.toast.warning('Missed Check-Out','You forgot to check out yesterday. Attendance auto-calculated as check-in + 8 hours.'); if(d?.checkIn&&!d?.checkOut) this.startTimer(d.checkIn); },
+    this.attendanceService.getTodayStatus(uid).subscribe({
+      next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); if(d?.missedCheckout) this.showMissedCheckoutModal.set(true); if(d?.checkIn&&!d?.checkOut) this.startTimer(d.checkIn); },
       error:()=>this.todayAtt.set(null)
     });
   }
@@ -671,7 +689,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   checkIn(): void {
     if (this.todayAtt()?.checkIn) { this.toast.warning('Already checked in',''); return; }
     this.attLoading.set(true);
-    this.attSvc.checkIn().subscribe({
+    this.attendanceService.checkIn().subscribe({
       next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); if(d?.checkIn&&!d?.checkOut) this.startTimer(d.checkIn); this.toast.success('Checked In',`Time: ${d?.checkIn}`); this.attLoading.set(false); },
       error:(e:any)=>{ this.toast.error('Failed',e?.error?.message??''); this.attLoading.set(false); }
     });
@@ -681,7 +699,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
     if (!this.todayAtt()?.checkIn) { this.toast.warning('Not checked in',''); return; }
     if (this.todayAtt()?.checkOut) { this.toast.warning('Already checked out',''); return; }
     this.attLoading.set(true);
-    this.attSvc.checkOut().subscribe({
+    this.attendanceService.checkOut().subscribe({
       next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); this.stopTimer(); this.toast.success('Checked Out',`Total: ${d?.totalHours??'—'}`); this.attLoading.set(false); },
       error:(e:any)=>{ this.toast.error('Failed',e?.error?.message??''); this.attLoading.set(false); }
     });
@@ -690,29 +708,29 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   private startTimer(t:string): void {
     const [h,m]=t.split(':').map(Number); const base=new Date(); base.setHours(h,m,0,0);
     this.stopTimer();
-    this.timerInterval=setInterval(()=>{ const diff=Date.now()-base.getTime(); const hh=Math.floor(diff/3600000),mm=Math.floor((diff%3600000)/60000),ss=Math.floor((diff%60000)/1000); this.liveTimer.set(`${this.pad(hh)}:${this.pad(mm)}:${this.pad(ss)}`); },1000);
+    this.timerInterval=setInterval(()=>{ const diff=Date.now()-base.getTime(); const hh=Math.floor(diff/3600000),mm=Math.floor((diff%3600000)/60000),ss=Math.floor((diff%60000)/1000); this.liveTimer.set(`${this.padNumber(hh)}:${this.padNumber(mm)}:${this.padNumber(ss)}`); },1000);
   }
   private stopTimer(): void { if(this.timerInterval) clearInterval(this.timerInterval); }
-  private pad(n:number): string { return n<10?'0'+n:''+n; }
+  private padNumber(n:number): string { return n<10?'0'+n:''+n; }
 
-  sortTs(col: 'date'|'hours'|'employee') {    if (this.tsSortCol() === col) this.tsSortDir.update(d => d==='asc'?'desc':'asc');
-    else { this.tsSortCol.set(col); this.tsSortDir.set('asc'); }
-    this.tsPage.set(1);
+  sortTimesheets(col: 'date'|'hours'|'employee') {    if (this.timesheetSortColumn() === col) this.timesheetSortDirection.update(d => d==='asc'?'desc':'asc');
+    else { this.timesheetSortColumn.set(col); this.timesheetSortDirection.set('asc'); }
+    this.timesheetPage.set(1);
   }
-  ico(active: boolean, dir: string) { return !active ? '⇅' : dir==='asc' ? '↑' : '↓'; }
+  getSortIcon(active: boolean, dir: string) { return !active ? '⇅' : dir==='asc' ? '↑' : '↓'; }
 
   private confirm(title: string, msg: string, action: ()=>void, type: 'danger'|'warning'|'info'='info') {
-    this.cfgTitle.set(title); this.cfgMsg.set(msg); this.cfgType.set(type);
-    this.cfgAction = action; this.cfgVisible.set(true);
+    this.confirmTitle.set(title); this.confirmMessage.set(msg); this.confirmType.set(type);
+    this.confirmAction = action; this.confirmVisible.set(true);
   }
-  onCfgOk()     { this.cfgAction?.(); this.cfgVisible.set(false); this.cfgAction = null; }
-  onCfgCancel() { this.cfgVisible.set(false); this.cfgAction = null; }
+  onConfirmOk()     { this.confirmAction?.(); this.confirmVisible.set(false); this.confirmAction = null; }
+  onConfirmCancel() { this.confirmVisible.set(false); this.confirmAction = null; }
 
   reviewTs(ts: Timesheet, approve: boolean) {
     const uid = this.auth.currentUser();
     if (!uid) { this.toast.error('Error','Invalid session.'); return; }
     this.openReviewModal(approve, (comment) => {
-      this.tsSvc.approveOrReject({
+      this.timesheetService.approveOrReject({
         timesheetId: ts.id, approvedById: uid,
         isApproved: approve,
         managerComment: comment || (approve ? 'Approved by Manager' : 'Rejected by Manager')
@@ -730,7 +748,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
     const uid = this.auth.currentUser();
     if (!uid) { this.toast.error('Error','Invalid session.'); return; }
     this.openReviewModal(approve, (comment) => {
-      this.lvSvc.approveOrReject({
+      this.leaveService.approveOrReject({
         leaveId: l.id, approvedById: uid,
         isApproved: approve,
         managerComment: comment || (approve ? 'Approved' : 'Rejected')
@@ -750,7 +768,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
       return;
     }
     const project = this.projects().find(p => p.id === this.selProjectId);
-    this.prjSvc.assign({
+    this.projectService.assign({
       projectId: this.selProjectId, userId: this.selUserId,
       projectName: project?.projectName ?? ''
     }).subscribe({
@@ -762,7 +780,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
     });
   }
   loadAssignments(projectId: number) {
-  this.prjSvc.getAssignmentsByProject(projectId).subscribe({
+  this.projectService.getAssignmentsByProject(projectId).subscribe({
     next: (res: any) => {
       const data = res?.data ?? res ?? [];
 
@@ -779,15 +797,15 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
 
   removeUserFromProject(assignmentId: number, projectId: number) {
     this.confirm('Remove Member', 'Remove this member from the project?', () => {
-      this.prjSvc.removeAssignment(assignmentId).subscribe({
+      this.projectService.removeAssignment(assignmentId).subscribe({
         next: () => { this.toast.success('Removed', 'Member removed from project.'); this.loadAssignments(projectId); },
         error: (e: any) => this.toast.error('Error', e?.error?.message ?? 'Failed.')
       });
     }, 'warning');
   }
 
-  stText(s: any)  { return s==0?'Pending':s==1?'Approved':'Rejected'; }
-  stClass(s: any) { return s==0?'zbadge-pending':s==1?'zbadge-approved':'zbadge-rejected'; }
+  getStatusText(s: any)  { return s==0?'Pending':s==1?'Approved':'Rejected'; }
+  getStatusClass(s: any) { return s==0?'zbadge-pending':s==1?'zbadge-approved':'zbadge-rejected'; }
 
   leaveDays(l: Leave): number {
     return Math.ceil((new Date(l.toDate).getTime() - new Date(l.fromDate).getTime()) / 86400000) + 1;
@@ -801,7 +819,7 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
     const v = this.addTimesheetForm.getRawValue();
     const proj = this.projects().find(p => p.id === +v.projectId!);
     const fmt = (t: string) => t?.length === 5 ? t + ':00' : t ?? '00:00:00';
-    this.tsSvc.create(uid, {
+    this.timesheetService.create(uid, {
       projectId: +v.projectId!, projectName: proj?.projectName ?? '',
       workDate: v.workDate!, startTime: fmt(v.startTime!), endTime: fmt(v.endTime!),
       breakTime: fmt(v.breakTime || '00:00'), taskDescription: v.taskDescription ?? ''
@@ -811,21 +829,33 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  showLeaveBalanceModal = signal(false);
+  leaveBalanceResult = signal<{ leaveType: string; remaining: number; total: number } | null>(null);
+
   addLeaveForSelf() {
     if (this.addLeaveForm.invalid) return;
     const uid = this.auth.currentUser(); if (!uid) return;
     const v = this.addLeaveForm.getRawValue();
-    this.lvSvc.apply(uid, { leaveTypeId: +v.leaveTypeId!, fromDate: v.fromDate!, toDate: v.toDate!, reason: v.reason ?? '' }).subscribe({
-      next: () => { this.toast.success('Leave Applied', 'Your leave request has been submitted.'); this.showAddLeaveModal.set(false); this.addLeaveForm.reset(); this.loadAll(); },
+    const selectedType = this.leaveTypes().find(lt => lt.id === +v.leaveTypeId!);
+    this.leaveService.apply(uid, { leaveTypeId: +v.leaveTypeId!, fromDate: v.fromDate!, toDate: v.toDate!, reason: v.reason ?? '' }).subscribe({
+      next: (res: any) => {
+        const remaining = res?.data?.remainingLeaves ?? 0;
+        this.showAddLeaveModal.set(false);
+        this.addLeaveForm.reset();
+        this.leaveBalanceResult.set({ leaveType: selectedType?.name ?? 'Leave', remaining, total: selectedType?.maxDaysPerYear ?? 0 });
+        this.showLeaveBalanceModal.set(true);
+        this.loadAll();
+        this.leaveService.getLeaveBalance(uid).subscribe((r: any) => this.leaveBalance.set(r?.data ?? []));
+      },
       error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Could not apply leave.')
     });
   }
 
   setTab(t: ManagerTab) {
     this.activeTab.set(t);
-    this.tabSvc.setTab(t);
-    this.bc.set([{label:'Manager Dashboard'},{label:this.tabs.find(x=>x.key===t)?.label??''}]);
-    this.tsPage.set(1); this.lvPage.set(1); this.teamPage.set(1);
+    this.tabService.setTab(t);
+    this.breadcrumbService.set([{label:'Manager Dashboard'},{label:this.tabs.find(x=>x.key===t)?.label??''}]);
+    this.timesheetPage.set(1); this.leavePage.set(1); this.teamPage.set(1);
     if (t === 'mytimesheet') this.loadMyTimesheet();
   }
 

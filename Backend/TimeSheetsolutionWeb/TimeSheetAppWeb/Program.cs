@@ -36,7 +36,7 @@ builder.Services.AddScoped<IInternDetailsService, InternDetailsService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
-builder.Services.AddSingleton<INotificationService, NotificationService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // ================= SIGNALR =================
 builder.Services.AddSignalR();

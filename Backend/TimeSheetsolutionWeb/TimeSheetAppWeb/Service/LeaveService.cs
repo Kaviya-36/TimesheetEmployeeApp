@@ -265,5 +265,30 @@ namespace TimeSheetAppWeb.Services
 
         private ApiResponse<T> Fail<T>(string msg) =>
             new() { Success = false, Message = msg };
+
+        // ================= GET LEAVE BALANCE =================
+        public async Task<ApiResponse<List<object>>> GetLeaveBalanceAsync(int userId)
+        {
+            try
+            {
+                var allLeaves    = await _leaveRepo.GetAllAsync()     ?? Enumerable.Empty<LeaveRequest>();
+                var leaveTypes   = await _leaveTypeRepo.GetAllAsync() ?? Enumerable.Empty<LeaveType>();
+                var userLeaves   = allLeaves.Where(l => l.UserId == userId && l.Status != LeaveStatus.Rejected).ToList();
+
+                var balance = leaveTypes.Where(t => t.IsActive).Select(t =>
+                {
+                    var used      = userLeaves.Where(l => l.LeaveTypeId == t.Id).Sum(l => (l.ToDate - l.FromDate).Days + 1);
+                    var remaining = t.MaxDaysPerYear - used;
+                    return (object)new { leaveType = t.Name, total = t.MaxDaysPerYear, used, remaining };
+                }).ToList();
+
+                return Success("Leave balance fetched", balance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetLeaveBalance error");
+                return Fail<List<object>>(ex.Message);
+            }
+        }
     }
 }

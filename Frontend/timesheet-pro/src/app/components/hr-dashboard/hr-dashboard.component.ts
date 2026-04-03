@@ -27,19 +27,19 @@ export type HrTab = 'employees' | 'attendance' | 'leaves' | 'payroll' | 'timeshe
 export class HrDashboardComponent implements OnInit, OnDestroy {
   readonly auth  = inject(AuthService);
   private  toast = inject(ToastService);
-  private  bc    = inject(BreadcrumbService);
-  private  usrSvc = inject(UserService);
-  private  attSvc = inject(AttendanceService);
-  private  lvSvc  = inject(LeaveService);
-  private  paySvc = inject(PayrollService);
-  private  tsSvc  = inject(TimesheetService);
-  private  prjSvc = inject(ProjectService);
-  private  fb     = inject(FormBuilder);
-  private  tabSvc = inject(TabService);
+  private  breadcrumbService    = inject(BreadcrumbService);
+  private  userService = inject(UserService);
+  private  attendanceService = inject(AttendanceService);
+  private  leaveService  = inject(LeaveService);
+  private  payrollService = inject(PayrollService);
+  private  timesheetService  = inject(TimesheetService);
+  private  projectService = inject(ProjectService);
+  private  formBuilder     = inject(FormBuilder);
+  private  tabService = inject(TabService);
 
   constructor() {
     effect(() => {
-      const t = this.tabSvc.activeTab();
+      const t = this.tabService.activeTab();
       if (t && t !== this.activeTab()) this.setTab(t as HrTab);
     });
   }
@@ -68,20 +68,21 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   liveTimer  = signal('00:00:00');
   private timerInterval: any;
   readonly todayDate = new Date().toISOString().split('T')[0];
-  readonly currentMonth = new Date().toISOString().slice(0, 7); // "2026-03"
+  readonly currentMonth = new Date().toISOString().slice(0, 7);
+  readonly lastMonth = (() => { const d = new Date(); d.setMonth(d.getMonth() - 1); return d.toISOString().slice(0, 7); })();
 
-  empSearch  = signal(''); empRoleF = signal('all'); empStatusF = signal('all'); empPage = signal(1); empPS = 8;
-  attSearch  = signal(''); attPage = signal(1); attPS = 8;
-  lvSearch   = signal(''); lvStatusF = signal('all'); lvPage = signal(1); lvPS = 8;
+  employeeSearch  = signal(''); employeeRoleFilter = signal('all'); employeeStatusFilter = signal('all'); employeePage = signal(1); employeesPageSize = 8;
+  attendanceSearch  = signal(''); attendancePage = signal(1); attendancePageSize = 8;
+  leaveSearch   = signal(''); leaveStatusFilter = signal('all'); leavePage = signal(1); leavesPageSize = 8;
   showLeaveCommentModal = signal(false);
   leaveComment = signal('');
   pendingLeaveAction = signal<{ leave: Leave; isApprove: boolean } | null>(null);
-  paySearch  = signal(''); payPage = signal(1); payPS = 8;
+  payrollSearch  = signal(''); payrollPage = signal(1); payrollPageSize = 8;
 
   // ── Timesheets ────────────────────────────────────────────────────────────
   allTimesheets = signal<any[]>([]);
-  tsSearch  = signal(''); tsStatus = signal('all'); tsPage = signal(1); tsPS = 8;
-  tsSortCol = signal<'date'|'hours'|'employee'>('date'); tsSortDir = signal<'asc'|'desc'>('desc');
+  timesheetSearch  = signal(''); timesheetStatusFilter = signal('all'); timesheetPage = signal(1); timesheetsPageSize = 8;
+  timesheetSortColumn = signal<'date'|'hours'|'employee'>('date'); timesheetSortDirection = signal<'asc'|'desc'>('desc');
   tsViewMode     = signal<'all'|'weekly'|'monthly'>('all');
   tsPeriodOffset = signal(0);
   tsPeriodLabel  = () => this._periodLabel(this.tsViewMode(), this.tsPeriodOffset());
@@ -114,23 +115,23 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
     if (s.includes(':')) { const [h, m] = s.split(':').map(Number); return h + (m||0)/60; }
     return parseFloat(s) || 0;
   }
-  fmtH(decimal: number): string {
+  formatHours(decimal: number): string {
     if (!decimal) return '—';
     const h = Math.floor(decimal); const m = Math.round((decimal-h)*60);
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   }
   parseHoursPublic = (val: any) => this.parseHoursVal(val);
 
-  filteredTs = computed(() => {
+  filteredTimesheets = computed(() => {
     let d = this.allTimesheets();
-    const q = this.tsSearch().toLowerCase();
+    const q = this.timesheetSearch().toLowerCase();
     if (q) d = d.filter(t => (t.employeeName??'').toLowerCase().includes(q) || (t.projectName??'').toLowerCase().includes(q));
-    if (this.tsStatus() !== 'all') {
+    if (this.timesheetStatusFilter() !== 'all') {
       const sv: Record<string,number> = { pending:0, approved:1, rejected:2 };
-      d = d.filter(t => Number(t.status) === sv[this.tsStatus()]);
+      d = d.filter(t => Number(t.status) === sv[this.timesheetStatusFilter()]);
     }
     d = d.filter(t => this._inPeriod(t.date, this.tsViewMode(), this.tsPeriodOffset()));
-    const col = this.tsSortCol(); const dir = this.tsSortDir();
+    const col = this.timesheetSortColumn(); const dir = this.timesheetSortDirection();
     d = [...d].sort((a,b) => {
       const v = col==='date' ? new Date(a.date).getTime()-new Date(b.date).getTime()
               : col==='hours' ? this.parseHoursVal(a.hoursWorked)-this.parseHoursVal(b.hoursWorked)
@@ -139,8 +140,8 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
     });
     return d;
   });
-  tsTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredTs().length / this.tsPS)));
-  pagedTs      = computed(() => { const s=(this.tsPage()-1)*this.tsPS; return this.filteredTs().slice(s,s+this.tsPS); });
+  timesheetTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredTimesheets().length / this.timesheetsPageSize)));
+  pagedTimesheets      = computed(() => { const s=(this.timesheetPage()-1)*this.timesheetsPageSize; return this.filteredTimesheets().slice(s,s+this.timesheetsPageSize); });
 
   weeklyRows = () => {
     const dates = this.visibleWeekDates(); const all = this.allTimesheets();
@@ -196,12 +197,12 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
     return [...empMap.entries()].map(([employeeName, prjMap]) => ({ employeeName, rows: [...prjMap.values()] }));
   };
 
-  sortTs(col: 'date'|'hours'|'employee') {
-    if (this.tsSortCol() === col) this.tsSortDir.update(d => d==='asc'?'desc':'asc');
-    else { this.tsSortCol.set(col); this.tsSortDir.set('asc'); }
-    this.tsPage.set(1);
+  sortTimesheets(col: 'date'|'hours'|'employee') {
+    if (this.timesheetSortColumn() === col) this.timesheetSortDirection.update(d => d==='asc'?'desc':'asc');
+    else { this.timesheetSortColumn.set(col); this.timesheetSortDirection.set('asc'); }
+    this.timesheetPage.set(1);
   }
-  ico(active: boolean, dir: string) { return !active ? '⇅' : dir==='asc' ? '↑' : '↓'; }
+  getSortIcon(active: boolean, dir: string) { return !active ? '⇅' : dir==='asc' ? '↑' : '↓'; }
 
   // ── View mode ─────────────────────────────────────────────────────────────
   attViewMode     = signal<'all'|'weekly'|'monthly'>('all');
@@ -232,80 +233,68 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
     return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
   }
 
-  filteredEmps = computed(() => {
+  filteredEmployees = computed(() => {
     let d = this.employees();
-    const q = this.empSearch().toLowerCase();
+    const q = this.employeeSearch().toLowerCase();
     if (q) d = d.filter(u => u.name.toLowerCase().includes(q)||u.email.toLowerCase().includes(q)||u.employeeId.toLowerCase().includes(q));
-    if (this.empRoleF()!=='all') d = d.filter(u=>u.role===this.empRoleF());
-    if (this.empStatusF()!=='all') d = d.filter(u=>this.empStatusF()==='active'?u.status==='Active':u.status!=='Active');
+    if (this.employeeRoleFilter()!=='all') d = d.filter(u=>u.role===this.employeeRoleFilter());
+    if (this.employeeStatusFilter()!=='all') d = d.filter(u=>this.employeeStatusFilter()==='active'?u.status==='Active':u.status!=='Active');
     return d;
   });
-  empTotalPages = computed(()=>Math.max(1,Math.ceil(this.filteredEmps().length/this.empPS)));
-  pagedEmps     = computed(()=>{const s=(this.empPage()-1)*this.empPS;return this.filteredEmps().slice(s,s+this.empPS);});
+  employeeTotalPages = computed(()=>Math.max(1,Math.ceil(this.filteredEmployees().length/this.employeesPageSize)));
+  pagedEmployees     = computed(()=>{const s=(this.employeePage()-1)*this.employeesPageSize;return this.filteredEmployees().slice(s,s+this.employeesPageSize);});
 
-  filteredAtt = computed(()=>{
+  filteredAttendances = computed(()=>{
     let d=this.attendance();
-    const q=this.attSearch().toLowerCase();
+    const q=this.attendanceSearch().toLowerCase();
     if(q) d=d.filter(a=>(a.employeeName??'').toLowerCase().includes(q));
     d = d.filter(a => this._inPeriod(a.date, this.attViewMode(), this.attPeriodOffset()));
     return d;
   });
-  attTotalPages = computed(()=>Math.max(1,Math.ceil(this.filteredAtt().length/this.attPS)));
-  pagedAtt      = computed(()=>{const s=(this.attPage()-1)*this.attPS;return this.filteredAtt().slice(s,s+this.attPS);});
+  attendanceTotalPages = computed(()=>Math.max(1,Math.ceil(this.filteredAttendances().length/this.attendancePageSize)));
+  pagedAttendances      = computed(()=>{const s=(this.attendancePage()-1)*this.attendancePageSize;return this.filteredAttendances().slice(s,s+this.attendancePageSize);});
 
-  filteredLv = computed(()=>{
+  filteredLeaves = computed(()=>{
     let d=this.allLeaves();
-    const q=this.lvSearch().toLowerCase();
+    const q=this.leaveSearch().toLowerCase();
     if(q) d=d.filter(l=>(l.employeeName??'').toLowerCase().includes(q));
-    if(this.lvStatusF()!=='all'){const sv:Record<string,number>={pending:0,approved:1,rejected:2};d=d.filter(l=>Number(l.status)===sv[this.lvStatusF()]);}
+    if(this.leaveStatusFilter()!=='all'){const sv:Record<string,number>={pending:0,approved:1,rejected:2};d=d.filter(l=>Number(l.status)===sv[this.leaveStatusFilter()]);}
     return d;
   });
-  lvTotalPages = computed(()=>Math.max(1,Math.ceil(this.filteredLv().length/this.lvPS)));
-  pagedLv      = computed(()=>{const s=(this.lvPage()-1)*this.lvPS;return this.filteredLv().slice(s,s+this.lvPS);});
+  leaveTotalPages = computed(()=>Math.max(1,Math.ceil(this.filteredLeaves().length/this.leavesPageSize)));
+  pagedLeaves      = computed(()=>{const s=(this.leavePage()-1)*this.leavesPageSize;return this.filteredLeaves().slice(s,s+this.leavesPageSize);});
 
-  filteredPay = computed(()=>{
+  filteredPayrolls = computed(()=>{
     let d=this.payrolls();
-    const q=this.paySearch().toLowerCase();
+    const q=this.payrollSearch().toLowerCase();
     if(q) d=d.filter(p=>(p.employeeName??'').toLowerCase().includes(q)||(p.employeeId??'').toLowerCase().includes(q));
     return d;
   });
-  payTotalPages = computed(()=>Math.max(1,Math.ceil(this.filteredPay().length/this.payPS)));
-  pagedPay      = computed(()=>{const s=(this.payPage()-1)*this.payPS;return this.filteredPay().slice(s,s+this.payPS);});
+  payrollTotalPages = computed(()=>Math.max(1,Math.ceil(this.filteredPayrolls().length/this.payrollPageSize)));
+  pagedPayrolls      = computed(()=>{const s=(this.payrollPage()-1)*this.payrollPageSize;return this.filteredPayrolls().slice(s,s+this.payrollPageSize);});
 
   activeCount  = computed(()=>this.employees().filter(u=>u.status==='Active').length);
   lateToday    = computed(()=>this.attendance().filter(a=>a.isLate).length);
   onTimeCount  = computed(()=>this.attendance().filter(a=>!a.isLate).length);
-  avgHrsPerDay = computed(()=>{
-    const list = this.attendance();
-    if (!list.length) return '0.0';
-    const total = list.reduce((s,a)=>{ const n=parseFloat(String(a.totalHours)); return s+(isNaN(n)?0:n); },0);
-    return (total/list.length).toFixed(1);
-  });
-  pendingLv    = computed(()=>this.allLeaves().filter(l=>Number(l.status)===0).length);
+  pendingLeavesCount    = computed(()=>this.allLeaves().filter(l=>Number(l.status)===0).length);
   totalPayroll = computed(()=>this.payrolls().reduce((s,p)=>s+(p.netSalary??0),0));
 
   editEmployee     = signal<User|null>(null);
   showPayrollModal = signal(false);
-  showAddTimesheetModal = signal(false);
-  showAddLeaveModal     = signal(false);
+  showAddLeaveModal        = signal(false);
+  showMissedCheckoutModal  = signal(false);
   leaveTypes            = signal<LeaveType[]>([]);
+  showLeaveBalanceModal = signal(false);
+  leaveBalanceResult = signal<{ leaveType: string; remaining: number; total: number } | null>(null);
+  leaveBalance = signal<{ leaveType: string; total: number; used: number; remaining: number }[]>([]);
   projects              = signal<Project[]>([]);
-  cfgVisible = signal(false); cfgTitle = signal(''); cfgMsg = signal(''); cfgType = signal<'danger'|'warning'|'info'>('danger');
-  private cfgAction: (()=>void)|null=null;
+  confirmVisible = signal(false); confirmTitle = signal(''); confirmMessage = signal(''); confirmType = signal<'danger'|'warning'|'info'>('danger');
+  private confirmAction: (()=>void)|null=null;
 
-  editForm = this.fb.group({ name:['',Validators.required], email:['',[Validators.required,Validators.email]], phone:[''], role:['',Validators.required] });
-  payrollForm = this.fb.group({ userId:['',Validators.required], basicSalary:['',[Validators.required,Validators.min(0)]], overtimeAmount:['0'], deductions:['0'], salaryMonth:[new Date().toISOString().slice(0,7),Validators.required] });
+  editForm = this.formBuilder.group({ name:['',Validators.required], email:['',[Validators.required,Validators.email]], phone:[''], role:['',Validators.required] });
+  payrollForm = this.formBuilder.group({ userId:['',Validators.required], basicSalary:['',[Validators.required,Validators.min(0)]], overtimeAmount:['0'], deductions:['0'], salaryMonth:[new Date().toISOString().slice(0,7),Validators.required] });
 
-  addTimesheetForm = this.fb.group({
-    projectId:       ['', Validators.required],
-    workDate:        [new Date().toISOString().split('T')[0], Validators.required],
-    startTime:       ['09:00', Validators.required],
-    endTime:         ['18:00', Validators.required],
-    breakTime:       ['01:00'],
-    taskDescription: [''],
-  });
-
-  addLeaveForm = this.fb.group({
+  addLeaveForm = this.formBuilder.group({
     leaveTypeId: ['', Validators.required],
     fromDate:    ['', Validators.required],
     toDate:      ['', Validators.required],
@@ -313,18 +302,18 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
-    this.bc.set([{label:'HR Dashboard'}, {label:'Employees'}]);
-    this.tabSvc.setTab('employees');
+    this.breadcrumbService.set([{label:'HR Dashboard'}, {label:'Employees'}]);
+    this.tabService.setTab('employees');
     this.loadAll();
     this.refreshToday();
-    this.usrSvc.getProfile().subscribe({ next:(r:any)=>this.userProfile.set(r?.data??r), error:()=>{} });
-    this.lvSvc.getLeaveTypes().subscribe({ next:(r:any)=>this.leaveTypes.set(this.toArr<LeaveType>(r)), error:()=>{} });
-    this.prjSvc.getAll().subscribe({ next:(r:any)=>this.projects.set(this.toArr<Project>(r)), error:()=>{} });
+    this.userService.getProfile().subscribe({ next:(r:any)=>this.userProfile.set(r?.data??r), error:()=>{} });
+    this.leaveService.getLeaveTypes().subscribe({ next:(r:any)=>this.leaveTypes.set(this.extractArray<LeaveType>(r)), error:()=>{} });
+    this.projectService.getAll().subscribe({ next:(r:any)=>this.projects.set(this.extractArray<Project>(r)), error:()=>{} });
   }
 
   ngOnDestroy() { if (this.timerInterval) clearInterval(this.timerInterval); }
 
-  private toArr<T>(r:any):T[] {
+  private extractArray<T>(r:any):T[] {
     if(Array.isArray(r)) return r;
     if(Array.isArray(r?.data)) return r.data;
     if(Array.isArray(r?.data?.data)) return r.data.data;
@@ -332,26 +321,28 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   }
 
   loadAll() {
-    this.usrSvc.getAll().subscribe({next:r=>this.employees.set(this.toArr<User>(r)),error:()=>{}});
-    this.attSvc.getAll().subscribe({next:r=>this.attendance.set(this.toArr<Attendance>(r)),error:()=>{}});
-    this.lvSvc.getAll().subscribe({next:r=>this.allLeaves.set(this.toArr<Leave>(r)),error:()=>{}});
-    this.tsSvc.getAll().subscribe({
+    this.userService.getAll().subscribe({next:r=>this.employees.set(this.extractArray<User>(r)),error:()=>{}});
+    this.attendanceService.getAll().subscribe({next:r=>this.attendance.set(this.extractArray<Attendance>(r)),error:()=>{}});
+    this.leaveService.getAll().subscribe({next:r=>this.allLeaves.set(this.extractArray<Leave>(r)),error:()=>{}});
+    this.timesheetService.getAll().subscribe({
       next:(r:any)=>{ const d=r?.data?.data??r?.data??r??[]; this.allTimesheets.set(Array.isArray(d)?d:[]); },
       error:()=>{}
     });
-    this.paySvc.getAll().subscribe({
+    this.payrollService.getAll().subscribe({
       next: r => {
-        const list = this.toArr<any>(r);
+        const list = this.extractArray<any>(r);
         this.payrolls.set(list);
       },
       error: () => {}
     });
+    const uid = this.auth.currentUser();
+    if (uid) this.leaveService.getLeaveBalance(uid).subscribe((r: any) => this.leaveBalance.set(r?.data ?? []));
   }
 
   private refreshToday(): void {
     const uid = this.auth.currentUser(); if (!uid) return;
-    this.attSvc.getTodayStatus(uid).subscribe({
-      next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); if(d?.missedCheckout) this.toast.warning('Missed Check-Out','You forgot to check out yesterday. Attendance auto-calculated as check-in + 8 hours.'); if(d?.checkIn&&!d?.checkOut) this.startTimer(d.checkIn); },
+    this.attendanceService.getTodayStatus(uid).subscribe({
+      next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); if(d?.missedCheckout) this.showMissedCheckoutModal.set(true); if(d?.checkIn&&!d?.checkOut) this.startTimer(d.checkIn); },
       error:()=>this.todayAtt.set(null)
     });
   }
@@ -359,7 +350,7 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   checkIn(): void {
     if (this.todayAtt()?.checkIn) { this.toast.warning('Already checked in',''); return; }
     this.attLoading.set(true);
-    this.attSvc.checkIn().subscribe({
+    this.attendanceService.checkIn().subscribe({
       next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); if(d?.checkIn&&!d?.checkOut) this.startTimer(d.checkIn); this.toast.success('Checked In',`Time: ${d?.checkIn}`); this.attLoading.set(false); },
       error:(e:any)=>{ this.toast.error('Failed',e?.error?.message??''); this.attLoading.set(false); }
     });
@@ -369,7 +360,7 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
     if (!this.todayAtt()?.checkIn) { this.toast.warning('Not checked in',''); return; }
     if (this.todayAtt()?.checkOut) { this.toast.warning('Already checked out',''); return; }
     this.attLoading.set(true);
-    this.attSvc.checkOut().subscribe({
+    this.attendanceService.checkOut().subscribe({
       next:(res:any)=>{ const d=res?.data??res; this.todayAtt.set(d); this.stopTimer(); this.toast.success('Checked Out',`Total: ${d?.totalHours??'—'}`); this.attLoading.set(false); },
       error:(e:any)=>{ this.toast.error('Failed',e?.error?.message??''); this.attLoading.set(false); }
     });
@@ -378,21 +369,21 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   private startTimer(t:string): void {
     const [h,m]=t.split(':').map(Number); const base=new Date(); base.setHours(h,m,0,0);
     this.stopTimer();
-    this.timerInterval=setInterval(()=>{ const diff=Date.now()-base.getTime(); const hh=Math.floor(diff/3600000),mm=Math.floor((diff%3600000)/60000),ss=Math.floor((diff%60000)/1000); this.liveTimer.set(`${this.pad(hh)}:${this.pad(mm)}:${this.pad(ss)}`); },1000);
+    this.timerInterval=setInterval(()=>{ const diff=Date.now()-base.getTime(); const hh=Math.floor(diff/3600000),mm=Math.floor((diff%3600000)/60000),ss=Math.floor((diff%60000)/1000); this.liveTimer.set(`${this.padNumber(hh)}:${this.padNumber(mm)}:${this.padNumber(ss)}`); },1000);
   }
   private stopTimer(): void { if(this.timerInterval) clearInterval(this.timerInterval); }
-  private pad(n:number): string { return n<10?'0'+n:''+n; }
+  private padNumber(n:number): string { return n<10?'0'+n:''+n; }
 
-  private confirm(title:string,msg:string,action:()=>void,type:'danger'|'warning'|'info'='danger'){    this.cfgTitle.set(title);this.cfgMsg.set(msg);this.cfgType.set(type);this.cfgAction=action;this.cfgVisible.set(true);
+  private confirm(title:string,msg:string,action:()=>void,type:'danger'|'warning'|'info'='danger'){    this.confirmTitle.set(title);this.confirmMessage.set(msg);this.confirmType.set(type);this.confirmAction=action;this.confirmVisible.set(true);
   }
-  onCfgOk(){this.cfgAction?.();this.cfgVisible.set(false);this.cfgAction=null;}
-  onCfgCancel(){this.cfgVisible.set(false);this.cfgAction=null;}
+  onConfirmOk(){this.confirmAction?.();this.confirmVisible.set(false);this.confirmAction=null;}
+  onConfirmCancel(){this.confirmVisible.set(false);this.confirmAction=null;}
 
   openEdit(u:User){this.editEmployee.set(u);this.editForm.patchValue({name:u.name,email:u.email,phone:u.phone,role:u.role});}
   saveEdit(){
     const u=this.editEmployee();if(!u||this.editForm.invalid)return;
     const v=this.editForm.value;
-    this.usrSvc.update(u.id,{name:v.name!,email:v.email!,phone:v.phone??'',role:v.role!}).subscribe({
+    this.userService.update(u.id,{name:v.name!,email:v.email!,phone:v.phone??'',role:v.role!}).subscribe({
       next:()=>{this.toast.success('Updated',`${u.name} updated.`);this.editEmployee.set(null);this.loadAll();},
       error:(e:any)=>this.toast.error('Error',e?.error?.message??'Failed.')
     });
@@ -401,7 +392,7 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   confirmToggle(u:User){
     const activate=u.status!=='Active';
     this.confirm(activate?'Activate':'Deactivate',`${activate?'Activate':'Deactivate'} "${u.name}"?`,()=>{
-      this.usrSvc.setActive(u.id,activate).subscribe({
+      this.userService.setActive(u.id,activate).subscribe({
         next:()=>{this.toast.success(activate?'Activated':'Deactivated',`${u.name}`);this.loadAll();},
         error:(e:any)=>this.toast.error('Error',e?.error?.message??'Failed.')
       });
@@ -410,7 +401,7 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
 
   confirmDelete(u:User){
     this.confirm('Delete Employee',`Permanently delete "${u.name}"?`,()=>{
-      this.usrSvc.delete(u.id).subscribe({next:()=>{this.toast.success('Deleted');this.loadAll();},error:(e:any)=>this.toast.error('Error',e?.error?.message??'Failed.')});
+      this.userService.delete(u.id).subscribe({next:()=>{this.toast.success('Deleted');this.loadAll();},error:(e:any)=>this.toast.error('Error',e?.error?.message??'Failed.')});
     });
   }
 
@@ -432,7 +423,7 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
     const uid = this.auth.currentUser()!;
     const comment = this.leaveComment().trim() ||
       (action.isApprove ? 'Approved by HR' : 'Rejected by HR');
-    this.lvSvc.approveOrReject({
+    this.leaveService.approveOrReject({
       leaveId: action.leave.id,
       approvedById: uid,
       isApproved: action.isApprove,
@@ -455,7 +446,7 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
     const v=this.payrollForm.value;
     const salaryMonth = v.salaryMonth ? `${v.salaryMonth}-01` : '';
     const overtimeAmount = (+v.overtimeAmount! || 0) * 100; // 1 hour = ₹100
-    this.paySvc.generate({userId:+v.userId!,basicSalary:+v.basicSalary!,overtimeAmount,deductions:+v.deductions!,salaryMonth}).subscribe({
+    this.payrollService.generate({userId:+v.userId!,basicSalary:+v.basicSalary!,overtimeAmount,deductions:+v.deductions!,salaryMonth}).subscribe({
       next:()=>{this.toast.success('Payroll Generated');this.showPayrollModal.set(false);this.payrollForm.reset({salaryMonth:this.currentMonth,overtimeAmount:'0',deductions:'0'});this.loadAll();},
       error:(e:any)=>this.toast.error('Error',e?.error?.message??'Failed.')
     });
@@ -517,7 +508,7 @@ exportLeavesExcel() {
     Employee: l.employeeName,
     From: l.fromDate,
     To: l.toDate,
-    Status: this.stText(l.status)
+    Status: this.getStatusText(l.status)
   }));
 
   const ws = XLSX.utils.json_to_sheet(data);
@@ -583,7 +574,7 @@ exportLeavesPDF() {
     l.employeeName,
     l.fromDate,
     l.toDate,
-    this.stText(l.status)
+    this.getStatusText(l.status)
   ]);
 
   autoTable(doc, {
@@ -743,41 +734,33 @@ exportPayrollPDF() {
     return Math.ceil((new Date(l.toDate).getTime() - new Date(l.fromDate).getTime()) / 86400000) + 1;
   }
 
-  stText(s:any){return s==0?'Pending':s==1?'Approved':'Rejected';}
-  stClass(s:any){return s==0?'zbadge-pending':s==1?'zbadge-approved':'zbadge-rejected';}
+  getStatusText(s:any){return s==0?'Pending':s==1?'Approved':'Rejected';}
+  getStatusClass(s:any){return s==0?'zbadge-pending':s==1?'zbadge-approved':'zbadge-rejected';}
   Number = Number;
-
-  addTimesheetForSelf() {
-    if (this.addTimesheetForm.invalid) return;
-    const uid = this.auth.currentUser(); if (!uid) return;
-    const v = this.addTimesheetForm.getRawValue();
-    const proj = this.projects().find(p => p.id === +v.projectId!);
-    const fmt = (t: string) => t?.length === 5 ? t + ':00' : t ?? '00:00:00';
-    this.tsSvc.create(uid, {
-      projectId: +v.projectId!, projectName: proj?.projectName ?? '',
-      workDate: v.workDate!, startTime: fmt(v.startTime!), endTime: fmt(v.endTime!),
-      breakTime: fmt(v.breakTime || '00:00'), taskDescription: v.taskDescription ?? ''
-    }).subscribe({
-      next: () => { this.toast.success('Timesheet Added', 'Your timesheet has been submitted.'); this.showAddTimesheetModal.set(false); this.addTimesheetForm.reset({ workDate: new Date().toISOString().split('T')[0], startTime: '09:00', endTime: '18:00', breakTime: '01:00' }); },
-      error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Could not create timesheet.')
-    });
-  }
 
   addLeaveForSelf() {
     if (this.addLeaveForm.invalid) return;
     const uid = this.auth.currentUser(); if (!uid) return;
     const v = this.addLeaveForm.getRawValue();
-    this.lvSvc.apply(uid, { leaveTypeId: +v.leaveTypeId!, fromDate: v.fromDate!, toDate: v.toDate!, reason: v.reason ?? '' }).subscribe({
-      next: () => { this.toast.success('Leave Applied', 'Your leave request has been submitted.'); this.showAddLeaveModal.set(false); this.addLeaveForm.reset(); },
+    const selectedType = this.leaveTypes().find(lt => lt.id === +v.leaveTypeId!);
+    this.leaveService.apply(uid, { leaveTypeId: +v.leaveTypeId!, fromDate: v.fromDate!, toDate: v.toDate!, reason: v.reason ?? '' }).subscribe({
+      next: (res: any) => {
+        const remaining = res?.data?.remainingLeaves ?? 0;
+        this.showAddLeaveModal.set(false);
+        this.addLeaveForm.reset();
+        this.leaveBalanceResult.set({ leaveType: selectedType?.name ?? 'Leave', remaining, total: selectedType?.maxDaysPerYear ?? 0 });
+        this.showLeaveBalanceModal.set(true);
+        this.leaveService.getLeaveBalance(uid).subscribe((r: any) => this.leaveBalance.set(r?.data ?? []));
+      },
       error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Could not apply leave.')
     });
   }
 
   setTab(t:HrTab){
     this.activeTab.set(t);
-    this.tabSvc.setTab(t);
-    this.bc.set([{label:'HR Dashboard'},{label:this.tabs.find(x=>x.key===t)?.label??''}]);
-    this.empPage.set(1);this.attPage.set(1);this.lvPage.set(1);this.payPage.set(1);
+    this.tabService.setTab(t);
+    this.breadcrumbService.set([{label:'HR Dashboard'},{label:this.tabs.find(x=>x.key===t)?.label??''}]);
+    this.employeePage.set(1);this.attendancePage.set(1);this.leavePage.set(1);this.payrollPage.set(1);
   }
   pages(total:number){return Array.from({length:total},(_,i)=>i+1);}
 }

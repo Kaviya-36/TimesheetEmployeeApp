@@ -48,11 +48,11 @@
         <div class="stat-grid">
           <div class="stat-card sc-warning">
             <div class="stat-icon-wrap">⏳</div>
-            <div class="stat-body"><div class="stat-value">{{ pendingTs().length }}</div><div class="stat-label">Pending Timesheets</div></div>
+            <div class="stat-body"><div class="stat-value">{{ pendingTimesheets().length }}</div><div class="stat-label">Pending Timesheets</div></div>
           </div>
           <div class="stat-card sc-warning">
             <div class="stat-icon-wrap">🌴</div>
-            <div class="stat-body"><div class="stat-value">{{ pendingLv().length }}</div><div class="stat-label">Pending Leaves</div></div>
+            <div class="stat-body"><div class="stat-value">{{ pendingLeaves().length }}</div><div class="stat-label">Pending Leaves</div></div>
           </div>
           <div class="stat-card sc-info">
             <div class="stat-icon-wrap">👥</div>
@@ -65,21 +65,21 @@
         </div>
 
         <!-- Quick Approvals -->
-        @if (pendingTs().length > 0) {
+        @if (pendingTimesheets().length > 0) {
           <div class="zmgr-quick-card">
             <div class="zmgr-quick-header">
               <div class="zmgr-quick-title">
                 <span class="zmgr-quick-dot"></span>
                 Pending Timesheet Approvals
               </div>
-              <span class="zbadge zbadge-pending">{{ pendingTs().length }}</span>
+              <span class="zbadge zbadge-pending">{{ pendingTimesheets().length }}</span>
             </div>
-            @for (ts of pendingTs().slice(0, 5); track ts.id) {
+            @for (ts of pendingTimesheets().slice(0, 5); track ts.id) {
               <div class="zmgr-approval-row">
                 <div class="zmgr-approval-avatar">{{ (ts.employeeName ?? 'U')[0].toUpperCase() }}</div>
                 <div class="zmgr-approval-info">
                   <span class="zmgr-approval-name">{{ ts.employeeName }}</span>
-                  <span class="zmgr-approval-meta">{{ ts.projectName }} · {{ ts.date | date:'dd MMM' }} · {{ fmtH(parseHoursPublic(ts.hoursWorked)) }}</span>
+                  <span class="zmgr-approval-meta">{{ ts.projectName }} · {{ ts.date | date:'dd MMM' }} · {{ formatHours(parseHoursPublic(ts.hoursWorked)) }}</span>
                 </div>
                 <div class="zmgr-approval-actions">
                   @if (ts.userId !== auth.currentUser()) {
@@ -91,25 +91,25 @@
                 </div>
               </div>
             }
-            @if (pendingTs().length > 5) {
+            @if (pendingTimesheets().length > 5) {
               <div class="zmgr-quick-footer">
-                <button class="zbtn zbtn-outline zbtn-sm" (click)="setTab('timesheets'); tsStatus.set('pending')">View all {{ pendingTs().length }} pending →</button>
+                <button class="zbtn zbtn-outline zbtn-sm" (click)="setTab('timesheets'); timesheetStatusFilter.set('pending')">View all {{ pendingTimesheets().length }} pending →</button>
               </div>
             }
           </div>
         }
 
         <!-- Pending Leaves -->
-        @if (pendingLv().length > 0) {
+        @if (pendingLeaves().length > 0) {
           <div class="zmgr-quick-card" style="margin-top:16px">
             <div class="zmgr-quick-header">
               <div class="zmgr-quick-title">
                 <span class="zmgr-quick-dot" style="background:#F59E0B"></span>
                 Pending Leave Requests
               </div>
-              <span class="zbadge zbadge-pending">{{ pendingLv().length }}</span>
+              <span class="zbadge zbadge-pending">{{ pendingLeaves().length }}</span>
             </div>
-            @for (l of pendingLv().slice(0, 3); track l.id) {
+            @for (l of pendingLeaves().slice(0, 3); track l.id) {
               <div class="zmgr-approval-row">
                 <div class="zmgr-approval-avatar" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">{{ (l.employeeName ?? 'U')[0].toUpperCase() }}</div>
                 <div class="zmgr-approval-info">
@@ -126,9 +126,9 @@
                 </div>
               </div>
             }
-            @if (pendingLv().length > 3) {
+            @if (pendingLeaves().length > 3) {
               <div class="zmgr-quick-footer">
-                <button class="zbtn zbtn-outline zbtn-sm" (click)="setTab('leaves'); lvStatus.set('pending')">View all {{ pendingLv().length }} pending →</button>
+                <button class="zbtn zbtn-outline zbtn-sm" (click)="setTab('leaves'); leaveStatusFilter.set('pending')">View all {{ pendingLeaves().length }} pending →</button>
               </div>
             }
           </div>
@@ -145,17 +145,17 @@
             </div>
             <div class="zmgr-ts-controls">
               <div class="zview-toggle">
-                <button class="zview-btn" [class.active]="tsViewMode()==='weekly'"  (click)="tsViewMode.set('weekly'); tsPeriodOffset.set(0); tsPage.set(1)">Weekly Grid</button>
-                <button class="zview-btn" [class.active]="tsViewMode()==='monthly'" (click)="tsViewMode.set('monthly'); tsPeriodOffset.set(0); tsPage.set(1)">Month</button>
-                <button class="zview-btn" [class.active]="tsViewMode()==='all'"     (click)="tsViewMode.set('all'); tsPeriodOffset.set(0); tsPage.set(1)">All</button>
+                <button class="zview-btn" [class.active]="tsViewMode()==='weekly'"  (click)="tsViewMode.set('weekly'); tsPeriodOffset.set(0); timesheetPage.set(1)">Weekly Grid</button>
+                <button class="zview-btn" [class.active]="tsViewMode()==='monthly'" (click)="tsViewMode.set('monthly'); tsPeriodOffset.set(0); timesheetPage.set(1)">Month</button>
+                <button class="zview-btn" [class.active]="tsViewMode()==='all'"     (click)="tsViewMode.set('all'); tsPeriodOffset.set(0); timesheetPage.set(1)">All</button>
               </div>
             </div>
           </div>
 
-          @if (pendingTs().length > 0) {
+          @if (pendingTimesheets().length > 0) {
             <div class="zmgr-pending-bar">
-              <span class="zmgr-pending-count">⏳ {{ pendingTs().length }} pending approval{{ pendingTs().length > 1 ? 's' : '' }}</span>
-              <button class="zbtn zbtn-outline zbtn-sm" (click)="tsStatus.set('pending'); tsViewMode.set('all'); tsPage.set(1)">View Pending</button>
+              <span class="zmgr-pending-count">⏳ {{ pendingTimesheets().length }} pending approval{{ pendingTimesheets().length > 1 ? 's' : '' }}</span>
+              <button class="zbtn zbtn-outline zbtn-sm" (click)="timesheetStatusFilter.set('pending'); tsViewMode.set('all'); timesheetPage.set(1)">View Pending</button>
             </div>
           }
 
@@ -186,7 +186,7 @@
                     <div class="zmgr-wts-emp-avatar">{{ group.employeeName[0].toUpperCase() }}</div>
                     <div class="zmgr-wts-emp-info">
                       <span class="zmgr-wts-emp-name">{{ group.employeeName }}</span>
-                      <span class="zmgr-wts-emp-meta">{{ group.rows.length }} project{{ group.rows.length > 1 ? 's' : '' }} · {{ fmtH(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }} total</span>
+                      <span class="zmgr-wts-emp-meta">{{ group.rows.length }} project{{ group.rows.length > 1 ? 's' : '' }} · {{ formatHours(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }} total</span>
                     </div>
                     @if (group.rows.some(r => getRowStatus(r) === 0) && group.rows.some(r => r.ts.userId !== auth.currentUser())) {
                       <div class="zmgr-wts-emp-actions">
@@ -214,12 +214,12 @@
                     <div class="zmgr-wts-row" [class.zmgr-wts-row-pending]="getRowStatus(row)===0" [style.grid-template-columns]="'180px repeat(' + visibleWeekDates().length + ', 1fr) 80px 100px'">
                       <div class="zmgr-wts-project-cell">
                         <span class="zmgr-wts-project-name">{{ row.ts.projectName }}</span>
-                        <span class="zbadge" [class]="stClass(getRowStatus(row))">{{ stText(getRowStatus(row)) }}</span>
+                        <span class="zbadge" [class]="getStatusClass(getRowStatus(row))">{{ getStatusText(getRowStatus(row)) }}</span>
                       </div>
                       @for (d of visibleWeekDates(); track d.getTime(); let vi = $index) {
                         <div class="zmgr-wts-cell" [class.zmgr-wts-today]="toDateStr(d)===todayDate" [class.zmgr-wts-has-hours]="row.hours[vi] !== null" [class.zmgr-wts-weekend]="vi>=5">
                           @if (row.hours[vi] !== null) {
-                            <span class="zmgr-wts-hours-val">{{ fmtH(row.hours[vi]!) }}</span>
+                            <span class="zmgr-wts-hours-val">{{ formatHours(row.hours[vi]!) }}</span>
                             @if (row.tsPerDay[vi]?.description) {
                               <span class="zmgr-wts-task-text"
                                 (click)="$event.stopPropagation(); toggleGridNote(row.tsPerDay[vi]!.description!)"
@@ -241,7 +241,7 @@
                           }
                         </div>
                       }
-                      <div class="zmgr-wts-row-total">{{ fmtH(row.hours.reduce((s,h)=>s+(h||0),0)) }}</div>
+                      <div class="zmgr-wts-row-total">{{ formatHours(row.hours.reduce((s,h)=>s+(h||0),0)) }}</div>
                       <div class="zmgr-wts-row-actions">
                         @if (getRowStatus(row) === 0 && row.ts.userId !== auth.currentUser()) {
                           <button class="zmgr-approve-btn" (click)="reviewRowTs(row, true)">✓</button>
@@ -259,9 +259,9 @@
                   <div class="zmgr-wts-footer" [style.grid-template-columns]="'180px repeat(' + visibleWeekDates().length + ', 1fr) 80px 100px'">
                     <div class="zmgr-wts-footer-label">Day Total</div>
                     @for (d of visibleWeekDates(); track d.getTime(); let i = $index) {
-                      <div class="zmgr-wts-day-total" [class.zmgr-wts-weekend]="i>=5">{{ fmtH(group.rows.reduce((s,r)=>s+(r.hours[i]||0),0)) }}</div>
+                      <div class="zmgr-wts-day-total" [class.zmgr-wts-weekend]="i>=5">{{ formatHours(group.rows.reduce((s,r)=>s+(r.hours[i]||0),0)) }}</div>
                     }
-                    <div class="zmgr-wts-grand-total">{{ fmtH(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</div>
+                    <div class="zmgr-wts-grand-total">{{ formatHours(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</div>
                     <div></div>
                   </div>
                 </div>
@@ -300,7 +300,7 @@
                         <span class="zmgr-wts-emp-name">{{ group.employeeName }}</span>
                         <span class="zmgr-wts-emp-meta">
                           {{ group.rows.length }} project{{ group.rows.length > 1 ? 's' : '' }} ·
-                          {{ fmtH(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }} total
+                          {{ formatHours(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }} total
                         </span>
                       </div>
                       @if (group.rows.some(r => r.tsPerDay.some(t => t && Number(t.status) === 0)) && group.rows.some(r => r.tsPerDay.some(t => t && t.userId !== auth.currentUser()))) {
@@ -346,7 +346,7 @@
                                  [class.zmgr-month-weekend]="d.getDay()===0||d.getDay()===6"
                                  [class.zmgr-month-has]="row.hours[di] !== null">
                               @if (row.hours[di] !== null) {
-                                <span class="zmgr-month-hours">{{ fmtH(row.hours[di]!) }}</span>
+                                <span class="zmgr-month-hours">{{ formatHours(row.hours[di]!) }}</span>
                                 @if (row.tsPerDay[di]?.description) {
                                   <span class="zmgr-month-task"
                                     (click)="$event.stopPropagation(); toggleGridNote(row.tsPerDay[di]!.description!)"
@@ -366,7 +366,7 @@
                               }
                             </div>
                           }
-                          <div class="zmgr-month-row-total">{{ fmtH(row.hours.reduce((s,h)=>s+(h||0),0)) }}</div>
+                          <div class="zmgr-month-row-total">{{ formatHours(row.hours.reduce((s,h)=>s+(h||0),0)) }}</div>
                           <div class="zmgr-month-row-actions">
                             @if (row.tsPerDay.some(t=>t&&Number(t.status)===0) && row.tsPerDay.some(t=>t&&t.userId!==auth.currentUser())) {
                               <button class="zmgr-approve-btn" (click)="reviewMonthRow(row, true)">✓</button>
@@ -387,11 +387,11 @@
                           <div class="zmgr-month-day-total"
                                [class.zmgr-month-weekend]="d.getDay()===0||d.getDay()===6">
                             {{ group.rows.reduce((s,r)=>s+(r.hours[di]||0),0) > 0
-                               ? fmtH(group.rows.reduce((s,r)=>s+(r.hours[di]||0),0))
+                               ? formatHours(group.rows.reduce((s,r)=>s+(r.hours[di]||0),0))
                                : '' }}
                           </div>
                         }
-                        <div class="zmgr-month-grand-total">{{ fmtH(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</div>
+                        <div class="zmgr-month-grand-total">{{ formatHours(group.rows.reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</div>
                         <div></div>
                       </div>
                     </div>
@@ -404,19 +404,19 @@
             @if (tsViewMode() === 'all') {
               <div class="zmgr-ts-filter-bar">
                 <div class="zfilter-wrap">
-                  <input class="zfilter-input" [ngModel]="tsSearch()" (ngModelChange)="tsSearch.set($event); tsPage.set(1)" placeholder="Search employee or project..." />
+                  <input class="zfilter-input" [ngModel]="timesheetSearch()" (ngModelChange)="timesheetSearch.set($event); timesheetPage.set(1)" placeholder="Search employee or project..." />
                 </div>
-                <select class="zfilter-select" [ngModel]="tsStatus()" (ngModelChange)="tsStatus.set($event); tsPage.set(1)">
+                <select class="zfilter-select" [ngModel]="timesheetStatusFilter()" (ngModelChange)="timesheetStatusFilter.set($event); timesheetPage.set(1)">
                   <option value="all">All Status</option>
                   <option value="pending">Pending</option>
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
                 </select>
-                <span class="zresult-count">{{ filteredTs().length }} records</span>
+                <span class="zresult-count">{{ filteredTimesheets().length }} records</span>
               </div>
 
               <div class="zmgr-ts-list">
-                @for (ts of pagedTs(); track ts.id) {
+                @for (ts of pagedTimesheets(); track ts.id) {
                   <div class="zmgr-ts-row" [class.zmgr-ts-pending]="ts.status===0" [class.zmgr-ts-approved]="ts.status===1" [class.zmgr-ts-rejected]="ts.status===2">
                     <div class="zmgr-ts-emp">
                       <div class="zmgr-ts-avatar">{{ (ts.employeeName??'U')[0].toUpperCase() }}</div>
@@ -430,10 +430,10 @@
                       <div class="zmgr-ts-date">{{ ts.date | date:'EEE, dd MMM yyyy' }}</div>
                     </div>
                     <div class="zmgr-ts-hours-block">
-                      <span class="zmgr-ts-hours-val">{{ fmtH(parseHoursPublic(ts.hoursWorked)) }}</span>
+                      <span class="zmgr-ts-hours-val">{{ formatHours(parseHoursPublic(ts.hoursWorked)) }}</span>
                       <span class="zmgr-ts-hours-lbl">hours</span>
                     </div>
-                    <div><span class="zbadge" [class]="stClass(ts.status)">{{ stText(ts.status) }}</span></div>
+                    <div><span class="zbadge" [class]="getStatusClass(ts.status)">{{ getStatusText(ts.status) }}</span></div>
                     <div class="zmgr-ts-notes">
                       @if (ts.description) { <div class="zmgr-ts-note">📝 {{ ts.description }}</div> }
                       @if (ts.managerComment) { <div class="zmgr-ts-comment">💬 {{ ts.managerComment }}</div> }
@@ -448,16 +448,16 @@
                     </div>
                   </div>
                 }
-                @if (pagedTs().length === 0) {
+                @if (pagedTimesheets().length === 0) {
                   <div class="zempty" style="padding:40px"><span class="zempty-icon">📋</span><span class="zempty-title">No timesheets found</span></div>
                 }
               </div>
               <div class="zpagination">
-                <span class="zpagination-info">{{ filteredTs().length }} records</span>
+                <span class="zpagination-info">{{ filteredTimesheets().length }} records</span>
                 <div class="zpagination-btns">
-                  <button class="zpg-btn" (click)="tsPage.update(p=>p-1)" [disabled]="tsPage()===1">‹</button>
-                  <span style="padding:0 12px;font-size:13px;color:#6B7280">{{ tsPage() }} / {{ tsTotalPages() }}</span>
-                  <button class="zpg-btn" (click)="tsPage.update(p=>p+1)" [disabled]="tsPage()===tsTotalPages()">›</button>
+                  <button class="zpg-btn" (click)="timesheetPage.update(p=>p-1)" [disabled]="timesheetPage()===1">‹</button>
+                  <span style="padding:0 12px;font-size:13px;color:#6B7280">{{ timesheetPage() }} / {{ timesheetTotalPages() }}</span>
+                  <button class="zpg-btn" (click)="timesheetPage.update(p=>p+1)" [disabled]="timesheetPage()===timesheetTotalPages()">›</button>
                 </div>
               </div>
             }
@@ -467,6 +467,26 @@
 
       <!-- ═══ LEAVES ═══ -->
       @if (activeTab() === 'leaves') {
+        <!-- Leave Balance -->
+        @if (leaveBalance().length > 0) {
+          <div class="zlv-balance-grid">
+            @for (b of leaveBalance(); track b.leaveType) {
+              <div class="zlv-balance-card" [class.zlv-balance-low]="b.remaining <= 3" [class.zlv-balance-empty]="b.remaining === 0">
+                <div class="zlv-balance-type">{{ b.leaveType }}</div>
+                <div class="zlv-balance-bar-track">
+                  <div class="zlv-balance-bar-fill"
+                    [style.width.%]="b.total > 0 ? (b.remaining / b.total) * 100 : 0"
+                    [class.zlv-balance-bar-low]="b.remaining <= 3">
+                  </div>
+                </div>
+                <div class="zlv-balance-nums">
+                  <span class="zlv-balance-remaining" [class.zlv-balance-remaining-low]="b.remaining <= 3">{{ b.remaining }} left</span>
+                  <span class="zlv-balance-total">/ {{ b.total }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
         <div class="zmgr-lv-card">
           <div class="zmgr-lv-header">
             <div class="zmgr-lv-title">
@@ -475,9 +495,9 @@
             </div>
             <div class="zmgr-lv-controls">
               <div class="zfilter-wrap">
-                <input class="zfilter-input" [ngModel]="lvSearch()" (ngModelChange)="lvSearch.set($event); lvPage.set(1)" placeholder="Search employee..." />
+                <input class="zfilter-input" [ngModel]="leaveSearch()" (ngModelChange)="leaveSearch.set($event); leavePage.set(1)" placeholder="Search employee..." />
               </div>
-              <select class="zfilter-select" [ngModel]="lvStatus()" (ngModelChange)="lvStatus.set($event); lvPage.set(1)">
+              <select class="zfilter-select" [ngModel]="leaveStatusFilter()" (ngModelChange)="leaveStatusFilter.set($event); leavePage.set(1)">
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
@@ -487,7 +507,7 @@
             </div>
           </div>
           <div class="zmgr-lv-list">
-            @for (l of pagedLv(); track l.id ?? $index) {
+            @for (l of pagedLeaves(); track l.id ?? $index) {
               <div class="zmgr-lv-row" [class.zmgr-lv-pending]="l.status===0" [class.zmgr-lv-approved]="l.status===1" [class.zmgr-lv-rejected]="l.status===2">
                 <div class="zmgr-lv-emp">
                   <div class="zmgr-lv-avatar">{{ (l.employeeName??'U')[0].toUpperCase() }}</div>
@@ -504,7 +524,7 @@
                   <span class="zmgr-lv-days-val">{{ leaveDays(l) }}</span>
                   <span class="zmgr-lv-days-lbl">days</span>
                 </div>
-                <div><span class="zbadge" [class]="stClass(l.status)">{{ stText(l.status) }}</span></div>
+                <div><span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span></div>
                 <div class="zmgr-lv-actions">
                   @if (+l.status === 0) {
                     @if (l.userId !== auth.currentUser()) {
@@ -517,16 +537,16 @@
                 </div>
               </div>
             }
-            @if (pagedLv().length === 0) {
+            @if (pagedLeaves().length === 0) {
               <div class="zempty" style="padding:40px"><span class="zempty-icon">🌴</span><span class="zempty-title">No leave requests found</span></div>
             }
           </div>
           <div class="zpagination">
-            <span class="zpagination-info">{{ filteredLv().length }} records</span>
+            <span class="zpagination-info">{{ filteredLeaves().length }} records</span>
             <div class="zpagination-btns">
-              <button class="zpg-btn" (click)="lvPage.update(p=>p-1)" [disabled]="lvPage()===1">‹</button>
-              <span style="padding:0 12px;font-size:13px;color:#6B7280">{{ lvPage() }} / {{ lvTotalPages() }}</span>
-              <button class="zpg-btn" (click)="lvPage.update(p=>p+1)" [disabled]="lvPage()===lvTotalPages()">›</button>
+              <button class="zpg-btn" (click)="leavePage.update(p=>p-1)" [disabled]="leavePage()===1">‹</button>
+              <span style="padding:0 12px;font-size:13px;color:#6B7280">{{ leavePage() }} / {{ leaveTotalPages() }}</span>
+              <button class="zpg-btn" (click)="leavePage.update(p=>p+1)" [disabled]="leavePage()===leaveTotalPages()">›</button>
             </div>
           </div>
         </div>
@@ -587,7 +607,7 @@
               </select>
               <select class="zfilter-select" [(ngModel)]="selUserId">
                 <option [value]="null">— Select Member —</option>
-                @for (u of teamMembers(); track u.id) { <option [value]="u.id">{{ u.name }}</option> }
+                @for (u of teamMembers(); track u.id) { <option [value]="u.id" [disabled]="u.status !== 'Active'">{{ u.name }}{{ u.status !== 'Active' ? ' (Inactive)' : '' }}</option> }
               </select>
               <button class="zbtn zbtn-primary" (click)="assignUserToProject()">Assign</button>
             </div>
@@ -771,25 +791,25 @@
             </div>
             <div class="zmgr-att-controls">
               <div class="zfilter-wrap">
-                <input class="zfilter-input" [ngModel]="attSearch()" (ngModelChange)="attSearch.set($event); attPage.set(1)" placeholder="Search employee..." />
+                <input class="zfilter-input" [ngModel]="attSearch()" (ngModelChange)="attSearch.set($event); attendancePage.set(1)" placeholder="Search employee..." />
               </div>
               <div class="zview-toggle">
-                <button class="zview-btn" [class.active]="attViewMode()==='all'"     (click)="attViewMode.set('all'); attPeriodOffset.set(0); attPage.set(1)">All</button>
-                <button class="zview-btn" [class.active]="attViewMode()==='weekly'"  (click)="attViewMode.set('weekly'); attPeriodOffset.set(0); attPage.set(1)">Week</button>
-                <button class="zview-btn" [class.active]="attViewMode()==='monthly'" (click)="attViewMode.set('monthly'); attPeriodOffset.set(0); attPage.set(1)">Month</button>
+                <button class="zview-btn" [class.active]="attViewMode()==='all'"     (click)="attViewMode.set('all'); attPeriodOffset.set(0); attendancePage.set(1)">All</button>
+                <button class="zview-btn" [class.active]="attViewMode()==='weekly'"  (click)="attViewMode.set('weekly'); attPeriodOffset.set(0); attendancePage.set(1)">Week</button>
+                <button class="zview-btn" [class.active]="attViewMode()==='monthly'" (click)="attViewMode.set('monthly'); attPeriodOffset.set(0); attendancePage.set(1)">Month</button>
               </div>
               @if (attViewMode() !== 'all') {
                 <div class="zmgr-att-period">
-                  <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o-1); attPage.set(1)">‹</button>
+                  <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o-1); attendancePage.set(1)">‹</button>
                   <span class="zts-period-label">{{ attPeriodLabel() }}</span>
-                  <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o+1); attPage.set(1)" [disabled]="attPeriodOffset()>=0">›</button>
+                  <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o+1); attendancePage.set(1)" [disabled]="attPeriodOffset()>=0">›</button>
                 </div>
               }
-              <span class="zatt-count-pill">{{ filteredAtt().length }} records</span>
+              <span class="zatt-count-pill">{{ filteredAttendances().length }} records</span>
             </div>
           </div>
           <div class="zmgr-att-list">
-            @for (a of pagedAtt(); track a.id) {
+            @for (a of pagedAttendances(); track a.id) {
               <div class="zmgr-att-row" [class.zmgr-att-late]="a.isLate">
                 <div class="zmgr-att-emp">
                   <div class="zmgr-att-avatar">{{ (a.employeeName??'U')[0].toUpperCase() }}</div>
@@ -826,16 +846,16 @@
                 </div>
               </div>
             }
-            @if (pagedAtt().length === 0) {
+            @if (pagedAttendances().length === 0) {
               <div class="zempty" style="padding:48px"><span class="zempty-icon">📭</span><span class="zempty-title">No attendance records found</span></div>
             }
           </div>
           <div class="zpagination">
-            <span class="zpagination-info">{{ filteredAtt().length }} records</span>
+            <span class="zpagination-info">{{ filteredAttendances().length }} records</span>
             <div class="zpagination-btns">
-              <button class="zpg-btn" (click)="attPage.update(p=>p-1)" [disabled]="attPage()===1">‹</button>
-              <span style="padding:0 12px;font-size:13px;color:#6B7280">{{ attPage() }} / {{ attTotalPages() }}</span>
-              <button class="zpg-btn" (click)="attPage.update(p=>p+1)" [disabled]="attPage()===attTotalPages()">›</button>
+              <button class="zpg-btn" (click)="attendancePage.update(p=>p-1)" [disabled]="attendancePage()===1">‹</button>
+              <span style="padding:0 12px;font-size:13px;color:#6B7280">{{ attendancePage() }} / {{ attendanceTotalPages() }}</span>
+              <button class="zpg-btn" (click)="attendancePage.update(p=>p+1)" [disabled]="attendancePage()===attendanceTotalPages()">›</button>
             </div>
           </div>
         </div>
@@ -868,7 +888,57 @@
   </div>
 </div>
 
-<app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()" [type]="cfgType()" (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />
+<!-- Missed Checkout Modal -->
+@if (showMissedCheckoutModal()) {
+  <div class="zmodal-overlay" (click)="showMissedCheckoutModal.set(false)">
+    <div class="zmco-modal" (click)="$event.stopPropagation()">
+      <div class="zmco-icon">⏰</div>
+      <h3 class="zmco-title">Missed Check-Out</h3>
+      <div class="zmco-body">
+        You forgot to check out <strong>yesterday</strong>. Your attendance has been automatically calculated as <strong>check-in + 8 hours</strong>.
+      </div>
+      <button class="zbtn zbtn-primary zmco-close-btn" (click)="showMissedCheckoutModal.set(false)">Got it</button>
+    </div>
+  </div>
+}
+<app-confirm [visible]="confirmVisible()" [title]="confirmTitle()" [message]="confirmMessage()" [type]="confirmType()" (confirmed)="onConfirmOk()" (cancelled)="onConfirmCancel()" />
+
+<!-- Leave Balance Modal -->
+@if (showLeaveBalanceModal()) {
+  <div class="zmodal-overlay" (click)="showLeaveBalanceModal.set(false)">
+    <div class="zlb-modal" (click)="$event.stopPropagation()">
+      <div class="zlb-icon">🌴</div>
+      <h3 class="zlb-title">Leave Applied!</h3>
+      <p class="zlb-sub">Your request has been submitted for approval.</p>
+      @if (leaveBalanceResult(); as bal) {
+        <div class="zlb-type">{{ bal.leaveType }}</div>
+        <div class="zlb-bar-wrap">
+          <div class="zlb-bar-track">
+            <div class="zlb-bar-fill" [style.width.%]="bal.total > 0 ? (bal.remaining / bal.total) * 100 : 0" [class.zlb-bar-low]="bal.remaining <= 3"></div>
+          </div>
+          <div class="zlb-bar-labels">
+            <span class="zlb-used">{{ bal.total - bal.remaining }} used</span>
+            <span class="zlb-remaining" [class.zlb-remaining-low]="bal.remaining <= 3">{{ bal.remaining }} remaining</span>
+          </div>
+        </div>
+        <div class="zlb-stats">
+          <div class="zlb-stat"><div class="zlb-stat-val">{{ bal.total }}</div><div class="zlb-stat-lbl">Total</div></div>
+          <div class="zlb-stat-sep"></div>
+          <div class="zlb-stat"><div class="zlb-stat-val" style="color:#DC2626">{{ bal.total - bal.remaining }}</div><div class="zlb-stat-lbl">Used</div></div>
+          <div class="zlb-stat-sep"></div>
+          <div class="zlb-stat"><div class="zlb-stat-val" [style.color]="bal.remaining <= 3 ? '#DC2626' : '#16A34A'">{{ bal.remaining }}</div><div class="zlb-stat-lbl">Remaining</div></div>
+        </div>
+        @if (bal.remaining <= 3 && bal.remaining > 0) {
+          <div class="zlb-warning">⚠ Only {{ bal.remaining }} day(s) left for {{ bal.leaveType }}</div>
+        }
+        @if (bal.remaining === 0) {
+          <div class="zlb-warning zlb-warning-empty">❌ No {{ bal.leaveType }} days remaining this year</div>
+        }
+      }
+      <button class="zbtn zbtn-primary zlb-close-btn" (click)="showLeaveBalanceModal.set(false)">Got it</button>
+    </div>
+  </div>
+}
 
 <!-- Apply My Leave Modal -->
 @if (showAddLeaveModal()) {

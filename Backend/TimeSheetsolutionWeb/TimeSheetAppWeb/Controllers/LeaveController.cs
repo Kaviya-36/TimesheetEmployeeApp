@@ -89,7 +89,7 @@ namespace TimeSheetAppWeb.Controllers
 
         // ================= GET MY LEAVES =================
         [HttpGet("user/{userId}")]
-        [Authorize(Roles = "Employee,Intern,HR,Manager,Admin")]
+        [Authorize(Roles = "Employee,Intern,HR,Manager,Admin,Mentor")]
         public async Task<IActionResult> GetMyLeaves(
             [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10,
             [FromQuery] string? search = null, [FromQuery] string? status = null,
@@ -109,6 +109,15 @@ namespace TimeSheetAppWeb.Controllers
             [FromQuery] string? sortDir = "desc")
         {
             var response = await _leaveService.GetAllLeavesAsync(pageNumber, pageSize, search, status, sortDir);
+            return Ok(response);
+        }
+
+        // ================= GET LEAVE BALANCE =================
+        [HttpGet("balance/{userId}")]
+        [Authorize(Roles = "Employee,Intern,HR,Manager,Admin,Mentor")]
+        public async Task<IActionResult> GetLeaveBalance(int userId)
+        {
+            var response = await _leaveService.GetLeaveBalanceAsync(userId);
             return Ok(response);
         }
     }

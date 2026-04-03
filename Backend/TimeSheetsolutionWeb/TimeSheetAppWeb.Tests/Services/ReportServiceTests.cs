@@ -166,3 +166,164 @@ namespace TimeSheetAppWeb.Tests.Services
         }
     }
 }
+
+    public class ReportServiceAdditionalTests
+    {
+        private readonly Mock<IRepository<int, Timesheet>> _tsRepo = new();
+        private readonly Mock<ILogger<ReportService>>      _logger = new();
+
+        private ReportService CreateService() =>
+            new(_tsRepo.Object, _logger.Object);
+
+        private Timesheet MakeTs(int id, int userId, int projectId, double hours,
+            TimesheetStatus status = TimesheetStatus.Approved,
+            DateTime? date = null) =>
+            new Timesheet
+            {
+                Id = id, UserId = userId, ProjectId = projectId,
+                ProjectName = $"Project {projectId}",
+                WorkDate = date ?? DateTime.Today,
+                TotalHours = hours, Status = status,
+                TaskDescription = $"Task {id}",
+                StartTime = TimeSpan.FromHours(9),
+                EndTime   = TimeSpan.FromHours(9 + hours)
+            };
+
+        // ── GetReport: empty data returns empty response ──────────────────────
+
+        [Fact]
+        public async Task GetReport_EmptyData_TotalItemsIsZero()
+        {
+            _tsRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Timesheet>());
+
+            var result = await CreateService().GetTimesheetReportAsync(
+                new ReportRequest { PageNumber = 1, PageSize = 10 });
+
+            Assert.Equal(0, result.TotalItems);
+        }
+
+        // ── GetReport: only approved and pending included ─────────────────────
+
+        [Fact]
+        public async Task GetReport_RejectedExcluded_OnlyApprovedAndPendingReturned()
+        {
+            var timesheets = new List<Timesheet>
+            {
+                MakeTs(1, 1, 1, 8, TimesheetStatus.Approved),
+                MakeTs(2, 1, 1, 4, TimesheetStatus.Pending),
+                MakeTs(3, 1, 1, 6, TimesheetStatus.Rejected)
+            };
+            _tsRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(timesheets);
+
+            var result = await CreateService().GetTimesheetReportAsync(
+                new ReportRequest { PageNumber = 1, PageSize = 10 });
+
+            Assert.Equal(2, result.TotalItems);
+        }
+
+        // ── GetReport: filter by userId ──────────────────────────────────────
+
+        // ── GetReport: filter by projectId ────────────────────────────────────
+
+        [Fact]
+        public async Task GetReport_FilterByProjectId_ReturnsOnlyThatProject()
+        {
+            var timesheets = new List<Timesheet>
+            {
+                MakeTs(1, 1, 1, 8), MakeTs(2, 1, 2, 6), MakeTs(3, 2, 2, 4)
+            };
+            _tsRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(timesheets);
+
+            var result = await CreateService().GetTimesheetReportAsync(
+                new ReportRequest { ProjectId = 2, PageNumber = 1, PageSize = 10 });
+
+            Assert.Equal(2, result.TotalItems);
+        }
+
+        // ── GetReport: date range filter ──────────────────────────────────────
+
+        [Fact]
+        public async Task GetReport_DateRangeFilter_ExcludesOutsideRange()
+        {
+            var timesheets = new List<Timesheet>
+            {
+                MakeTs(1, 1, 1, 8, date: DateTime.Today.AddDays(-20)),
+                MakeTs(2, 1, 1, 6, date: DateTime.Today.AddDays(-3)),
+                MakeTs(3, 1, 1, 4, date: DateTime.Today)
+            };
+            _tsRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(timesheets);
+
+            var result = await CreateService().GetTimesheetReportAsync(new ReportRequest
+            {
+                StartDate  = DateTime.Today.AddDays(-5),
+                EndDate    = DateTime.Today,
+                PageNumber = 1, PageSize = 10
+            });
+
+            Assert.Equal(2, result.TotalItems);
+        }
+
+        // ── GetReport: pagination page 2 ─────────────────────────────────────
+
+        [Fact]
+        public async Task GetReport_Page2_ReturnsCorrectItems()
+        {
+            var timesheets = Enumerable.Range(1, 10)
+                .Select(i => MakeTs(i, 1, 1, 8, date: DateTime.Today.AddDays(-i)))
+                .ToList();
+            _tsRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(timesheets);
+
+            var result = await CreateService().GetTimesheetReportAsync(
+                new ReportRequest { PageNumber = 2, PageSize = 4 });
+
+            Assert.Equal(10, result.TotalItems);
+            Assert.Equal(4, result.Data!.Count());
+        }
+
+        // ── GetReport: hours worked mapped correctly ──────────────────────────
+
+        [Fact]
+        public async Task GetReport_HoursWorked_MappedFromTotalHours()
+        {
+            _tsRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(
+                new List<Timesheet> { MakeTs(1, 1, 1, 6.5) });
+
+            var result = await CreateService().GetTimesheetReportAsync(
+                new ReportRequest { PageNumber = 1, PageSize = 10 });
+
+            Assert.Equal(6.5m, result.Data!.First().HoursWorked);
+        }
+
+        // ── GetReport: total pages calculated correctly ───────────────────────
+
+        [Fact]
+        public async Task GetReport_TotalPages_CalculatedCorrectly()
+        {
+            var timesheets = Enumerable.Range(1, 7)
+                .Select(i => MakeTs(i, 1, 1, 8, date: DateTime.Today.AddDays(-i)))
+                .ToList();
+            _tsRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(timesheets);
+
+            var result = await CreateService().GetTimesheetReportAsync(
+                new ReportRequest { PageNumber = 1, PageSize = 3 });
+
+            Assert.Equal(7, result.TotalItems);
+            Assert.Equal(3, result.TotalPages);
+        }
+
+        // ── GetReport: current page reflected in response ─────────────────────
+
+        [Fact]
+        public async Task GetReport_CurrentPage_ReflectsRequestedPage()
+        {
+            var timesheets = Enumerable.Range(1, 5)
+                .Select(i => MakeTs(i, 1, 1, 8, date: DateTime.Today.AddDays(-i)))
+                .ToList();
+            _tsRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(timesheets);
+
+            var result = await CreateService().GetTimesheetReportAsync(
+                new ReportRequest { PageNumber = 2, PageSize = 3 });
+
+            Assert.Equal(2, result.CurrentPage);
+        }
+    }

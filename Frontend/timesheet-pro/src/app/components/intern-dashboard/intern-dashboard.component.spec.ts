@@ -147,23 +147,23 @@ describe('InternDashboardComponent', () => {
   // ── Timesheet pagination ───────────────────────────────────────────────────
   it('tsTotalPages should be 1 when no timesheets', () => {
     component.timesheets.set([]);
-    expect(component.tsTotalPages()).toBe(1);
+    expect(component.timesheetTotalPages()).toBe(1);
   });
 
   it('tsTotalPages should calculate correctly for tsPS=6', () => {
     component.timesheets.set(Array.from({ length: 13 }, (_, i) => makeTs({ id: i + 1 })));
-    expect(component.tsTotalPages()).toBe(3);
+    expect(component.timesheetTotalPages()).toBe(3);
   });
 
   it('pagedTs should return max tsPS items', () => {
     component.timesheets.set(Array.from({ length: 13 }, (_, i) => makeTs({ id: i + 1 })));
-    expect(component.pagedTs().length).toBe(6);
+    expect(component.pagedTimesheets().length).toBe(6);
   });
 
   it('pagedTs page 2 returns second slice', () => {
     component.timesheets.set(Array.from({ length: 13 }, (_, i) => makeTs({ id: i + 1 })));
-    component.tsPage.set(2);
-    expect(component.pagedTs()[0].id).toBe(7);
+    component.timesheetPage.set(2);
+    expect(component.pagedTimesheets()[0].id).toBe(7);
   });
 
   // ── Attendance pagination ──────────────────────────────────────────────────
@@ -284,15 +284,15 @@ describe('InternDashboardComponent', () => {
   // ── confirmDeleteTs ────────────────────────────────────────────────────────
   it('confirmDeleteTs should set cfgVisible to true', () => {
     component.confirmDeleteTs(makeTs());
-    expect(component.cfgVisible()).toBeTrue();
-    expect(component.cfgTitle()).toContain('Delete');
+    expect(component.confirmVisible()).toBeTrue();
+    expect(component.confirmTitle()).toContain('Delete');
   });
 
   it('onCfgOk should execute delete action', fakeAsync(() => {
     tsSpy.delete.and.returnValue(of({}));
     tsSpy.getByUser.and.returnValue(of([]));
     component.confirmDeleteTs(makeTs());
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     expect(tsSpy.delete).toHaveBeenCalledWith(1);
     expect(toastSpy.success).toHaveBeenCalled();
@@ -301,15 +301,15 @@ describe('InternDashboardComponent', () => {
   it('onCfgOk should handle delete error', fakeAsync(() => {
     tsSpy.delete.and.returnValue(throwError(() => ({ error: { message: 'Error' } })));
     component.confirmDeleteTs(makeTs());
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     expect(toastSpy.error).toHaveBeenCalled();
   }));
 
   it('onCfgCancel should close confirm dialog', () => {
-    component.cfgVisible.set(true);
-    component.onCfgCancel();
-    expect(component.cfgVisible()).toBeFalse();
+    component.confirmVisible.set(true);
+    component.onConfirmCancel();
+    expect(component.confirmVisible()).toBeFalse();
   });
 
   // ── submitLeave ───────────────────────────────────────────────────────────
@@ -354,12 +354,12 @@ describe('InternDashboardComponent', () => {
   });
 
   // ── stText / stClass ───────────────────────────────────────────────────────
-  it('stText(0) → Pending',  () => expect(component.stText(0)).toBe('Pending'));
-  it('stText(1) → Approved', () => expect(component.stText(1)).toBe('Approved'));
-  it('stText(2) → Rejected', () => expect(component.stText(2)).toBe('Rejected'));
-  it('stClass(0) contains "pending"',  () => expect(component.stClass(0)).toContain('pending'));
-  it('stClass(1) contains "approved"', () => expect(component.stClass(1)).toContain('approved'));
-  it('stClass(2) contains "rejected"', () => expect(component.stClass(2)).toContain('rejected'));
+  it('stText(0) → Pending',  () => expect(component.getStatusText(0)).toBe('Pending'));
+  it('stText(1) → Approved', () => expect(component.getStatusText(1)).toBe('Approved'));
+  it('stText(2) → Rejected', () => expect(component.getStatusText(2)).toBe('Rejected'));
+  it('stClass(0) contains "pending"',  () => expect(component.getStatusClass(0)).toContain('pending'));
+  it('stClass(1) contains "approved"', () => expect(component.getStatusClass(1)).toContain('approved'));
+  it('stClass(2) contains "rejected"', () => expect(component.getStatusClass(2)).toContain('rejected'));
 
   // ── pages ─────────────────────────────────────────────────────────────────
   it('pages(3) should return [1,2,3]', () => expect(component.pages(3)).toEqual([1,2,3]));

@@ -65,21 +65,6 @@ namespace TimeSheetAppWeb.Controllers
             }
         }
 
-        // ---------------- GET PROJECT BY ID ----------------
-        [HttpGet("{projectId}")]
-        public async Task<IActionResult> GetProjectById(int projectId)
-        {
-            try
-            {
-                var result = await _projectService.GetProjectByIdAsync(projectId);
-                return StatusCode(result.Success ? 200 : 404, result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Success = false, Message = $"Error fetching project: {ex.Message}" });
-            }
-        }
-
         // ---------------- GET ALL PROJECTS WITH PAGINATION ----------------
         [HttpGet]
         [Authorize(Roles = "Admin,HR,Manager,Mentor")]
@@ -126,33 +111,6 @@ namespace TimeSheetAppWeb.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { Success = false, Message = $"Error removing user from project: {ex.Message}" });
-            }
-        }
-
-        [HttpGet("my")]
-        [Authorize] // any logged-in user
-        public async Task<IActionResult> GetMyProjects()
-        {
-            try
-            {
-                var userIdClaim = User.FindFirst("id")?.Value;
-
-                if (string.IsNullOrEmpty(userIdClaim))
-                    return Unauthorized();
-
-                int userId = int.Parse(userIdClaim);
-
-                var result = await _projectService.GetMyProjectsAsync(userId);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Success = false,
-                    Message = $"Error fetching user projects: {ex.Message}"
-                });
             }
         }
 

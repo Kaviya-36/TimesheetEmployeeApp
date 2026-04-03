@@ -112,10 +112,14 @@ namespace TimeSheetAppWeb.Services
                 var deptName = await ResolveDepartmentNameAsync(addedUser!.DepartmentId);
                 return MapToDto(addedUser!, deptName);
             }
+            catch (InvalidOperationException)
+            {
+                throw; // re-throw business validation errors as-is
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while registering user with Email {Email}", request.Email);
-                throw new Exception("An error occurred while registering the user.", ex);
+                throw new Exception(ex.InnerException?.Message ?? ex.Message);
             }
         }
 

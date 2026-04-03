@@ -44,12 +44,12 @@ const NAV_MAP: Record<string, NavItem[]> = {
     { label: 'Profile',     icon: '👤', tab: 'profile'    },
   ],
   Mentor: [
-    { label: 'Interns',     icon: '🎓', tab: 'interns'    },
-    { label: 'Profile',     icon: '👤', tab: 'profile'    },
+    { label: 'Interns',    icon: '🎓', tab: 'interns'  },
+    { label: 'My Leave',   icon: '🌴', tab: 'leave'    },
+    { label: 'Profile',    icon: '👤', tab: 'profile'  },
   ],
   Intern: [
     { label: 'Dashboard',   icon: '📊', tab: 'dashboard'  },
-    { label: 'Timesheets',  icon: '📋', tab: 'timesheet'  },
     { label: 'Attendance',  icon: '⏰', tab: 'attendance' },
     { label: 'Leave',       icon: '🌴', tab: 'leave'      },
     { label: 'Tasks',       icon: '📝', tab: 'tasks'      },

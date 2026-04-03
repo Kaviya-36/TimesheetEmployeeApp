@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TimeSheetAppWeb.Interface;
-using TimeSheetAppWeb.Model;
 using TimeSheetAppWeb.Model.common;
 using TimeSheetAppWeb.Model.DTOs;
 
@@ -13,12 +12,10 @@ namespace TimeSheetAppWeb.Controllers
     public class TimesheetController : ControllerBase
     {
         private readonly ITimesheetService _timesheetService;
-        private readonly IAttendanceService _attendanceService;
 
-        public TimesheetController(ITimesheetService timesheetService, IAttendanceService attendanceService)
+        public TimesheetController(ITimesheetService timesheetService)
         {
             _timesheetService = timesheetService;
-            _attendanceService = attendanceService;
         }
 
         // ---------------- UPDATE TIMESHEET ----------------

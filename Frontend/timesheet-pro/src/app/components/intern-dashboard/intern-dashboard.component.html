@@ -4,11 +4,6 @@
   <!-- Tab Bar removed — navigation via sidebar -->
 
   @if (activeTab()==='dashboard') {
-    <div class="stat-grid">
-      <div class="stat-card"><div class="stat-icon-wrap">📋</div><div class="stat-body"><div class="stat-value">{{ timesheets().length }}</div><div class="stat-label">Total Timesheets</div></div></div>
-      <div class="stat-card sc-success"><div class="stat-icon-wrap">✅</div><div class="stat-body"><div class="stat-value">{{ approvedTs() }}</div><div class="stat-label">Approved</div></div></div>
-      <div class="stat-card sc-warning"><div class="stat-icon-wrap">⏳</div><div class="stat-body"><div class="stat-value">{{ pendingTs() }}</div><div class="stat-label">Pending</div></div></div>
-    </div>
     <div class="zatt-hero">
       <div class="zatt-hero-left">
         <div class="zatt-hero-title">Today's Attendance</div>
@@ -38,259 +33,95 @@
     </div>
 
     <!-- Bottom 2-col grid -->
-    <div class="zintern-dash-grid">
-
+    <div class="zdash-2col">
       <!-- My Tasks -->
-      <div class="zintern-dash-card">
-        <div class="zintern-dash-card-header">
-          <div class="zintern-dash-card-title">📝 My Tasks</div>
+      <!-- My Tasks -->
+      <div class="zdash-widget">
+        <div class="zdash-widget-header">
+          <div class="zdash-widget-title">📝 My Tasks</div>
           <span class="zintern-task-count">{{ tasks().length }}</span>
         </div>
         @if (tasks().length === 0) {
-          <div class="zintern-dash-empty">No tasks assigned yet</div>
+          <div class="zdash-widget-empty">No tasks assigned yet</div>
         } @else {
-          <div class="zintern-dash-task-list">
-            @for (t of tasks().slice(0, 5); track t.id) {
-              <div class="zintern-dash-task-row" [class.zintern-dash-task-done]="t.status===2">
-                <span class="zintern-dash-task-icon">{{ t.status === 2 ? '✅' : '📌' }}</span>
-                <div class="zintern-dash-task-info">
-                  <div class="zintern-dash-task-name">{{ taskLabel(t) }}</div>
-                  @if (t.dueDate) { <div class="zintern-dash-task-due">📅 {{ t.dueDate | date:'dd MMM' }}</div> }
-                </div>
-                <span class="zbadge" [class]="taskStatusClass(t.status)" style="font-size:10px">{{ taskStatusText(t.status) }}</span>
+          @for (t of tasks().slice(0, 5); track t.id) {
+            <div class="zdash-widget-row" [class.ztask-list-done]="t.status===3">
+              <span style="font-size:16px;flex-shrink:0">{{ t.status === 3 ? '✅' : t.status === 2 ? '🔄' : '📌' }}</span>
+              <div style="flex:1;min-width:0">
+                <div class="ztask-list-name">{{ taskLabel(t) }}</div>
+                @if (t.dueDate) { <div class="ztask-list-due">📅 {{ t.dueDate | date:'dd MMM' }}</div> }
               </div>
-            }
-            @if (tasks().length > 5) {
-              <div class="zintern-dash-more" (click)="setTab('tasks')">View all {{ tasks().length }} tasks →</div>
-            }
-          </div>
-        }
-      </div>
-
-      <!-- Recent Timesheets -->
-      <div class="zintern-dash-card">
-        <div class="zintern-dash-card-header">
-          <div class="zintern-dash-card-title">📋 Recent Timesheets</div>
-          <span style="font-size:12px;color:#6B7280;font-weight:600">{{ totalHours() }}h total</span>
-        </div>
-        @if (timesheets().length === 0) {
-          <div class="zintern-dash-empty">No timesheets yet</div>
-        } @else {
-          <div class="zintern-dash-ts-list">
-            @for (ts of timesheets().slice(0, 5); track ts.id) {
-              <div class="zintern-dash-ts-row">
-                <div class="zintern-dash-ts-info">
-                  <div class="zintern-dash-ts-project">{{ ts.projectName }}</div>
-                  <div class="zintern-dash-ts-date">{{ ts.date | date:'EEE, dd MMM' }}</div>
-                </div>
-                <span class="zintern-dash-ts-hours">{{ ts.hoursWorked }}h</span>
-                <span class="zbadge" [class]="stClass(ts.status)" style="font-size:10px">{{ stText(ts.status) }}</span>
-              </div>
-            }
-            @if (timesheets().length > 5) {
-              <div class="zintern-dash-more" (click)="setTab('timesheet')">View all {{ timesheets().length }} →</div>
-            }
-          </div>
-        }
-      </div>
-
-    </div>
-  }
-
-  @if (activeTab()==='timesheet') {
-    <div class="zwts-card" (click)="closeNote()">
-      <div class="zwts-header">
-        <div class="zwts-title">
-          <svg width="22" height="22" fill="none" stroke="#10B981" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span>Weekly Timesheet</span>
-        </div>
-        <div class="zwts-nav">
-          <button class="zwts-nav-btn" (click)="tsPeriodOffset.set(0);initGrid()">Current Week</button>
-          <div class="zwts-week-range">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <span>{{ weekDates()[0] | date:'dd MMM' }} – {{ weekDates()[6] | date:'dd MMM yyyy' }}</span>
-          </div>
-          <button class="zwts-arrow" (click)="tsPeriodOffset.update(o=>o-1);initGrid()">‹</button>
-          <button class="zwts-arrow" (click)="tsPeriodOffset.update(o=>o+1);initGrid()" [disabled]="tsPeriodOffset()>=0">›</button>
-        </div>
-      </div>
-
-      <div class="zwts-col-headers">
-        <div class="zwts-project-hdr">Project</div>
-        @for (d of weekDates(); track d.getTime()) {
-          <div class="zwts-day-hdr" [class.zwts-today]="toDateStr(d)===todayDate" [class.zwts-weekend]="$index>=5">
-            <div class="zwts-day-name">{{ weekDays[$index] }}</div>
-            <div class="zwts-day-date">{{ d | date:'MMM dd' }}</div>
-          </div>
-        }
-        <div class="zwts-week-hdr">Week<br>Hours</div>
-      </div>
-
-      <div class="zwts-rows">
-        @for (row of gridRows(); track row.projectName; let i = $index) {
-          <div class="zwts-row">
-            <div class="zwts-project-cell">
-              <button class="zwts-remove-btn" (click)="removeGridRow(i)">✕</button>
-              <span class="zwts-project-name">{{ row.projectName }}</span>
+              <span class="zbadge" [class]="taskStatusClass(t.status)" style="font-size:10px">{{ taskStatusText(t.status) }}</span>
             </div>
-            @for (d of weekDates(); track d.getTime()) {
-              <div class="zwts-cell" [class.zwts-today]="toDateStr(d)===todayDate"
-                   [class.zwts-weekend]="$index>=5"
-                   [class.zwts-cell-approved]="getCellStatus(i, toDateStr(d)) === 1"
-                   style="position:relative">
-                @if (getCellStatus(i, toDateStr(d)) === 1) {
-                  <div class="zwts-cell-locked">
-                    <span class="zwts-cell-locked-val">{{ getCellVal(i, d) }}</span>
-                    <span class="zwts-cell-locked-badge">✓</span>
-                  </div>
-                } @else {
-                  <input class="zwts-input" [value]="getCellVal(i, d)"
-                    (change)="setCellVal(i, d, $any($event.target).value)"
-                    (focus)="$any($event.target).select()" placeholder="00h:00m" />
-                  @if (getCellStatus(i, toDateStr(d)) === 0) {
-                    <button class="zwts-cell-del-btn" (click)="$event.stopPropagation(); confirmDeleteTs(gridRows()[i].tsPerDay[toDateStr(d)])" title="Delete">✕</button>
-                  }
-                }
-                @if (getCellNote(i, toDateStr(d))) {
-                  <div class="zwts-cell-note-preview" (click)="$event.stopPropagation(); toggleNote(i, toDateStr(d))" [title]="getCellNote(i, toDateStr(d))">{{ getCellNote(i, toDateStr(d)) }}</div>
-                } @else if (getCellVal(i, d) && getCellStatus(i, toDateStr(d)) !== 1) {
-                  <div class="zwts-cell-note-add" (click)="$event.stopPropagation(); toggleNote(i, toDateStr(d))">+ task</div>
-                }
-                <button class="zwts-note-btn" [class.zwts-note-has]="getCellNote(i, toDateStr(d))" (click)="toggleNote(i, toDateStr(d))">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
-                @if (isNoteActive(i, toDateStr(d))) {
-                  <div class="zwts-note-popover" (click)="$event.stopPropagation()">
-                    <div class="zwts-note-popover-header">
-                      <span>Note — {{ d | date:'EEE, MMM d' }}</span>
-                      <button class="zwts-note-close" (click)="closeNote()">✕</button>
-                    </div>
-                    <textarea class="zwts-note-textarea" [value]="getCellNote(i, toDateStr(d))"
-                      (input)="setCellNote(i, toDateStr(d), $any($event.target).value)"
-                      placeholder="What did you work on?" rows="3"></textarea>
-                    <div class="zwts-note-footer">
-                      <button class="zwts-note-submit-btn" (click)="closeNote()">✓ Save Note</button>
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-            <div class="zwts-row-total">{{ rowTotal(i) }}</div>
-          </div>
+          }
+          @if (tasks().length > 5) {
+            <div class="zdash-widget-more" (click)="setTab('tasks')">View all {{ tasks().length }} tasks →</div>
+          }
         }
-
-        <div class="zwts-add-row">
-          <div class="zwts-project-cell" style="position:relative">
-            <button class="zwts-add-btn" (click)="showProjectPicker.update(v=>!v)">
-              <span style="font-size:16px;color:#9CA3AF">⊕</span>
-              <span>Select a task</span>
-              <span style="font-size:10px;color:#9CA3AF">∨</span>
-            </button>
-            @if (showProjectPicker()) {
-              <div class="zwts-picker">
-                @for (t of availableTasks(); track t.id) {
-                  <div class="zwts-picker-item" (click)="addTaskRow(t)">
-                    <div style="font-weight:600;font-size:13px">{{ taskLabel(t) }}</div>
-                    @if (t.description) { <div style="font-size:11px;color:#9CA3AF;margin-top:2px">{{ t.description }}</div> }
-                  </div>
-                }
-                @if (availableTasks().length === 0) {
-                  <div class="zwts-picker-empty">All tasks added</div>
-                }
-              </div>
-            }
+      </div>
+      <!-- Leave Summary -->
+      <div class="zdash-widget">
+        <div class="zdash-widget-header">
+          <div class="zdash-widget-title">🌴 Leave Summary</div>
+          <button class="zbtn zbtn-outline zbtn-sm" (click)="showLeaveModal.set(true)">+ Apply</button>
+        </div>
+        <div class="zdash-widget-row" style="justify-content:space-around;padding:8px 0">
+          <div style="text-align:center">
+            <div style="font-size:22px;font-weight:700;color:#F59E0B">{{ leaves().filter(l=>+l.status===0).length }}</div>
+            <div style="font-size:11px;color:#6B7280">Pending</div>
           </div>
-          @for (d of weekDates(); track d.getTime()) { <div class="zwts-cell zwts-cell-empty"></div> }
-          <div class="zwts-row-total">0</div>
+          <div style="text-align:center">
+            <div style="font-size:22px;font-weight:700;color:#10B981">{{ leaves().filter(l=>+l.status===1).length }}</div>
+            <div style="font-size:11px;color:#6B7280">Approved</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:22px;font-weight:700;color:#EF4444">{{ leaves().filter(l=>+l.status===2).length }}</div>
+            <div style="font-size:11px;color:#6B7280">Rejected</div>
+          </div>
         </div>
-      </div>
-
-      <div class="zwts-footer">
-        <div class="zwts-footer-actions">
-          <button class="zwts-submit-btn" (click)="submitGrid()" [disabled]="gridSaving() || gridRows().length===0">
-            @if (gridSaving()) { <span class="zbtn-spin"></span> } ✓ Submit for Approval
-          </button>
-        </div>
-        @for (d of weekDates(); track d.getTime()) {
-          <div class="zwts-day-total" [class.zwts-weekend]="$index>=5">{{ dayTotal(d) }}</div>
+        @if (leaveBalance().length > 0) {
+          @for (lb of leaveBalance().slice(0, 3); track lb.leaveType) {
+            <div class="zdash-widget-row" style="flex-direction:column;gap:4px;padding:6px 0">
+              <div style="display:flex;justify-content:space-between;font-size:12px">
+                <span style="color:#374151;font-weight:500">{{ lb.leaveType }}</span>
+                <span style="color:#6B7280">{{ lb.remaining }}/{{ lb.total }} days left</span>
+              </div>
+              <div style="height:6px;background:#F3F4F6;border-radius:3px;overflow:hidden">
+                <div style="height:100%;background:#6366F1;border-radius:3px;transition:width 0.3s"
+                     [style.width]="(lb.total > 0 ? (lb.remaining / lb.total) * 100 : 0) + '%'"></div>
+              </div>
+            </div>
+          }
+        } @else {
+          <div class="zdash-widget-empty">No leave balance data</div>
         }
-        <div class="zwts-grand-total">{{ grandTotal() }}</div>
-      </div>
-    </div>
-
-    <!-- History -->
-    <div class="zcard" style="margin-top:16px">
-      <div class="zcard-header">
-        <span class="zcard-title">Timesheet History</span>
-        <div class="zview-toggle">
-          <button class="zview-btn" [class.active]="tsViewMode()==='all'"     (click)="tsViewMode.set('all');tsPage.set(1)">All</button>
-          <button class="zview-btn" [class.active]="tsViewMode()==='pending'"  (click)="tsViewMode.set('pending');tsPage.set(1)">Pending</button>
-          <button class="zview-btn" [class.active]="tsViewMode()==='approved'" (click)="tsViewMode.set('approved');tsPage.set(1)">Approved</button>
-        </div>
-      </div>
-      <div class="ztable-wrap">
-        <table class="ztable">
-          <thead><tr><th>Project</th><th>Date</th><th>Hours</th><th>Status</th><th>Comment</th><th>Actions</th></tr></thead>
-          <tbody>
-            @for (ts of pagedTs(); track ts.id) {
-              <tr>
-                <td><strong>{{ ts.projectName }}</strong></td>
-                <td>{{ ts.date | date:'dd MMM yyyy' }}</td>
-                <td><strong class="zhours">{{ ts.hoursWorked }}</strong></td>
-                <td><span class="zbadge" [class]="stClass(ts.status)">{{ stText(ts.status) }}</span></td>
-                <td class="ztext-muted">{{ ts.managerComment || '—' }}</td>
-                <td>@if(ts.status===0){<button class="zbtn zbtn-danger zbtn-sm" (click)="confirmDeleteTs(ts)">🗑</button>}@else{<span class="ztext-muted">—</span>}</td>
-              </tr>
-            }
-            @if(pagedTs().length===0){<tr class="empty-row"><td colspan="6">No timesheet history.</td></tr>}
-          </tbody>
-        </table>
-      </div>
-      <div class="zpagination">
-        <span class="zpagination-info">{{ filteredTs().length }} records</span>
-        <div class="zpagination-btns">
-          <button class="zpg-btn" (click)="tsPage.update(p=>p-1)" [disabled]="tsPage()===1">‹</button>
-          <span style="padding:0 12px;font-size:13px;color:#6B7280">{{ tsPage() }}/{{ tsTotalPages() }}</span>
-          <button class="zpg-btn" (click)="tsPage.update(p=>p+1)" [disabled]="tsPage()===tsTotalPages()">›</button>
-        </div>
+        @if (leaves().length > 0) {
+          <div class="zdash-widget-more" (click)="setTab('leave')">View all leaves →</div>
+        }
       </div>
     </div>
   }
 
   @if (activeTab()==='attendance') {
-    <!-- Stat cards -->
-    <div class="zintern-att-stats">
-      <div class="zintern-att-stat zintern-att-stat-blue">
-        <div class="zintern-att-stat-icon">📅</div>
-        <div class="zintern-att-stat-val">{{ attendances().length }}</div>
-        <div class="zintern-att-stat-lbl">Total Days</div>
-      </div>
-      <div class="zintern-att-stat zintern-att-stat-green">
-        <div class="zintern-att-stat-icon">✅</div>
-        <div class="zintern-att-stat-val">{{ attendances().length - attendances().filter(a=>a.isLate).length }}</div>
-        <div class="zintern-att-stat-lbl">On Time</div>
-      </div>
-      <div class="zintern-att-stat zintern-att-stat-amber">
-        <div class="zintern-att-stat-icon">⚠</div>
-        <div class="zintern-att-stat-val">{{ attendances().filter(a=>a.isLate).length }}</div>
-        <div class="zintern-att-stat-lbl">Late</div>
-      </div>
+    <div class="zdash-stat-grid-3">
+      <div class="zdash-stat zdash-stat-blue"><div class="zdash-stat-icon">📅</div><div><div class="zdash-stat-val">{{ attendances().length }}</div><div class="zdash-stat-lbl">Total Days</div></div></div>
+      <div class="zdash-stat zdash-stat-green"><div class="zdash-stat-icon">✅</div><div><div class="zdash-stat-val">{{ attendances().length - attendances().filter(a=>a.isLate).length }}</div><div class="zdash-stat-lbl">On Time</div></div></div>
+      <div class="zdash-stat zdash-stat-amber"><div class="zdash-stat-icon">⚠</div><div><div class="zdash-stat-val">{{ attendances().filter(a=>a.isLate).length }}</div><div class="zdash-stat-lbl">Late</div></div></div>
     </div>
-
-    <div class="zintern-att-card2">
-      <div class="zintern-att-header2">
-        <div class="zintern-att-title2">
+    <div class="zsection-card">
+      <div class="zsection-header">
+        <div class="zsection-title">
           <svg width="18" height="18" fill="none" stroke="#6366F1" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           Attendance History
         </div>
-        <div class="zintern-att-controls">
+        <div class="zsection-controls">
           <div class="zview-toggle">
             <button class="zview-btn" [class.active]="attViewMode()==='all'"     (click)="attViewMode.set('all');attPeriodOffset.set(0);attPage.set(1)">All</button>
             <button class="zview-btn" [class.active]="attViewMode()==='weekly'"  (click)="attViewMode.set('weekly');attPeriodOffset.set(0);attPage.set(1)">Week</button>
             <button class="zview-btn" [class.active]="attViewMode()==='monthly'" (click)="attViewMode.set('monthly');attPeriodOffset.set(0);attPage.set(1)">Month</button>
           </div>
           @if (attViewMode() !== 'all') {
-            <div class="zintern-att-period">
+            <div class="zperiod-group">
               <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o-1);attPage.set(1)">‹</button>
               <span class="zts-period-label">{{ attPeriodLabel() }}</span>
               <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o+1);attPage.set(1)" [disabled]="attPeriodOffset()>=0">›</button>
@@ -299,34 +130,27 @@
           <span class="zatt-count-pill">{{ filteredAtt().length }} records</span>
         </div>
       </div>
-
-      <div class="zintern-att-list">
+      <div class="zatt-list">
         @for (a of pagedAtt(); track a.id) {
-          <div class="zintern-att-row" [class.zintern-att-late]="a.isLate">
-            <div class="zintern-att-date-block">
-              <div class="zintern-att-date-day">{{ a.date | date:'EEE' }}</div>
-              <div class="zintern-att-date-num">{{ a.date | date:'dd' }}</div>
-              <div class="zintern-att-date-mon">{{ a.date | date:'MMM yyyy' }}</div>
+          <div class="zatt-list-row" [class.zatt-list-row-late]="a.isLate">
+            <div class="zatt-date-block">
+              <div class="zatt-date-day">{{ a.date | date:'EEE' }}</div>
+              <div class="zatt-date-num">{{ a.date | date:'dd' }}</div>
+              <div class="zatt-date-mon">{{ a.date | date:'MMM yyyy' }}</div>
             </div>
             <div class="zatt-timeline">
               <div class="zatt-tl-dot zatt-tl-in"></div>
               <div class="zatt-tl-line" [class.zatt-tl-line-done]="a.checkOut"></div>
               <div class="zatt-tl-dot zatt-tl-out" [class.zatt-tl-dot-empty]="!a.checkOut"></div>
             </div>
-            <div class="zintern-att-times">
-              <div class="zintern-att-time-item">
-                <span class="zintern-att-time-lbl">Check In</span>
-                <span class="zintern-att-time-val">{{ a.checkIn || '—' }}</span>
-              </div>
-              <div class="zintern-att-time-sep">→</div>
-              <div class="zintern-att-time-item">
-                <span class="zintern-att-time-lbl">Check Out</span>
-                <span class="zintern-att-time-val">{{ a.checkOut || '—' }}</span>
-              </div>
+            <div class="zatt-times-cell">
+              <div class="zatt-time-item"><span class="zatt-time-lbl">Check In</span><span class="zatt-time-val">{{ a.checkIn || '—' }}</span></div>
+              <div class="zatt-time-sep">→</div>
+              <div class="zatt-time-item"><span class="zatt-time-lbl">Check Out</span><span class="zatt-time-val">{{ a.checkOut || '—' }}</span></div>
             </div>
-            <div class="zintern-att-hours">
-              <div class="zintern-att-hours-val">{{ a.totalHours || '—' }}</div>
-              <div class="zintern-att-hours-lbl">hours</div>
+            <div class="zatt-hours-cell">
+              <div class="zatt-hours-val">{{ a.totalHours || '—' }}</div>
+              <div class="zatt-hours-lbl">hours</div>
             </div>
             <div>
               @if (a.isLate) { <span class="zatt-pill zatt-pill-late">⚠ Late</span> }
@@ -338,7 +162,6 @@
           <div class="zempty" style="padding:40px"><span class="zempty-icon">📭</span><span class="zempty-title">No attendance records</span></div>
         }
       </div>
-
       <div class="zpagination">
         <span class="zpagination-info">{{ filteredAtt().length }} records</span>
         <div class="zpagination-btns">
@@ -351,27 +174,47 @@
   }
 
   @if (activeTab()==='leave') {
-    <div class="zintern-lv-card">
-      <div class="zintern-lv-header">
-        <div class="zintern-lv-title">
+    <!-- Leave Balance -->
+    @if (leaveBalance().length > 0) {
+      <div class="zlv-balance-grid">
+        @for (b of leaveBalance(); track b.leaveType) {
+          <div class="zlv-balance-card" [class.zlv-balance-low]="b.remaining <= 3" [class.zlv-balance-empty]="b.remaining === 0">
+            <div class="zlv-balance-type">{{ b.leaveType }}</div>
+            <div class="zlv-balance-bar-track">
+              <div class="zlv-balance-bar-fill"
+                [style.width.%]="b.total > 0 ? (b.remaining / b.total) * 100 : 0"
+                [class.zlv-balance-bar-low]="b.remaining <= 3">
+              </div>
+            </div>
+            <div class="zlv-balance-nums">
+              <span class="zlv-balance-remaining" [class.zlv-balance-remaining-low]="b.remaining <= 3">{{ b.remaining }} left</span>
+              <span class="zlv-balance-total">/ {{ b.total }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+    <div class="zsection-card">
+      <div class="zsection-header">
+        <div class="zsection-title">
           <svg width="18" height="18" fill="none" stroke="#10B981" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           My Leave Requests
         </div>
         <button class="zbtn zbtn-primary zbtn-sm" (click)="showLeaveModal.set(true)">+ Apply Leave</button>
       </div>
-      <div class="zintern-lv-list">
+      <div class="zlv-list">
         @for (l of leaves(); track l.id) {
-          <div class="zintern-lv-row" [class.zintern-lv-pending]="l.status===0" [class.zintern-lv-approved]="l.status===1" [class.zintern-lv-rejected]="l.status===2">
-            <div class="zintern-lv-type">
-              <div class="zintern-lv-type-name">{{ l.leaveType }}</div>
-              <div class="zintern-lv-dates">{{ l.fromDate | date:'dd MMM' }} → {{ l.toDate | date:'dd MMM yyyy' }}</div>
+          <div class="zlv-list-row" [class.zlv-row-pending]="l.status===0" [class.zlv-row-approved]="l.status===1" [class.zlv-row-rejected]="l.status===2">
+            <div>
+              <div class="zlv-date-range">{{ l.leaveType }}</div>
+              <div class="zlv-reason">{{ l.fromDate | date:'dd MMM' }} → {{ l.toDate | date:'dd MMM yyyy' }}</div>
             </div>
-            <div class="zintern-lv-days">
-              <span class="zintern-lv-days-val">{{ leaveDays(l) }}</span>
-              <span class="zintern-lv-days-lbl">days</span>
+            <div class="zlv-days-cell">
+              <span class="zlv-days-val">{{ leaveDays(l) }}</span>
+              <span class="zlv-days-lbl">days</span>
             </div>
-            <div class="zintern-lv-reason">{{ l.reason || '—' }}</div>
-            <div><span class="zbadge" [class]="stClass(l.status)">{{ stText(l.status) }}</span></div>
+            <div class="zlv-reason">{{ l.reason || '—' }}</div>
+            <div><span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span></div>
             <div>
               @if (+l.status === 0) {
                 <button class="zbtn zbtn-danger zbtn-sm" (click)="confirmDeleteLeave(l)">🗑</button>
@@ -387,9 +230,9 @@
   }
 
   @if (activeTab()==='tasks') {
-    <div class="zintern-task-card">
-      <div class="zintern-task-header">
-        <div class="zintern-task-title">
+    <div class="zsection-card">
+      <div class="zsection-header">
+        <div class="zsection-title">
           <svg width="18" height="18" fill="none" stroke="#7C3AED" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           My Tasks
         </div>
@@ -398,19 +241,25 @@
       @if (tasks().length === 0) {
         <div class="zempty" style="padding:48px"><span class="zempty-icon">📝</span><span class="zempty-title">No tasks assigned yet</span></div>
       } @else {
-        <div class="zintern-task-list">
+        <div class="ztask-list-items">
           @for (t of tasks(); track t.id) {
-            <div class="zintern-task-item" [class.zintern-task-done]="t.status===2">
-              <div class="zintern-task-icon">{{ t.status === 2 ? '✅' : '📌' }}</div>
-              <div class="zintern-task-body">
-                <div class="zintern-task-name">{{ taskLabel(t) }}</div>
-                @if (t.description) { <div class="zintern-task-desc">{{ t.description }}</div> }
-                @if (t.dueDate) { <div class="zintern-task-due">📅 Due {{ t.dueDate | date:'dd MMM yyyy' }}</div> }
+            <div class="ztask-list-row" [class.ztask-list-done]="t.status===2">
+              <div class="ztask-list-icon">{{ t.status === 2 ? '✅' : '📌' }}</div>
+              <div class="ztask-list-body">
+                <div class="ztask-list-name">{{ taskLabel(t) }}</div>
+                @if (t.description) { <div class="ztask-list-desc">{{ t.description }}</div> }
+                @if (t.dueDate) { <div class="ztask-list-due">📅 Due {{ t.dueDate | date:'dd MMM yyyy' }}</div> }
               </div>
-              <div class="zintern-task-right">
+              <div class="ztask-list-right">
                 <span class="zbadge" [class]="taskStatusClass(t.status)">{{ taskStatusText(t.status) }}</span>
-                @if (t.status !== 2) {
-                  <button class="zbtn zbtn-success zbtn-sm" (click)="markTaskComplete(t)">✓ Complete</button>
+                @if (t.status !== 3) {
+                  @if (t.status === 1) {
+                    <button class="zbtn zbtn-outline zbtn-sm" (click)="updateTaskStatus(t, 2)">▶ Start</button>
+                  }
+                  @if (t.status === 2) {
+                    <button class="zbtn zbtn-success zbtn-sm" (click)="updateTaskStatus(t, 3)">✓ Complete</button>
+                    <button class="zbtn zbtn-outline zbtn-sm" (click)="updateTaskStatus(t, 1)">↩ Pending</button>
+                  }
                 }
               </div>
             </div>
@@ -443,34 +292,6 @@
   }
 </div></div></div>
 
-@if(showTsModal()){
-  <div class="zmodal-overlay" (click)="showTsModal.set(false)"><div class="zmodal" (click)="$event.stopPropagation()">
-    <div class="zmodal-header"><span class="zmodal-title">📋 Add Timesheet</span><button class="zmodal-close" (click)="showTsModal.set(false)">✕</button></div>
-    <div class="zmodal-body"><form [formGroup]="tsForm" novalidate>
-      <div class="zform-group"><label class="zform-label">Task <span class="req">*</span></label>
-        <select formControlName="taskId" class="zform-control" (change)="onTaskSelect()">
-          <option value="">— Select Task —</option>
-          @for(t of tasks(); track t.id) {
-            @if(+$any(t).status !== 2) {
-              <option [value]="t.id">{{ taskLabel(t) }}</option>
-            }
-          }
-        </select>
-        @if(tasks().length === 0) {
-          <span class="zform-error">No tasks assigned. Contact your mentor.</span>
-        }
-      </div>
-      <div class="zform-group"><label class="zform-label">Work Date <span class="req">*</span></label><input formControlName="workDate" type="date" class="zform-control" [max]="todayDate" /></div>
-      <div class="zgrid-3">
-        <div class="zform-group"><label class="zform-label">Start</label><input formControlName="startTime" type="time" class="zform-control" /></div>
-        <div class="zform-group"><label class="zform-label">End</label><input formControlName="endTime" type="time" class="zform-control" /></div>
-        <div class="zform-group"><label class="zform-label">Break</label><input formControlName="breakTime" type="time" class="zform-control" /></div>
-      </div>
-      <div class="zform-group"><label class="zform-label">Description</label><textarea formControlName="taskDescription" class="zform-control" rows="2" placeholder="Auto-filled from task, or add notes..."></textarea></div>
-    </form></div>
-    <div class="zmodal-footer"><button class="zbtn zbtn-outline" (click)="showTsModal.set(false)">Cancel</button><button class="zbtn zbtn-primary" [disabled]="tsForm.invalid" (click)="submitTimesheet()">Submit</button></div>
-  </div></div>
-}
 @if(showLeaveModal()){
   <div class="zmodal-overlay" (click)="showLeaveModal.set(false)"><div class="zmodal zmodal-sm" (click)="$event.stopPropagation()">
     <div class="zmodal-header"><span class="zmodal-title">🌴 Apply Leave</span><button class="zmodal-close" (click)="showLeaveModal.set(false)">✕</button></div>
@@ -485,4 +306,54 @@
     <div class="zmodal-footer"><button class="zbtn zbtn-outline" (click)="showLeaveModal.set(false)">Cancel</button><button class="zbtn zbtn-primary" [disabled]="leaveForm.invalid" (click)="submitLeave()">Apply</button></div>
   </div></div>
 }
-<app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()" (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />
+<!-- Missed Checkout Modal -->
+@if (showMissedCheckoutModal()) {
+  <div class="zmodal-overlay" (click)="showMissedCheckoutModal.set(false)">
+    <div class="zmco-modal" (click)="$event.stopPropagation()">
+      <div class="zmco-icon">⏰</div>
+      <h3 class="zmco-title">Missed Check-Out</h3>
+      <div class="zmco-body">
+        You forgot to check out <strong>yesterday</strong>. Your attendance has been automatically calculated as <strong>check-in + 8 hours</strong>.
+      </div>
+      <button class="zbtn zbtn-primary zmco-close-btn" (click)="showMissedCheckoutModal.set(false)">Got it</button>
+    </div>
+  </div>
+}
+<app-confirm [visible]="confirmVisible()" [title]="confirmTitle()" [message]="confirmMessage()" (confirmed)="onConfirmOk()" (cancelled)="onConfirmCancel()" />
+
+<!-- Leave Balance Modal -->
+@if (showLeaveBalanceModal()) {
+  <div class="zmodal-overlay" (click)="showLeaveBalanceModal.set(false)">
+    <div class="zlb-modal" (click)="$event.stopPropagation()">
+      <div class="zlb-icon">🌴</div>
+      <h3 class="zlb-title">Leave Applied!</h3>
+      <p class="zlb-sub">Your request has been submitted for approval.</p>
+      @if (leaveBalanceResult(); as bal) {
+        <div class="zlb-type">{{ bal.leaveType }}</div>
+        <div class="zlb-bar-wrap">
+          <div class="zlb-bar-track">
+            <div class="zlb-bar-fill" [style.width.%]="bal.total > 0 ? (bal.remaining / bal.total) * 100 : 0" [class.zlb-bar-low]="bal.remaining <= 3"></div>
+          </div>
+          <div class="zlb-bar-labels">
+            <span class="zlb-used">{{ bal.total - bal.remaining }} used</span>
+            <span class="zlb-remaining" [class.zlb-remaining-low]="bal.remaining <= 3">{{ bal.remaining }} remaining</span>
+          </div>
+        </div>
+        <div class="zlb-stats">
+          <div class="zlb-stat"><div class="zlb-stat-val">{{ bal.total }}</div><div class="zlb-stat-lbl">Total</div></div>
+          <div class="zlb-stat-sep"></div>
+          <div class="zlb-stat"><div class="zlb-stat-val" style="color:#DC2626">{{ bal.total - bal.remaining }}</div><div class="zlb-stat-lbl">Used</div></div>
+          <div class="zlb-stat-sep"></div>
+          <div class="zlb-stat"><div class="zlb-stat-val" [style.color]="bal.remaining <= 3 ? '#DC2626' : '#16A34A'">{{ bal.remaining }}</div><div class="zlb-stat-lbl">Remaining</div></div>
+        </div>
+        @if (bal.remaining <= 3 && bal.remaining > 0) {
+          <div class="zlb-warning">⚠ Only {{ bal.remaining }} day(s) left for {{ bal.leaveType }}</div>
+        }
+        @if (bal.remaining === 0) {
+          <div class="zlb-warning zlb-warning-empty">❌ No {{ bal.leaveType }} days remaining this year</div>
+        }
+      }
+      <button class="zbtn zbtn-primary zlb-close-btn" (click)="showLeaveBalanceModal.set(false)">Got it</button>
+    </div>
+  </div>
+}

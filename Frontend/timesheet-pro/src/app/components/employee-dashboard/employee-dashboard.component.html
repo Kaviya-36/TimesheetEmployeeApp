@@ -1,4 +1,4 @@
-﻿<div class="app-shell">
+<div class="app-shell">
   <app-sidebar />
   <div class="app-main">
     <app-navbar />
@@ -25,23 +25,23 @@
               <div class="zdash-stat-val">{{ timesheets().length }}</div>
               <div class="zdash-stat-lbl">Total Timesheets</div>
             </div>
-            <div class="zdash-stat-trend">{{ totalHours() }} hrs total</div>
+            <div class="zdash-stat-trend">{{ totalHoursLogged() }} hrs total</div>
           </div>
           <div class="zdash-stat-card zdash-stat-green">
             <div class="zdash-stat-icon">✅</div>
             <div class="zdash-stat-body">
-              <div class="zdash-stat-val">{{ approvedCount() }}</div>
+              <div class="zdash-stat-val">{{ approvedTimesheetsCount() }}</div>
               <div class="zdash-stat-lbl">Approved</div>
             </div>
-            <div class="zdash-stat-trend">{{ timesheets().length ? ((approvedCount()/timesheets().length)*100).toFixed(0) : 0 }}% approval rate</div>
+            <div class="zdash-stat-trend">{{ timesheets().length ? ((approvedTimesheetsCount()/timesheets().length)*100).toFixed(0) : 0 }}% approval rate</div>
           </div>
           <div class="zdash-stat-card zdash-stat-amber">
             <div class="zdash-stat-icon">⏳</div>
             <div class="zdash-stat-body">
-              <div class="zdash-stat-val">{{ pendingCount() }}</div>
+              <div class="zdash-stat-val">{{ pendingTimesheetsCount() }}</div>
               <div class="zdash-stat-lbl">Pending Review</div>
             </div>
-            <div class="zdash-stat-trend">{{ rejectedCount() }} rejected</div>
+            <div class="zdash-stat-trend">{{ rejectedTimesheetsCount() }} rejected</div>
           </div>
           <div class="zdash-stat-card zdash-stat-purple">
             <div class="zdash-stat-icon">📅</div>
@@ -49,7 +49,7 @@
               <div class="zdash-stat-val">{{ attendances().length }}</div>
               <div class="zdash-stat-lbl">Days Present</div>
             </div>
-            <div class="zdash-stat-trend">{{ onTimeDays() }} on time · {{ attendances().filter(a=>a.isLate).length }} late</div>
+            <div class="zdash-stat-trend">{{ onTimeDaysCount() }} on time · {{ attendances().filter(a=>a.isLate).length }} late</div>
           </div>
         </div>
 
@@ -138,12 +138,12 @@
               <div class="zdash-section-title">🌴 Leave Summary</div>
               <div class="zdash-leave-row">
                 <div class="zdash-leave-item">
-                  <div class="zdash-leave-val" style="color:#D97706">{{ pendingLeaves() }}</div>
+                  <div class="zdash-leave-val" style="color:#D97706">{{ pendingLeavesCount() }}</div>
                   <div class="zdash-leave-lbl">Pending</div>
                 </div>
                 <div class="zdash-leave-sep"></div>
                 <div class="zdash-leave-item">
-                  <div class="zdash-leave-val" style="color:#16A34A">{{ approvedLeaves() }}</div>
+                  <div class="zdash-leave-val" style="color:#16A34A">{{ approvedLeavesCount() }}</div>
                   <div class="zdash-leave-lbl">Approved</div>
                 </div>
                 <div class="zdash-leave-sep"></div>
@@ -157,11 +157,11 @@
             <!-- Recent timesheets -->
             <div class="zdash-recent-card">
               <div class="zdash-section-title">📋 Recent Timesheets</div>
-              @if (recentTimesheets().length === 0) {
+              @if (recentTimesheetsList().length === 0) {
                 <div class="zdash-empty-hint">No timesheets yet</div>
               } @else {
                 <div class="zdash-recent-list">
-                  @for (ts of recentTimesheets(); track ts.id) {
+                  @for (ts of recentTimesheetsList(); track ts.id) {
                     <div class="zdash-recent-row">
                       <div class="zdash-recent-dot"
                         [class.zdash-dot-approved]="ts.status===1"
@@ -174,13 +174,31 @@
                       </div>
                       <div class="zdash-recent-right">
                         <span class="zts-hours-chip">{{ ts.hoursWorked }}h</span>
-                        <span class="zbadge" [class]="stClass(ts.status)" style="font-size:10px;padding:2px 8px">{{ stText(ts.status) }}</span>
+                        <span class="zbadge" [class]="getStatusClass(ts.status)" style="font-size:10px;padding:2px 8px">{{ getStatusText(ts.status) }}</span>
                       </div>
                     </div>
                   }
                 </div>
               }
             </div>
+
+            <!-- My Projects -->
+            @if (projectsAssignment().length > 0) {
+              <div class="zdash-recent-card" style="margin-top:16px">
+                <div class="zdash-section-title">🗂 My Projects</div>
+                <div class="zdash-recent-list">
+                  @for (p of projectsAssignment(); track p.projectId) {
+                    <div class="zdash-recent-row">
+                      <div style="width:8px;height:8px;border-radius:50%;background:#6366F1;flex-shrink:0;margin-top:4px"></div>
+                      <div class="zdash-recent-info">
+                        <div class="zdash-recent-project">{{ p.projectName }}</div>
+                      </div>
+                      <span class="zbadge zbadge-role" style="font-size:10px">Active</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
 
           </div>
         </div>
@@ -350,9 +368,9 @@
             </div>
             <div class="zts-history-filters">
               <div class="zview-toggle">
-                <button class="zview-btn" [class.active]="tsViewMode()==='weekly'"  (click)="tsViewMode.set('weekly');tsPeriodOffset.set(0);tsPage.set(1)">Week</button>
-                <button class="zview-btn" [class.active]="tsViewMode()==='monthly'" (click)="tsViewMode.set('monthly');tsPeriodOffset.set(0);tsPage.set(1)">Month</button>
-                <button class="zview-btn" [class.active]="tsViewMode()==='all'"     (click)="tsViewMode.set('all');tsPeriodOffset.set(0);tsPage.set(1)">All</button>
+                <button class="zview-btn" [class.active]="tsViewMode()==='weekly'"  (click)="tsViewMode.set('weekly');tsPeriodOffset.set(0);timesheetPage.set(1)">Week</button>
+                <button class="zview-btn" [class.active]="tsViewMode()==='monthly'" (click)="tsViewMode.set('monthly');tsPeriodOffset.set(0);timesheetPage.set(1)">Month</button>
+                <button class="zview-btn" [class.active]="tsViewMode()==='all'"     (click)="tsViewMode.set('all');tsPeriodOffset.set(0);timesheetPage.set(1)">All</button>
               </div>
               @if (tsViewMode() !== 'all') {
                 <div class="zts-period-nav">
@@ -363,10 +381,10 @@
               }
               @if (tsViewMode() === 'all') {
                 <div class="zview-toggle">
-                  <button class="zview-btn" [class.active]="tsStatus()==='all'"      (click)="tsStatus.set('all');tsPage.set(1)">All</button>
-                  <button class="zview-btn" [class.active]="tsStatus()==='pending'"  (click)="tsStatus.set('pending');tsPage.set(1)">Pending</button>
-                  <button class="zview-btn" [class.active]="tsStatus()==='approved'" (click)="tsStatus.set('approved');tsPage.set(1)">Approved</button>
-                  <button class="zview-btn" [class.active]="tsStatus()==='rejected'" (click)="tsStatus.set('rejected');tsPage.set(1)">Rejected</button>
+                  <button class="zview-btn" [class.active]="timesheetStatusFilter()==='all'"      (click)="timesheetStatusFilter.set('all');timesheetPage.set(1)">All</button>
+                  <button class="zview-btn" [class.active]="timesheetStatusFilter()==='pending'"  (click)="timesheetStatusFilter.set('pending');timesheetPage.set(1)">Pending</button>
+                  <button class="zview-btn" [class.active]="timesheetStatusFilter()==='approved'" (click)="timesheetStatusFilter.set('approved');timesheetPage.set(1)">Approved</button>
+                  <button class="zview-btn" [class.active]="timesheetStatusFilter()==='rejected'" (click)="timesheetStatusFilter.set('rejected');timesheetPage.set(1)">Rejected</button>
                 </div>
               }
             </div>
@@ -413,7 +431,7 @@
                            [class.zts-hist-pending]="row.tsPerDay[wi] && +row.tsPerDay[wi]!.status===0"
                            [class.zts-hist-rejected]="row.tsPerDay[wi] && +row.tsPerDay[wi]!.status===2">
                         @if (row.hours[wi] !== null) {
-                          <span class="zts-hist-hours">{{ fmtH(row.hours[wi]) }}</span>
+                          <span class="zts-hist-hours">{{ formatHours(row.hours[wi]) }}</span>
                           @if (row.tsPerDay[wi] && row.tsPerDay[wi]!.status !== 0) {
                             <span class="zts-hist-badge"
                               [class.zts-hist-badge-approved]="row.tsPerDay[wi]!.status===1"
@@ -430,7 +448,7 @@
                       </div>
                     }
                     <div class="zts-hist-row-total">
-                      <span class="zts-hours-chip">{{ fmtH(row.hours.reduce((s,h)=>s+(h||0),0)) || '—' }}</span>
+                      <span class="zts-hours-chip">{{ formatHours(row.hours.reduce((s,h)=>s+(h||0),0)) || '—' }}</span>
                     </div>
                   </div>
                 }
@@ -439,11 +457,11 @@
                   <div class="zts-hist-footer-label">Day Total</div>
                   @for (d of histWeekDates(); track d.getTime(); let wi = $index) {
                     <div class="zts-hist-day-total" [class.zts-hist-weekend]="wi>=5">
-                      {{ fmtH(histWeeklyRows().reduce((s,r)=>s+(r.hours[wi]||0),0)) }}
+                      {{ formatHours(histWeeklyRows().reduce((s,r)=>s+(r.hours[wi]||0),0)) }}
                     </div>
                   }
                   <div class="zts-hist-grand-total">
-                    <span class="zts-hours-chip">{{ fmtH(histWeeklyRows().reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</span>
+                    <span class="zts-hours-chip">{{ formatHours(histWeeklyRows().reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</span>
                   </div>
                 </div>
               }
@@ -494,7 +512,7 @@
                              [class.zts-month-pending]="row.tsPerDay[di] && +row.tsPerDay[di]!.status===0"
                              [class.zts-month-rejected]="row.tsPerDay[di] && +row.tsPerDay[di]!.status===2">
                           @if (row.hours[di] !== null) {
-                            <span class="zts-month-hours">{{ fmtH(row.hours[di]) }}</span>
+                            <span class="zts-month-hours">{{ formatHours(row.hours[di]) }}</span>
                             @if (row.tsPerDay[di]?.description) {
                               <span class="zts-month-note" [title]="row.tsPerDay[di]!.description!">
                                 {{ row.tsPerDay[di]!.description }}
@@ -504,7 +522,7 @@
                         </div>
                       }
                       <div class="zts-month-row-total">
-                        <span class="zts-hours-chip">{{ fmtH(row.hours.reduce((s,h)=>s+(h||0),0)) || '—' }}</span>
+                        <span class="zts-hours-chip">{{ formatHours(row.hours.reduce((s,h)=>s+(h||0),0)) || '—' }}</span>
                       </div>
                     </div>
                   }
@@ -515,11 +533,11 @@
                     @for (d of monthDates(); track d.getTime(); let di = $index) {
                       <div class="zts-month-day-total"
                            [class.zts-month-weekend]="d.getDay()===0||d.getDay()===6">
-                        {{ fmtH(monthlyRows().reduce((s,r)=>s+(r.hours[di]||0),0)) }}
+                        {{ formatHours(monthlyRows().reduce((s,r)=>s+(r.hours[di]||0),0)) }}
                       </div>
                     }
                     <div class="zts-month-grand-total">
-                      <span class="zts-hours-chip">{{ fmtH(monthlyRows().reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</span>
+                      <span class="zts-hours-chip">{{ formatHours(monthlyRows().reduce((s,r)=>s+r.hours.reduce((a,h)=>a+(h||0),0),0)) }}</span>
                     </div>
                   </div>
                 </div>
@@ -533,9 +551,9 @@
             <table class="zts-list-table">
               <thead>
                 <tr>
-                  <th class="sortable" (click)="sortTs('project')">Project {{ ico(tsSortCol()==='project', tsSortDir()) }}</th>
-                  <th class="sortable" (click)="sortTs('date')">Date {{ ico(tsSortCol()==='date', tsSortDir()) }}</th>
-                  <th class="sortable" (click)="sortTs('hours')">Hours {{ ico(tsSortCol()==='hours', tsSortDir()) }}</th>
+                  <th class="sortable" (click)="sortTimesheets('project')">Project {{ getSortIcon(timesheetSortColumn()==='project', timesheetSortDirection()) }}</th>
+                  <th class="sortable" (click)="sortTimesheets('date')">Date {{ getSortIcon(timesheetSortColumn()==='date', timesheetSortDirection()) }}</th>
+                  <th class="sortable" (click)="sortTimesheets('hours')">Hours {{ getSortIcon(timesheetSortColumn()==='hours', timesheetSortDirection()) }}</th>
                   <th>Status</th>
                   <th>Note</th>
                   <th>Comment</th>
@@ -543,7 +561,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (ts of pagedTs(); track ts.id) {
+                @for (ts of pagedTimesheets(); track ts.id) {
                   <tr [class.zts-row-pending]="ts.status===0" [class.zts-row-rejected]="ts.status===2">
                     <td>
                       <div class="zts-list-project-cell">
@@ -557,7 +575,7 @@
                     </td>
                     <td class="zts-list-date">{{ ts.date | date:'EEE, dd MMM yyyy' }}</td>
                     <td><span class="zts-hours-chip">{{ ts.hoursWorked }}</span></td>
-                    <td><span class="zbadge" [class]="stClass(ts.status)">{{ stText(ts.status) }}</span></td>
+                    <td><span class="zbadge" [class]="getStatusClass(ts.status)">{{ getStatusText(ts.status) }}</span></td>
                     <td class="zts-note-cell">
                       @if (activeHistoryNote() === ts.id) {
                         <div class="zts-note-inline" (click)="$event.stopPropagation()">
@@ -597,18 +615,18 @@
                     </td>
                   </tr>
                 }
-                @if (pagedTs().length === 0) {
+                @if (pagedTimesheets().length === 0) {
                   <tr class="empty-row"><td colspan="7">No timesheet records found.</td></tr>
                 }
               </tbody>
             </table>
           </div>
           <div class="zts-list-pagination">
-            <span class="zts-list-pagination-info">{{ filteredTs().length }} records</span>
+            <span class="zts-list-pagination-info">{{ filteredTimesheets().length }} records</span>
             <div class="zts-list-pagination-btns">
-              <button class="zts-pg-btn" (click)="tsPage.update(p=>p-1)" [disabled]="tsPage()===1">‹</button>
-              <span class="zts-pg-label">{{ tsPage() }} / {{ tsTotalPages() }}</span>
-              <button class="zts-pg-btn" (click)="tsPage.update(p=>p+1)" [disabled]="tsPage()===tsTotalPages()">›</button>
+              <button class="zts-pg-btn" (click)="timesheetPage.update(p=>p-1)" [disabled]="timesheetPage()===1">‹</button>
+              <span class="zts-pg-label">{{ timesheetPage() }} / {{ timesheetTotalPages() }}</span>
+              <button class="zts-pg-btn" (click)="timesheetPage.update(p=>p+1)" [disabled]="timesheetPage()===timesheetTotalPages()">›</button>
             </div>
           </div>
           } <!-- end list view -->
@@ -641,13 +659,6 @@
               <div class="zatt-stat-lbl">Late Days</div>
             </div>
           </div>
-          <div class="zatt-stat-card">
-            <div class="zatt-stat-icon" style="background:#FEF0EB;color:#E05B2B">⏱</div>
-            <div class="zatt-stat-body">
-              <div class="zatt-stat-val">{{ avgHoursPerDay() }}h</div>
-              <div class="zatt-stat-lbl">Avg Hours/Day</div>
-            </div>
-          </div>
         </div>
 
         <!-- History card -->
@@ -660,24 +671,24 @@
             </div>
             <div class="zatt-history-controls">
               <div class="zview-toggle">
-                <button class="zview-btn" [class.active]="attViewMode()==='all'"     (click)="attViewMode.set('all');attPeriodOffset.set(0);attPage.set(1)">All</button>
-                <button class="zview-btn" [class.active]="attViewMode()==='weekly'"  (click)="attViewMode.set('weekly');attPeriodOffset.set(0);attPage.set(1)">Week</button>
-                <button class="zview-btn" [class.active]="attViewMode()==='monthly'" (click)="attViewMode.set('monthly');attPeriodOffset.set(0);attPage.set(1)">Month</button>
+                <button class="zview-btn" [class.active]="attViewMode()==='all'"     (click)="attViewMode.set('all');attPeriodOffset.set(0);attendancePage.set(1)">All</button>
+                <button class="zview-btn" [class.active]="attViewMode()==='weekly'"  (click)="attViewMode.set('weekly');attPeriodOffset.set(0);attendancePage.set(1)">Week</button>
+                <button class="zview-btn" [class.active]="attViewMode()==='monthly'" (click)="attViewMode.set('monthly');attPeriodOffset.set(0);attendancePage.set(1)">Month</button>
               </div>
               @if (attViewMode() !== 'all') {
                 <div class="zperiod-nav">
-                  <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o-1);attPage.set(1)">‹</button>
+                  <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o-1);attendancePage.set(1)">‹</button>
                   <span class="zts-period-label">{{ attPeriodLabel() }}</span>
-                  <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o+1);attPage.set(1)" [disabled]="attPeriodOffset()>=0">›</button>
+                  <button class="zwts-arrow" (click)="attPeriodOffset.update(o=>o+1);attendancePage.set(1)" [disabled]="attPeriodOffset()>=0">›</button>
                 </div>
               }
-              <span class="zatt-count-pill">{{ filteredAtt().length }} records</span>
+              <span class="zatt-count-pill">{{ filteredAttendances().length }} records</span>
             </div>
           </div>
 
           <!-- Cards list -->
           <div class="zatt-list">
-            @for (a of pagedAtt(); track a.id) {
+            @for (a of pagedAttendances(); track a.id) {
               <div class="zatt-row" [class.zatt-row-late]="a.isLate">
                 <!-- Date block -->
                 <div class="zatt-date-block">
@@ -722,7 +733,7 @@
                 </div>
               </div>
             }
-            @if (pagedAtt().length === 0) {
+            @if (pagedAttendances().length === 0) {
               <div class="zempty" style="padding:48px">
                 <span class="zempty-icon">📭</span>
                 <span class="zempty-title">No attendance records found</span>
@@ -732,11 +743,11 @@
 
           <!-- Pagination -->
           <div class="zts-list-pagination">
-            <span class="zts-list-pagination-info">{{ filteredAtt().length }} records</span>
+            <span class="zts-list-pagination-info">{{ filteredAttendances().length }} records</span>
             <div class="zts-list-pagination-btns">
-              <button class="zts-pg-btn" (click)="attPage.update(p=>p-1)" [disabled]="attPage()===1">‹</button>
-              <span class="zts-pg-label">{{ attPage() }} / {{ attTotalPages() }}</span>
-              <button class="zts-pg-btn" (click)="attPage.update(p=>p+1)" [disabled]="attPage()===attTotalPages()">›</button>
+              <button class="zts-pg-btn" (click)="attendancePage.update(p=>p-1)" [disabled]="attendancePage()===1">‹</button>
+              <span class="zts-pg-label">{{ attendancePage() }} / {{ attendanceTotalPages() }}</span>
+              <button class="zts-pg-btn" (click)="attendancePage.update(p=>p+1)" [disabled]="attendancePage()===attendanceTotalPages()">›</button>
             </div>
           </div>
         </div>
@@ -749,12 +760,12 @@
         <div class="zlv-stats-row">
           <div class="zlv-stat-card zlv-stat-pending">
             <div class="zlv-stat-icon">⏳</div>
-            <div class="zlv-stat-val">{{ pendingLeaves() }}</div>
+            <div class="zlv-stat-val">{{ pendingLeavesCount() }}</div>
             <div class="zlv-stat-lbl">Pending</div>
           </div>
           <div class="zlv-stat-card zlv-stat-approved">
             <div class="zlv-stat-icon">✅</div>
-            <div class="zlv-stat-val">{{ approvedLeaves() }}</div>
+            <div class="zlv-stat-val">{{ approvedLeavesCount() }}</div>
             <div class="zlv-stat-lbl">Approved</div>
           </div>
           <div class="zlv-stat-card zlv-stat-total">
@@ -763,6 +774,27 @@
             <div class="zlv-stat-lbl">Total Requests</div>
           </div>
         </div>
+
+        <!-- Leave balance per type -->
+        @if (leaveBalance().length > 0) {
+          <div class="zlv-balance-grid">
+            @for (b of leaveBalance(); track b.leaveType) {
+              <div class="zlv-balance-card" [class.zlv-balance-low]="b.remaining <= 3" [class.zlv-balance-empty]="b.remaining === 0">
+                <div class="zlv-balance-type">{{ b.leaveType }}</div>
+                <div class="zlv-balance-bar-track">
+                  <div class="zlv-balance-bar-fill"
+                    [style.width.%]="b.total > 0 ? (b.remaining / b.total) * 100 : 0"
+                    [class.zlv-balance-bar-low]="b.remaining <= 3">
+                  </div>
+                </div>
+                <div class="zlv-balance-nums">
+                  <span class="zlv-balance-remaining" [class.zlv-balance-remaining-low]="b.remaining <= 3">{{ b.remaining }} left</span>
+                  <span class="zlv-balance-total">/ {{ b.total }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
 
         <!-- Leave history card -->
         <div class="zlv-card">
@@ -776,7 +808,7 @@
 
           <!-- Leave rows -->
           <div class="zlv-list">
-            @for (l of pagedLv(); track l.id) {
+            @for (l of pagedLeaves(); track l.id) {
               <div class="zlv-row">
                 <!-- Type + dates -->
                 <div class="zlv-type-block">
@@ -797,7 +829,7 @@
 
                 <!-- Status -->
                 <div class="zlv-status-block">
-                  <span class="zbadge" [class]="stClass(l.status)">{{ stText(l.status) }}</span>
+                  <span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span>
                   @if (l.managerComment) {
                     <span class="zlv-comment" [title]="l.managerComment">{{ l.managerComment }}</span>
                   }
@@ -814,7 +846,7 @@
                 </div>
               </div>
             }
-            @if (pagedLv().length === 0) {
+            @if (pagedLeaves().length === 0) {
               <div class="zempty" style="padding:48px">
                 <span class="zempty-icon">🌴</span>
                 <span class="zempty-title">No leave requests yet</span>
@@ -826,9 +858,9 @@
           <div class="zts-list-pagination">
             <span class="zts-list-pagination-info">{{ leaves().length }} requests</span>
             <div class="zts-list-pagination-btns">
-              <button class="zts-pg-btn" (click)="lvPage.update(p=>p-1)" [disabled]="lvPage()===1">‹</button>
-              <span class="zts-pg-label">{{ lvPage() }} / {{ lvTotalPages() }}</span>
-              <button class="zts-pg-btn" (click)="lvPage.update(p=>p+1)" [disabled]="lvPage()===lvTotalPages()">›</button>
+              <button class="zts-pg-btn" (click)="leavePage.update(p=>p-1)" [disabled]="leavePage()===1">‹</button>
+              <span class="zts-pg-label">{{ leavePage() }} / {{ leaveTotalPages() }}</span>
+              <button class="zts-pg-btn" (click)="leavePage.update(p=>p+1)" [disabled]="leavePage()===leaveTotalPages()">›</button>
             </div>
           </div>
         </div>
@@ -890,8 +922,88 @@
 }
 
 <!-- Confirm -->
-<app-confirm [visible]="cfgVisible()" [title]="cfgTitle()" [message]="cfgMsg()"
-  (confirmed)="onCfgOk()" (cancelled)="onCfgCancel()" />
+<app-confirm [visible]="confirmVisible()" [title]="confirmTitle()" [message]="confirmMessage()"
+  (confirmed)="onConfirmOk()" (cancelled)="onConfirmCancel()" />
+
+<!-- Missed Checkout Modal -->
+@if (showMissedCheckoutModal()) {
+  <div class="zmodal-overlay" (click)="showMissedCheckoutModal.set(false)">
+    <div class="zmco-modal" (click)="$event.stopPropagation()">
+      <div class="zmco-icon">⏰</div>
+      <h3 class="zmco-title">Missed Check-Out</h3>
+      <div class="zmco-body">
+        You forgot to check out <strong>yesterday</strong>. Your attendance has been automatically calculated as <strong>check-in + 8 hours</strong>.
+      </div>
+      @if (todayAtt()?.checkIn) {
+        <div class="zmco-time">
+          <div class="zmco-time-item">
+            <div class="zmco-time-lbl">Yesterday Check In</div>
+            <div class="zmco-time-val">{{ todayAtt()?.checkIn || '—' }}</div>
+          </div>
+          <div class="zmco-time-sep">→</div>
+          <div class="zmco-time-item">
+            <div class="zmco-time-lbl">Auto Check Out</div>
+            <div class="zmco-time-val">+8h</div>
+          </div>
+        </div>
+      }
+      <button class="zbtn zbtn-primary zmco-close-btn" (click)="showMissedCheckoutModal.set(false)">Got it</button>
+    </div>
+  </div>
+}
+
+<!-- Leave Balance Modal -->
+@if (showLeaveBalanceModal()) {
+  <div class="zmodal-overlay" (click)="showLeaveBalanceModal.set(false)">
+    <div class="zlb-modal" (click)="$event.stopPropagation()">
+      <div class="zlb-icon">🌴</div>
+      <h3 class="zlb-title">Leave Applied!</h3>
+      <p class="zlb-sub">Your request has been submitted for approval.</p>
+
+      @if (leaveBalanceResult(); as bal) {
+        <div class="zlb-type">{{ bal.leaveType }}</div>
+        <div class="zlb-bar-wrap">
+          <div class="zlb-bar-track">
+            <div class="zlb-bar-fill"
+              [style.width.%]="bal.total > 0 ? (bal.remaining / bal.total) * 100 : 0"
+              [class.zlb-bar-low]="bal.remaining <= 3">
+            </div>
+          </div>
+          <div class="zlb-bar-labels">
+            <span class="zlb-used">{{ bal.total - bal.remaining }} used</span>
+            <span class="zlb-remaining" [class.zlb-remaining-low]="bal.remaining <= 3">
+              {{ bal.remaining }} remaining
+            </span>
+          </div>
+        </div>
+        <div class="zlb-stats">
+          <div class="zlb-stat">
+            <div class="zlb-stat-val">{{ bal.total }}</div>
+            <div class="zlb-stat-lbl">Total Days</div>
+          </div>
+          <div class="zlb-stat-sep"></div>
+          <div class="zlb-stat">
+            <div class="zlb-stat-val" style="color:#DC2626">{{ bal.total - bal.remaining }}</div>
+            <div class="zlb-stat-lbl">Used</div>
+          </div>
+          <div class="zlb-stat-sep"></div>
+          <div class="zlb-stat">
+            <div class="zlb-stat-val" [style.color]="bal.remaining <= 3 ? '#DC2626' : '#16A34A'">{{ bal.remaining }}</div>
+            <div class="zlb-stat-lbl">Remaining</div>
+          </div>
+        </div>
+        @if (bal.remaining <= 3 && bal.remaining > 0) {
+          <div class="zlb-warning">⚠ Only {{ bal.remaining }} day(s) left for {{ bal.leaveType }}</div>
+        }
+        @if (bal.remaining === 0) {
+          <div class="zlb-warning zlb-warning-empty">❌ No {{ bal.leaveType }} days remaining this year</div>
+        }
+      }
+
+      <button class="zbtn zbtn-primary zlb-close-btn" (click)="showLeaveBalanceModal.set(false)">Got it</button>
+    </div>
+  </div>
+}
 
 <!-- Edit Leave Modal -->
 @if (showEditLeaveModal()) {

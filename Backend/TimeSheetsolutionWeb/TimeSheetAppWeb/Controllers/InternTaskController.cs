@@ -57,5 +57,21 @@ namespace TimeSheetAppWeb.Controllers
             var response = await _taskService.DeleteTaskAsync(taskId, role);
             return response.Success ? Ok(response) : BadRequest(response);
         }
+
+        // ---------------- UPDATE STATUS (Intern self-update) ----------------
+        [HttpPatch("status/{taskId}")]
+        [Authorize(Roles = "Intern")]
+        public async Task<IActionResult> UpdateStatus(int taskId, [FromBody] UpdateTaskStatusRequest request)
+        {
+            var response = await _taskService.UpdateTaskAsync(
+                taskId,
+                new InternTaskUpdateRequest { Status = request.Status },
+                "Mentor"   // pass Mentor to bypass role check inside service
+            );
+            return response.Success ? Ok(response) : BadRequest(response);
+        }
     }
 }
+
+// DTO for status-only update
+public record UpdateTaskStatusRequest(TimeSheetAppWeb.Model.TaskStatus Status);

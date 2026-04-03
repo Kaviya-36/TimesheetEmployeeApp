@@ -738,17 +738,18 @@
 
 /* Attendance card */
 .zdash-att-card {
-  background: var(--c-surface); border: 1px solid var(--c-border);
+  background: linear-gradient(135deg, #1A1F2E 0%, #1E3A8A 100%);
   border-radius: var(--radius-xl); padding: 24px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 8px 32px rgba(26,31,46,.3);
   display: flex; flex-direction: column; gap: 18px;
 }
 .zdash-att-header { display: flex; align-items: center; justify-content: space-between; }
 .zdash-att-title  {
   display: flex; align-items: center; gap: 8px;
-  font-size: 15px; font-weight: 800; color: var(--c-ink);
+  font-size: 15px; font-weight: 800; color: #fff;
 }
-.zdash-att-date { font-size: 12px; color: var(--c-ink-3); font-weight: 600; }
+.zdash-att-title svg { stroke: rgba(255,255,255,.7); }
+.zdash-att-date { font-size: 12px; color: rgba(255,255,255,.5); font-weight: 600; }
 
 .zdash-att-status-row { display: flex; align-items: center; gap: 10px; }
 .zdash-att-status-badge {
@@ -756,23 +757,23 @@
   padding: 5px 14px; border-radius: var(--radius-pill);
   font-size: 12px; font-weight: 700;
 }
-.zdash-att-idle { background: var(--c-surface-3); color: var(--c-ink-3); }
-.zdash-att-live { background: var(--c-green-light); color: #16A34A; }
-.zdash-att-done { background: var(--c-blue-light); color: var(--c-blue); }
+.zdash-att-idle { background: rgba(255,255,255,.1); color: rgba(255,255,255,.6); }
+.zdash-att-live { background: rgba(16,185,129,.2); color: #10B981; border: 1px solid rgba(16,185,129,.3); }
+.zdash-att-done { background: rgba(255,255,255,.1); color: rgba(255,255,255,.6); }
 .zdash-late-tag {
-  background: var(--c-amber-light); color: var(--c-amber);
-  border: 1px solid var(--c-amber-border); border-radius: var(--radius-pill);
+  background: rgba(245,158,11,.2); color: #FCD34D;
+  border: 1px solid rgba(245,158,11,.3); border-radius: var(--radius-pill);
   padding: 4px 10px; font-size: 11px; font-weight: 700;
 }
 
 .zdash-live-timer {
-  font-size: 38px; font-weight: 900; color: var(--c-ink);
+  font-size: 38px; font-weight: 900; color: #fff;
   font-family: var(--font-mono); letter-spacing: 2px; text-align: center; padding: 6px 0;
 }
 
 .zdash-time-blocks {
   display: flex; align-items: center;
-  background: var(--c-surface-2); border-radius: var(--radius-lg); padding: 16px;
+  background: rgba(255,255,255,.08); border-radius: var(--radius-lg); padding: 16px;
 }
 .zdash-time-block { flex: 1; display: flex; align-items: center; gap: 10px; }
 .zdash-time-icon  {
@@ -780,9 +781,9 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 16px; font-weight: 700; flex-shrink: 0;
 }
-.zdash-time-lbl { font-size: 10px; color: var(--c-ink-4); font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
-.zdash-time-val { font-size: 15px; font-weight: 800; color: var(--c-ink); font-family: var(--font-mono); margin-top: 2px; }
-.zdash-time-divider { width: 1px; height: 36px; background: var(--c-border); margin: 0 12px; }
+.zdash-time-lbl { font-size: 10px; color: rgba(255,255,255,.5); font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+.zdash-time-val { font-size: 15px; font-weight: 800; color: #fff; font-family: var(--font-mono); margin-top: 2px; }
+.zdash-time-divider { width: 1px; height: 36px; background: rgba(255,255,255,.15); margin: 0 12px; }
 
 .zdash-att-btn { width: 100%; justify-content: center; padding: 12px; font-size: 14px; }
 
@@ -1006,3 +1007,31 @@
   .zlv-status-block { grid-column: 1; }
   .zlv-actions { grid-column: 3; grid-row: 1; }
 }
+
+/* ── Leave Balance Grid ──────────────────────────────────────────────────── */
+.zlv-balance-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px; margin-bottom: 20px;
+}
+.zlv-balance-card {
+  background: #fff; border: 1px solid #E5E7EB;
+  border-radius: 12px; padding: 14px 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  transition: box-shadow .15s;
+}
+.zlv-balance-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+.zlv-balance-low   { border-color: #FDE68A; background: #FFFBEB; }
+.zlv-balance-empty { border-color: #FECACA; background: #FEF2F2; }
+.zlv-balance-type  { font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 8px; }
+.zlv-balance-bar-track {
+  height: 6px; background: #F3F4F6; border-radius: 99px; overflow: hidden; margin-bottom: 6px;
+}
+.zlv-balance-bar-fill {
+  height: 100%; background: linear-gradient(90deg, #10B981, #34D399);
+  border-radius: 99px; transition: width .4s ease;
+}
+.zlv-balance-bar-fill.zlv-balance-bar-low { background: linear-gradient(90deg, #EF4444, #F87171); }
+.zlv-balance-nums { display: flex; justify-content: space-between; align-items: center; }
+.zlv-balance-remaining { font-size: 13px; font-weight: 800; color: #16A34A; }
+.zlv-balance-remaining.zlv-balance-remaining-low { color: #DC2626; }
+.zlv-balance-total { font-size: 11px; color: #9CA3AF; }

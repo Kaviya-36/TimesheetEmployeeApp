@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Attendance, InternTask, LeaveType, Project, User, UserProfile } from '../../models';
+import { Attendance, InternTask, Leave, LeaveType, Project, User, UserProfile } from '../../models';
 import { AttendanceService, InternService, LeaveService, ProjectService, TimesheetService, UserService } from '../../services/api.services';
 import { AuthService } from '../../services/auth.service';
 import { BreadcrumbService } from '../../services/breadcrumb.service';
@@ -12,7 +12,7 @@ import { ConfirmComponent } from '../confirm-dialog/confirm.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 
-export type MentorTab = 'interns' | 'profile';
+export type MentorTab = 'interns' | 'leave' | 'profile';
 
 @Component({
   selector: 'app-mentor-dashboard',
@@ -25,20 +25,20 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
 
   readonly auth  = inject(AuthService);
   private  toast = inject(ToastService);
-  private  bc    = inject(BreadcrumbService);
-  private  notif = inject(NotificationService);
-  private  intSvc  = inject(InternService);
-  private  usrSvc  = inject(UserService);
-  private  attSvc  = inject(AttendanceService);
-  private  tsSvc   = inject(TimesheetService);
-  private  lvSvc   = inject(LeaveService);
-  private  prjSvc  = inject(ProjectService);
-  private  fb      = inject(FormBuilder);
-  private  tabSvc  = inject(TabService);
+  private  breadcrumbService    = inject(BreadcrumbService);
+  private  notificationService = inject(NotificationService);
+  private  internService  = inject(InternService);
+  private  userService  = inject(UserService);
+  private  attendanceService  = inject(AttendanceService);
+  private  timesheetService   = inject(TimesheetService);
+  private  leaveService   = inject(LeaveService);
+  private  projectService  = inject(ProjectService);
+  private  formBuilder      = inject(FormBuilder);
+  private  tabService  = inject(TabService);
 
   constructor() {
     effect(() => {
-      const t = this.tabSvc.activeTab();
+      const t = this.tabService.activeTab();
       if (t && t !== this.activeTab()) this.setTab(t as MentorTab);
     });
   }
@@ -47,6 +47,7 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
   activeTab = signal<MentorTab>('interns');
   readonly tabs: { key: MentorTab; label: string; icon: string }[] = [
     { key: 'interns', label: 'Interns', icon: '🎓' },
+    { key: 'leave',   label: 'My Leave', icon: '🌴' },
     { key: 'profile', label: 'Profile', icon: '👤' },
   ];
 
@@ -57,12 +58,17 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
   userProfile    = signal<UserProfile | null>(null);
   projects       = signal<Project[]>([]);
   leaveTypes     = signal<LeaveType[]>([]);
+  myLeaves       = signal<any[]>([]);
 
   // ── Self timesheet / leave modals ─────────────────────────────────────────
-  showAddTimesheetModal = signal(false);
-  showAddLeaveModal     = signal(false);
+  showAddTimesheetModal    = signal(false);
+  showAddLeaveModal        = signal(false);
+  showMissedCheckoutModal  = signal(false);
+  showLeaveBalanceModal = signal(false);
+  leaveBalanceResult = signal<{ leaveType: string; remaining: number; total: number } | null>(null);
+  leaveBalance = signal<{ leaveType: string; total: number; used: number; remaining: number }[]>([]);
 
-  addTimesheetForm = this.fb.group({
+  addTimesheetForm = this.formBuilder.group({
     projectId:       ['', Validators.required],
     workDate:        [new Date().toISOString().split('T')[0], Validators.required],
     startTime:       ['09:00', Validators.required],
@@ -71,7 +77,7 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
     taskDescription: [''],
   });
 
-  addLeaveForm = this.fb.group({
+  addLeaveForm = this.formBuilder.group({
     leaveTypeId: ['', Validators.required],
     fromDate:    ['', Validators.required],
     toDate:      ['', Validators.required],
@@ -102,22 +108,22 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
   editTask      = signal<InternTask | null>(null);
 
   // ── Confirm dialog ────────────────────────────────────────────────────────
-  cfgVisible = signal(false);
-  cfgTitle   = signal('');
-  cfgMsg     = signal('');
-  private cfgAction: (() => void) | null = null;
+  confirmVisible = signal(false);
+  confirmTitle   = signal('');
+  confirmMessage     = signal('');
+  private confirmAction: (() => void) | null = null;
 
-  onCfgOk()     { this.cfgAction?.(); this.cfgVisible.set(false); this.cfgAction = null; }
-  onCfgCancel() { this.cfgVisible.set(false); this.cfgAction = null; }
+  onConfirmOk()     { this.confirmAction?.(); this.confirmVisible.set(false); this.confirmAction = null; }
+  onConfirmCancel() { this.confirmVisible.set(false); this.confirmAction = null; }
 
   // ── Forms ─────────────────────────────────────────────────────────────────
-  taskForm = this.fb.group({
+  taskForm = this.formBuilder.group({
     taskTitle:   ['', Validators.required],
     description: [''],
     dueDate:     ['']
   });
 
-  editTaskForm = this.fb.group({
+  editTaskForm = this.formBuilder.group({
     taskTitle:   ['', Validators.required],
     description: [''],
     dueDate:     ['']
@@ -125,18 +131,19 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
-    this.bc.set([{ label: 'Mentor Dashboard' }, { label: 'Interns' }]);
-    this.tabSvc.setTab('interns');
+    this.breadcrumbService.set([{ label: 'Mentor Dashboard' }, { label: 'Interns' }]);
+    this.tabService.setTab('interns');
     this.loadInterns();
     this.refreshToday();
-    this.usrSvc.getProfile().subscribe({ next: (r: any) => this.userProfile.set(r?.data ?? r), error: () => {} });
-    this.prjSvc.getAll().subscribe({ next: (r: any) => this.projects.set(this.toArr<Project>(r)), error: () => {} });
-    this.lvSvc.getLeaveTypes().subscribe({ next: (r: any) => this.leaveTypes.set(this.toArr<LeaveType>(r)), error: () => {} });
+    this.userService.getProfile().subscribe({ next: (r: any) => this.userProfile.set(r?.data ?? r), error: () => {} });
+    this.projectService.getAll().subscribe({ next: (r: any) => this.projects.set(this.extractArray<Project>(r)), error: () => {} });
+    this.leaveService.getLeaveTypes().subscribe({ next: (r: any) => this.leaveTypes.set(this.extractArray<LeaveType>(r)), error: () => {} });
+    this.loadMyLeaves();
   }
 
   ngOnDestroy(): void { this.stopTimer(); }
 
-  private toArr<T>(r: any): T[] {
+  private extractArray<T>(r: any): T[] {
     if (Array.isArray(r)) return r;
     if (Array.isArray(r?.data)) return r.data;
     if (Array.isArray(r?.data?.data)) return r.data.data;
@@ -145,9 +152,9 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
 
   // ── Interns ───────────────────────────────────────────────────────────────
   private loadInterns(): void {
-    this.usrSvc.getAll().subscribe({
+    this.userService.getAll().subscribe({
       next: (res: any) => {
-        const data = this.toArr<User>(res);
+        const data = this.extractArray<User>(res);
         this.interns.set(data.filter(u => (u.role ?? '').toLowerCase() === 'intern'));
       },
       error: () => { this.toast.error('Error', 'Failed to load interns'); this.interns.set([]); }
@@ -161,8 +168,8 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
 
   // ── Tasks ─────────────────────────────────────────────────────────────────
   loadTasks(internId: number): void {
-    this.intSvc.getTasks(internId).subscribe({
-      next: (res: any) => this.tasks.set(this.toArr<InternTask>(res)),
+    this.internService.getTasks(internId).subscribe({
+      next: (res: any) => this.tasks.set(this.extractArray<InternTask>(res)),
       error: () => { this.toast.error('Failed to load tasks', ''); this.tasks.set([]); }
     });
   }
@@ -178,7 +185,7 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
     const intern = this.selectedIntern();
     if (!intern) return;
     const v = this.taskForm.value;
-    this.intSvc.createTask({ internId: intern.id, taskTitle: v.taskTitle!, description: v.description || '', dueDate: v.dueDate || undefined }).subscribe({
+    this.internService.createTask({ internId: intern.id, taskTitle: v.taskTitle!, description: v.description || '', dueDate: v.dueDate || undefined }).subscribe({
       next: () => { this.toast.success('Task Assigned', ''); this.showModal.set(false); this.loadTasks(intern.id); },
       error: () => this.toast.error('Failed', '')
     });
@@ -198,7 +205,7 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
     const task = this.editTask();
     if (!task || this.editTaskForm.invalid) return;
     const v = this.editTaskForm.value;
-    this.intSvc.updateTask(task.id, { taskTitle: v.taskTitle!, description: v.description || '', dueDate: v.dueDate || undefined }).subscribe({
+    this.internService.updateTask(task.id, { taskTitle: v.taskTitle!, description: v.description || '', dueDate: v.dueDate || undefined }).subscribe({
       next: () => {
         this.toast.success('Task Updated', '');
         this.showEditModal.set(false);
@@ -209,27 +216,27 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
   }
 
   confirmDeleteTask(task: InternTask): void {
-    this.cfgTitle.set('Delete Task');
-    this.cfgMsg.set(`Delete "${task.taskTitle}"? This cannot be undone.`);
-    this.cfgAction = () => {
-      this.intSvc.deleteTask(task.id).subscribe({
+    this.confirmTitle.set('Delete Task');
+    this.confirmMessage.set(`Delete "${task.taskTitle}"? This cannot be undone.`);
+    this.confirmAction = () => {
+      this.internService.deleteTask(task.id).subscribe({
         next: () => { this.toast.success('Deleted', ''); this.loadTasks(this.selectedIntern()!.id); },
         error: () => this.toast.error('Delete failed', '')
       });
     };
-    this.cfgVisible.set(true);
+    this.confirmVisible.set(true);
   }
 
   // ── Attendance ────────────────────────────────────────────────────────────
   private refreshToday(): void {
     const uid = this.auth.currentUser();
     if (!uid) return;
-    this.attSvc.getTodayStatus(uid).subscribe({
+    this.attendanceService.getTodayStatus(uid).subscribe({
       next: (res: any) => {
         const d = res?.data ?? res;
         this.todayAtt.set(d);
         if (d?.missedCheckout) {
-          this.toast.warning('Missed Check-Out', 'You forgot to check out yesterday. Attendance auto-calculated as check-in + 8 hours.');
+          this.showMissedCheckoutModal.set(true);
         }
         if (d?.checkIn && !d?.checkOut) this.startTimer(d.checkIn);
       },
@@ -240,13 +247,13 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
   checkIn(): void {
     if (this.todayAtt()?.checkIn) { this.toast.warning('Already checked in', ''); return; }
     this.attLoading.set(true);
-    this.attSvc.checkIn().subscribe({
+    this.attendanceService.checkIn().subscribe({
       next: (res: any) => {
         const d = res?.data ?? res;
         this.todayAtt.set(d);
         if (d?.checkIn && !d?.checkOut) this.startTimer(d.checkIn);
         this.toast.success('Checked In', `Welcome! Time: ${d?.checkIn}`);
-        this.notif.pushLocal('Attendance', 'Mentor checked in successfully.');
+        this.notificationService.pushLocal('Attendance', 'Mentor checked in successfully.');
         this.attLoading.set(false);
       },
       error: (err: any) => { this.toast.error('Check-In Failed', err?.error?.message ?? 'Please try again.'); this.attLoading.set(false); }
@@ -257,13 +264,13 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
     if (!this.todayAtt()?.checkIn) { this.toast.warning('Not checked in', ''); return; }
     if (this.todayAtt()?.checkOut) { this.toast.warning('Already checked out', ''); return; }
     this.attLoading.set(true);
-    this.attSvc.checkOut().subscribe({
+    this.attendanceService.checkOut().subscribe({
       next: (res: any) => {
         const d = res?.data ?? res;
         this.todayAtt.set(d);
         this.stopTimer();
         this.toast.success('Checked Out', `Total: ${d?.totalHours ?? '—'}`);
-        this.notif.pushLocal('Attendance', 'Mentor checked out successfully.');
+        this.notificationService.pushLocal('Attendance', 'Mentor checked out successfully.');
         this.attLoading.set(false);
       },
       error: (err: any) => { this.toast.error('Check-Out Failed', err?.error?.message ?? 'Please try again.'); this.attLoading.set(false); }
@@ -278,19 +285,33 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
     this.timerInterval = setInterval(() => {
       const diff = Date.now() - base.getTime();
       const hh = Math.floor(diff / 3600000), mm = Math.floor((diff % 3600000) / 60000), ss = Math.floor((diff % 60000) / 1000);
-      this.liveTimer.set(`${this.pad(hh)}:${this.pad(mm)}:${this.pad(ss)}`);
+      this.liveTimer.set(`${this.padNumber(hh)}:${this.padNumber(mm)}:${this.padNumber(ss)}`);
     }, 1000);
   }
 
   private stopTimer(): void { if (this.timerInterval) clearInterval(this.timerInterval); }
-  private pad(n: number): string { return n < 10 ? '0' + n : '' + n; }
+  private padNumber(n: number): string { return n < 10 ? '0' + n : '' + n; }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   statusClass(status: any): string {
-    return status == 2 ? 'zbadge-approved' : status == 1 ? 'zbadge-info' : 'zbadge-pending';
+    return status == 3 ? 'zbadge-approved' : status == 2 ? 'zbadge-info' : 'zbadge-pending';
   }
   statusText(status: any): string {
-    return status == 0 ? 'Pending' : status == 1 ? 'In Progress' : 'Completed';
+    return status == 1 ? 'Pending' : status == 2 ? 'In Progress' : 'Completed';
+  }
+  getStatusText(s: any)  { return s == 0 ? 'Pending' : s == 1 ? 'Approved' : 'Rejected'; }
+  getStatusClass(s: any) { return s == 0 ? 'zbadge-pending' : s == 1 ? 'zbadge-approved' : 'zbadge-rejected'; }
+  leaveDays(l: Leave): number {
+    return Math.ceil((new Date(l.toDate).getTime() - new Date(l.fromDate).getTime()) / 86400000) + 1;
+  }
+
+  private loadMyLeaves(): void {
+    const uid = this.auth.currentUser(); if (!uid) return;
+    this.leaveService.getMyLeaves(uid).subscribe({
+      next: (r: any) => this.myLeaves.set(this.extractArray<Leave>(r)),
+      error: () => {}
+    });
+    this.leaveService.getLeaveBalance(uid).subscribe((r: any) => this.leaveBalance.set(r?.data ?? []));
   }
 
   addTimesheetForSelf() {
@@ -299,7 +320,7 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
     const v = this.addTimesheetForm.getRawValue();
     const proj = this.projects().find(p => p.id === +v.projectId!);
     const fmt = (t: string) => t?.length === 5 ? t + ':00' : t ?? '00:00:00';
-    this.tsSvc.create(uid, {
+    this.timesheetService.create(uid, {
       projectId: +v.projectId!, projectName: proj?.projectName ?? '',
       workDate: v.workDate!, startTime: fmt(v.startTime!), endTime: fmt(v.endTime!),
       breakTime: fmt(v.breakTime || '00:00'), taskDescription: v.taskDescription ?? ''
@@ -313,15 +334,24 @@ export class MentorDashboardComponent implements OnInit, OnDestroy {
     if (this.addLeaveForm.invalid) return;
     const uid = this.auth.currentUser(); if (!uid) return;
     const v = this.addLeaveForm.getRawValue();
-    this.lvSvc.apply(uid, { leaveTypeId: +v.leaveTypeId!, fromDate: v.fromDate!, toDate: v.toDate!, reason: v.reason ?? '' }).subscribe({
-      next: () => { this.toast.success('Leave Applied', 'Your leave request has been submitted.'); this.showAddLeaveModal.set(false); this.addLeaveForm.reset(); },
+    const selectedType = this.leaveTypes().find(lt => lt.id === +v.leaveTypeId!);
+    this.leaveService.apply(uid, { leaveTypeId: +v.leaveTypeId!, fromDate: v.fromDate!, toDate: v.toDate!, reason: v.reason ?? '' }).subscribe({
+      next: (res: any) => {
+        const remaining = res?.data?.remainingLeaves ?? 0;
+        this.showAddLeaveModal.set(false);
+        this.addLeaveForm.reset();
+        this.leaveBalanceResult.set({ leaveType: selectedType?.name ?? 'Leave', remaining, total: selectedType?.maxDaysPerYear ?? 0 });
+        this.showLeaveBalanceModal.set(true);
+        this.loadMyLeaves();
+        this.leaveService.getLeaveBalance(uid).subscribe((r: any) => this.leaveBalance.set(r?.data ?? []));
+      },
       error: (e: any) => this.toast.error('Failed', e?.error?.message ?? 'Could not apply leave.')
     });
   }
 
   setTab(t: MentorTab): void {
     this.activeTab.set(t);
-    this.tabSvc.setTab(t);
-    this.bc.set([{ label: 'Mentor Dashboard' }, { label: this.tabs.find(x => x.key === t)?.label ?? '' }]);
+    this.tabService.setTab(t);
+    this.breadcrumbService.set([{ label: 'Mentor Dashboard' }, { label: this.tabs.find(x => x.key === t)?.label ?? '' }]);
   }
 }

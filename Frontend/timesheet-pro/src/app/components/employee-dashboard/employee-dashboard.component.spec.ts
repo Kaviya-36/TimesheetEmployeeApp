@@ -115,13 +115,13 @@ describe('EmployeeDashboardComponent', () => {
   });
 
   it('setTab should reset all page signals to 1', () => {
-    component.tsPage.set(3);
-    component.attPage.set(2);
-    component.lvPage.set(4);
+    component.timesheetPage.set(3);
+    component.attendancePage.set(2);
+    component.leavePage.set(4);
     component.setTab('dashboard');
-    expect(component.tsPage()).toBe(1);
-    expect(component.attPage()).toBe(1);
-    expect(component.lvPage()).toBe(1);
+    expect(component.timesheetPage()).toBe(1);
+    expect(component.attendancePage()).toBe(1);
+    expect(component.leavePage()).toBe(1);
   });
 
   it('should have all expected tab keys', () => {
@@ -136,12 +136,12 @@ describe('EmployeeDashboardComponent', () => {
   // ── Computed stats ─────────────────────────────────────────────────────────
   it('approvedCount should count status===1 timesheets', () => {
     component.timesheets.set([makeTs({ status: 1 }), makeTs({ id: 2, status: 0 }), makeTs({ id: 3, status: 1 })]);
-    expect(component.approvedCount()).toBe(2);
+    expect(component.approvedTimesheetsCount()).toBe(2);
   });
 
   it('pendingCount should count status===0 timesheets', () => {
     component.timesheets.set([makeTs({ status: 0 }), makeTs({ id: 2, status: 1 })]);
-    expect(component.pendingCount()).toBe(1);
+    expect(component.pendingTimesheetsCount()).toBe(1);
   });
 
   it('totalHours should sum all hoursWorked', () => {
@@ -150,120 +150,120 @@ describe('EmployeeDashboardComponent', () => {
       makeTs({ id: 2, hoursWorked: 8 }),
       makeTs({ id: 3, hoursWorked: 5 })
     ]);
-    expect(component.totalHours()).toBe('20.0');
+    expect(component.totalHoursLogged()).toBe('20.0');
   });
 
   it('totalHours should be 0.0 for empty list', () => {
     component.timesheets.set([]);
-    expect(component.totalHours()).toBe('0.0');
+    expect(component.totalHoursLogged()).toBe('0.0');
   });
 
   // ── Timesheet filtering ────────────────────────────────────────────────────
   it('filteredTs should filter by search query on projectName', () => {
     component.timesheets.set([makeTs({ projectName: 'Alpha' }), makeTs({ id: 2, projectName: 'Beta' })]);
-    component.tsSearch.set('alpha');
-    expect(component.filteredTs().length).toBe(1);
-    expect(component.filteredTs()[0].projectName).toBe('Alpha');
+    component.timesheetSearch.set('alpha');
+    expect(component.filteredTimesheets().length).toBe(1);
+    expect(component.filteredTimesheets()[0].projectName).toBe('Alpha');
   });
 
   it('filteredTs should filter by pending status', () => {
     component.timesheets.set([makeTs({ status: 0 }), makeTs({ id: 2, status: 1 })]);
-    component.tsStatus.set('pending');
-    expect(component.filteredTs().length).toBe(1);
+    component.timesheetStatusFilter.set('pending');
+    expect(component.filteredTimesheets().length).toBe(1);
   });
 
   it('filteredTs should filter by approved status', () => {
     component.timesheets.set([makeTs({ status: 0 }), makeTs({ id: 2, status: 1 })]);
-    component.tsStatus.set('approved');
-    expect(component.filteredTs().length).toBe(1);
-    expect(component.filteredTs()[0].status).toBe(1);
+    component.timesheetStatusFilter.set('approved');
+    expect(component.filteredTimesheets().length).toBe(1);
+    expect(component.filteredTimesheets()[0].status).toBe(1);
   });
 
   it('filteredTs should filter by rejected status', () => {
     component.timesheets.set([makeTs({ status: 2 }), makeTs({ id: 2, status: 1 })]);
-    component.tsStatus.set('rejected');
-    expect(component.filteredTs().length).toBe(1);
-    expect(component.filteredTs()[0].status).toBe(2);
+    component.timesheetStatusFilter.set('rejected');
+    expect(component.filteredTimesheets().length).toBe(1);
+    expect(component.filteredTimesheets()[0].status).toBe(2);
   });
 
   it('filteredTs should return all when status is "all"', () => {
     component.timesheets.set([makeTs({ status: 0 }), makeTs({ id: 2, status: 1 }), makeTs({ id: 3, status: 2 })]);
-    component.tsStatus.set('all');
-    expect(component.filteredTs().length).toBe(3);
+    component.timesheetStatusFilter.set('all');
+    expect(component.filteredTimesheets().length).toBe(3);
   });
 
   // ── Timesheet sorting ──────────────────────────────────────────────────────
   it('sortTs should toggle direction on same column', () => {
-    component.tsSortCol.set('date');
-    component.tsSortDir.set('asc');
-    component.sortTs('date');
-    expect(component.tsSortDir()).toBe('desc');
+    component.timesheetSortColumn.set('date');
+    component.timesheetSortDirection.set('asc');
+    component.sortTimesheets('date');
+    expect(component.timesheetSortDirection()).toBe('desc');
   });
 
   it('sortTs should change column and reset to asc', () => {
-    component.tsSortCol.set('date');
-    component.sortTs('hours');
-    expect(component.tsSortCol()).toBe('hours');
-    expect(component.tsSortDir()).toBe('asc');
+    component.timesheetSortColumn.set('date');
+    component.sortTimesheets('hours');
+    expect(component.timesheetSortColumn()).toBe('hours');
+    expect(component.timesheetSortDirection()).toBe('asc');
   });
 
   it('sortTs should reset page to 1', () => {
-    component.tsPage.set(3);
-    component.sortTs('project');
-    expect(component.tsPage()).toBe(1);
+    component.timesheetPage.set(3);
+    component.sortTimesheets('project');
+    expect(component.timesheetPage()).toBe(1);
   });
 
   // ── Timesheet pagination ───────────────────────────────────────────────────
   it('tsTotalPages should be 1 when no timesheets', () => {
     component.timesheets.set([]);
-    expect(component.tsTotalPages()).toBe(1);
+    expect(component.timesheetTotalPages()).toBe(1);
   });
 
   it('tsTotalPages should calculate correctly for tsPS=6', () => {
     component.timesheets.set(Array.from({ length: 13 }, (_, i) => makeTs({ id: i + 1 })));
-    expect(component.tsTotalPages()).toBe(3);
+    expect(component.timesheetTotalPages()).toBe(3);
   });
 
   it('pagedTs should return max tsPS items', () => {
     component.timesheets.set(Array.from({ length: 13 }, (_, i) => makeTs({ id: i + 1 })));
-    expect(component.pagedTs().length).toBe(6);
+    expect(component.pagedTimesheets().length).toBe(6);
   });
 
   it('pagedTs page 2 should return second slice', () => {
     component.timesheets.set(Array.from({ length: 13 }, (_, i) => makeTs({ id: i + 1 })));
-    component.tsPage.set(2);
-    expect(component.pagedTs()[0].id).toBe(7);
+    component.timesheetPage.set(2);
+    expect(component.pagedTimesheets()[0].id).toBe(7);
   });
 
   // ── Attendance pagination ──────────────────────────────────────────────────
   it('attTotalPages should calculate correctly', () => {
     component.attendances.set(Array.from({ length: 17 }, (_, i) => makeAtt({ id: i + 1 })));
-    expect(component.attTotalPages()).toBe(3);
+    expect(component.attendanceTotalPages()).toBe(3);
   });
 
   it('pagedAtt returns max attPS items', () => {
     component.attendances.set(Array.from({ length: 17 }, (_, i) => makeAtt({ id: i + 1 })));
-    expect(component.pagedAtt().length).toBe(8);
+    expect(component.pagedAttendances().length).toBe(8);
   });
 
   // ── Leave pagination ───────────────────────────────────────────────────────
   it('lvTotalPages should calculate correctly for lvPS=6', () => {
     component.leaves.set(Array.from({ length: 13 }, (_, i) => makeLeave({ id: i + 1 })));
-    expect(component.lvTotalPages()).toBe(3);
+    expect(component.leaveTotalPages()).toBe(3);
   });
 
   // ── ico helper ────────────────────────────────────────────────────────────
-  it('ico returns ⇅ when column not active', () => expect(component.ico(false, 'asc')).toBe('⇅'));
-  it('ico returns ↑ for asc active column',  () => expect(component.ico(true, 'asc')).toBe('↑'));
-  it('ico returns ↓ for desc active column', () => expect(component.ico(true, 'desc')).toBe('↓'));
+  it('ico returns ⇅ when column not active', () => expect(component.getSortIcon(false, 'asc')).toBe('⇅'));
+  it('ico returns ↑ for asc active column',  () => expect(component.getSortIcon(true, 'asc')).toBe('↑'));
+  it('ico returns ↓ for desc active column', () => expect(component.getSortIcon(true, 'desc')).toBe('↓'));
 
   // ── stText / stClass ───────────────────────────────────────────────────────
-  it('stText(0) → Pending',  () => expect(component.stText(0)).toBe('Pending'));
-  it('stText(1) → Approved', () => expect(component.stText(1)).toBe('Approved'));
-  it('stText(2) → Rejected', () => expect(component.stText(2)).toBe('Rejected'));
-  it('stClass(0) contains "pending"',  () => expect(component.stClass(0)).toContain('pending'));
-  it('stClass(1) contains "approved"', () => expect(component.stClass(1)).toContain('approved'));
-  it('stClass(2) contains "rejected"', () => expect(component.stClass(2)).toContain('rejected'));
+  it('stText(0) → Pending',  () => expect(component.getStatusText(0)).toBe('Pending'));
+  it('stText(1) → Approved', () => expect(component.getStatusText(1)).toBe('Approved'));
+  it('stText(2) → Rejected', () => expect(component.getStatusText(2)).toBe('Rejected'));
+  it('stClass(0) contains "pending"',  () => expect(component.getStatusClass(0)).toContain('pending'));
+  it('stClass(1) contains "approved"', () => expect(component.getStatusClass(1)).toContain('approved'));
+  it('stClass(2) contains "rejected"', () => expect(component.getStatusClass(2)).toContain('rejected'));
 
   // ── leaveDays ─────────────────────────────────────────────────────────────
   it('leaveDays should return 1 for same-day leave', () => {
@@ -421,24 +421,24 @@ describe('EmployeeDashboardComponent', () => {
   // ── confirmDeleteTs ────────────────────────────────────────────────────────
   it('confirmDeleteTs should open confirm dialog', () => {
     component.confirmDeleteTs(makeTs());
-    expect(component.cfgVisible()).toBeTrue();
-    expect(component.cfgTitle()).toContain('Delete');
+    expect(component.confirmVisible()).toBeTrue();
+    expect(component.confirmTitle()).toContain('Delete');
   });
 
   it('onCfgOk should execute delete action', fakeAsync(() => {
     tsSpy.delete.and.returnValue(of({}));
     tsSpy.getByUser.and.returnValue(of([]));
     component.confirmDeleteTs(makeTs());
-    component.onCfgOk();
+    component.onConfirmOk();
     tick();
     expect(tsSpy.delete).toHaveBeenCalledWith(1);
     expect(toastSpy.success).toHaveBeenCalled();
   }));
 
   it('onCfgCancel should close confirm dialog', () => {
-    component.cfgVisible.set(true);
-    component.onCfgCancel();
-    expect(component.cfgVisible()).toBeFalse();
+    component.confirmVisible.set(true);
+    component.onConfirmCancel();
+    expect(component.confirmVisible()).toBeFalse();
   });
 
   // ── submitLeave ───────────────────────────────────────────────────────────
