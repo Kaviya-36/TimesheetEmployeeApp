@@ -206,10 +206,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   addUserForm = this.formBuilder.group({
     employeeId:   ['', Validators.required],
-    name:         ['', Validators.required],
+    name:         ['', [Validators.required, Validators.minLength(3)]],
     email:        ['', [Validators.required, Validators.email]],
     password:     ['', [Validators.required, Validators.minLength(6)]],
-    phone:        [''],
+    phone:        ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10), Validators.pattern('^[0-9]{10}$')]],
     role:         ['Employee', Validators.required],
     departmentId: ['', Validators.required],
   });
@@ -480,7 +480,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       name:         v.name!,
       email:        v.email!,
       password:     v.password!,
-      phone:        v.phone ?? '',
+      phone:        v.phone!,
       role:         v.role!,
       departmentId: Number(v.departmentId!)
     }).subscribe({

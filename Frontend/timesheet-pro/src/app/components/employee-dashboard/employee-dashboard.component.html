@@ -575,7 +575,15 @@
                     </td>
                     <td class="zts-list-date">{{ ts.date | date:'EEE, dd MMM yyyy' }}</td>
                     <td><span class="zts-hours-chip">{{ ts.hoursWorked }}</span></td>
-                    <td><span class="zbadge" [class]="getStatusClass(ts.status)">{{ getStatusText(ts.status) }}</span></td>
+                    <td>
+                      <span class="zbadge" [class]="getStatusClass(ts.status)">{{ getStatusText(ts.status) }}</span>
+                      @if (ts.approvedByName) {
+                        <div style="font-size:11px;color:#6B7280;margin-top:3px">{{ +ts.status === 1 ? '✅' : '❌' }} {{ ts.approvedByName }}</div>
+                      }
+                      @if (ts.managerComment) {
+                        <div style="font-size:11px;color:#6B7280;font-style:italic;margin-top:2px">💬 {{ ts.managerComment }}</div>
+                      }
+                    </td>
                     <td class="zts-note-cell">
                       @if (activeHistoryNote() === ts.id) {
                         <div class="zts-note-inline" (click)="$event.stopPropagation()">
@@ -830,6 +838,9 @@
                 <!-- Status -->
                 <div class="zlv-status-block">
                   <span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span>
+                  @if (l.approvedByName) {
+                    <span class="zlv-approver">{{ +l.status === 1 ? '✅' : '❌' }} {{ l.approvedByName }}</span>
+                  }
                   @if (l.managerComment) {
                     <span class="zlv-comment" [title]="l.managerComment">{{ l.managerComment }}</span>
                   }
@@ -932,19 +943,16 @@
       <div class="zmco-icon">⏰</div>
       <h3 class="zmco-title">Missed Check-Out</h3>
       <div class="zmco-body">
-        You forgot to check out <strong>yesterday</strong>. Your attendance has been automatically calculated as <strong>check-in + 8 hours</strong>.
+        You forgot to check out on the following day(s). Attendance has been automatically calculated as <strong>check-in + 8 hours</strong>.
       </div>
-      @if (todayAtt()?.checkIn) {
+      @if (todayAtt()?.missedDates?.length) {
         <div class="zmco-time">
-          <div class="zmco-time-item">
-            <div class="zmco-time-lbl">Yesterday Check In</div>
-            <div class="zmco-time-val">{{ todayAtt()?.checkIn || '—' }}</div>
-          </div>
-          <div class="zmco-time-sep">→</div>
-          <div class="zmco-time-item">
-            <div class="zmco-time-lbl">Auto Check Out</div>
-            <div class="zmco-time-val">+8h</div>
-          </div>
+          @for (d of todayAtt()!.missedDates!; track d) {
+            <div class="zmco-time-item">
+              <div class="zmco-time-lbl">📅 {{ d }}</div>
+              <div class="zmco-time-val">Auto +8h</div>
+            </div>
+          }
         </div>
       }
       <button class="zbtn zbtn-primary zmco-close-btn" (click)="showMissedCheckoutModal.set(false)">Got it</button>

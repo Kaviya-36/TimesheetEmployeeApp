@@ -155,24 +155,29 @@ namespace TimeSheetAppWeb.Services
             try
             {
                 var today = DateTime.Today;
-                var yesterday = today.AddDays(-1);
                 var allAttendances = await _attendanceRepository.GetAllAsync() ?? Enumerable.Empty<Attendance>();
 
-                // ── Flag yesterday's missed checkout (no auto-fill) ───────────────
-                var prevRecord = allAttendances.FirstOrDefault(a => a.UserId == userId && a.Date.Date == yesterday);
-                bool missedCheckout = false;
-                if (prevRecord != null && prevRecord.CheckIn.HasValue && !prevRecord.CheckOut.HasValue)
+                // ── Find ALL past records with missed checkout ─────────────────────
+                var missedRecords = allAttendances
+                    .Where(a => a.UserId == userId && a.Date.Date < today && a.CheckIn.HasValue && !a.CheckOut.HasValue)
+                    .OrderBy(a => a.Date)
+                    .ToList();
+
+                var missedDates = new List<string>();
+                foreach (var record in missedRecords)
                 {
-                    missedCheckout = true;
-                    var autoCheckout = CalcAutoCheckout(prevRecord.CheckIn.Value);
-                    var tracked = await _attendanceRepository.GetByIdAsync(prevRecord.Id);
+                    var autoCheckout = CalcAutoCheckout(record.CheckIn.Value);
+                    var tracked = await _attendanceRepository.GetByIdAsync(record.Id);
                     if (tracked != null)
                     {
                         tracked.CheckOut   = autoCheckout.checkOut;
                         tracked.TotalHours = autoCheckout.totalHours;
                         await _attendanceRepository.UpdateAsync(tracked.Id, tracked);
                     }
+                    missedDates.Add(record.Date.ToString("dd MMM yyyy"));
                 }
+
+                bool missedCheckout = missedDates.Count > 0;
 
                 var attendance = allAttendances.FirstOrDefault(a => a.UserId == userId && a.Date.Date == today);
 
@@ -181,13 +186,14 @@ namespace TimeSheetAppWeb.Services
                     {
                         Success = true,
                         Message = missedCheckout ? "missed_checkout" : "No attendance for today",
-                        Data = missedCheckout ? new AttendanceResponse { MissedCheckout = true } : null
+                        Data = missedCheckout
+                            ? new AttendanceResponse { MissedCheckout = true, MissedDates = missedDates }
+                            : null
                     };
-
-                // ── No same-day auto-checkout — leave record open for manual checkout ──
 
                 var dto = await MapToDtoAsync(attendance);
                 dto.MissedCheckout = missedCheckout;
+                dto.MissedDates    = missedDates;
 
                 return new ApiResponse<AttendanceResponse> { Success = true, Data = dto };
             }

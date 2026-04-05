@@ -214,7 +214,15 @@
               <span class="zlv-days-lbl">days</span>
             </div>
             <div class="zlv-reason">{{ l.reason || '—' }}</div>
-            <div><span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span></div>
+            <div>
+              <span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span>
+              @if (l.approvedByName) {
+                <div style="font-size:11px;color:#6B7280;margin-top:3px">{{ +l.status === 1 ? '✅' : '❌' }} {{ l.approvedByName }}</div>
+              }
+              @if (l.managerComment) {
+                <div style="font-size:11px;color:#6B7280;font-style:italic;margin-top:2px">💬 {{ l.managerComment }}</div>
+              }
+            </div>
             <div>
               @if (+l.status === 0) {
                 <button class="zbtn zbtn-danger zbtn-sm" (click)="confirmDeleteLeave(l)">🗑</button>
@@ -313,8 +321,15 @@
       <div class="zmco-icon">⏰</div>
       <h3 class="zmco-title">Missed Check-Out</h3>
       <div class="zmco-body">
-        You forgot to check out <strong>yesterday</strong>. Your attendance has been automatically calculated as <strong>check-in + 8 hours</strong>.
+        You forgot to check out on the following day(s). Attendance has been automatically calculated as <strong>check-in + 8 hours</strong>.
       </div>
+      @if (todayAtt()?.missedDates?.length) {
+        <div class="zmco-time">
+          @for (d of todayAtt()!.missedDates!; track d) {
+            <div class="zmco-time-item"><div class="zmco-time-lbl">📅 {{ d }}</div><div class="zmco-time-val">Auto +8h</div></div>
+          }
+        </div>
+      }
       <button class="zbtn zbtn-primary zmco-close-btn" (click)="showMissedCheckoutModal.set(false)">Got it</button>
     </div>
   </div>

@@ -9,4 +9,5 @@
     public bool IsLate { get; set; }
     public string? TotalHours { get; set; }
     public bool MissedCheckout { get; set; }
+    public List<string> MissedDates { get; set; } = new();
 }

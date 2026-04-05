@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TimeSheetAppWeb.Interface;
 using TimeSheetAppWeb.Model.common;
 using TimeSheetAppWeb.Model.DTOs;
@@ -76,11 +77,14 @@ namespace TimeSheetAppWeb.Controllers
             [FromQuery] string? search = null, [FromQuery] string? status = null,
             [FromQuery] string? sortBy = "date", [FromQuery] string? sortDir = "desc")
         {
+            var callerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var callerRole = User.FindFirst(ClaimTypes.Role)?.Value
+                          ?? User.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value;
             var result = await _timesheetService.GetAllTimesheetsAsync(new PaginationParams
             {
                 PageNumber = pageNumber, PageSize = pageSize,
                 Search = search, Status = status, SortBy = sortBy, SortDir = sortDir
-            });
+            }, callerId, callerRole);
             return Ok(result);
         }
         //---------------Create Timesheet (manual with start/end time)--------------------

@@ -108,7 +108,10 @@ namespace TimeSheetAppWeb.Controllers
             [FromQuery] string? search = null, [FromQuery] string? status = null,
             [FromQuery] string? sortDir = "desc")
         {
-            var response = await _leaveService.GetAllLeavesAsync(pageNumber, pageSize, search, status, sortDir);
+            var callerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var callerRole = User.FindFirst(ClaimTypes.Role)?.Value
+                          ?? User.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value;
+            var response = await _leaveService.GetAllLeavesAsync(pageNumber, pageSize, search, status, sortDir, callerId, callerRole);
             return Ok(response);
         }
 

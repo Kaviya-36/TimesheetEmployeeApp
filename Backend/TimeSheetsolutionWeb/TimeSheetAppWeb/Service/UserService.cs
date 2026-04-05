@@ -89,6 +89,12 @@ namespace TimeSheetAppWeb.Services
                     throw new InvalidOperationException("EmployeeId already exists");
                 }
 
+                if (users.Any(u => u.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    _logger.LogWarning("Registration failed: Name {Name} already exists", request.Name);
+                    throw new InvalidOperationException("Username already exists");
+                }
+
                 var hashedPassword = _passwordService.HashPassword(request.Password);
 
                 var user = new User

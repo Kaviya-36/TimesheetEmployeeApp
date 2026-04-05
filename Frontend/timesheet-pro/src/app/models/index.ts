@@ -31,7 +31,7 @@ export interface Timesheet {
   projectId?: number; projectName: string; date: string;
   startTime: string; endTime: string; breakTime: string;
   hoursWorked: number; description?: string;
-  status: number; managerComment?: string;
+  status: number; approvedById?: number; approvedByName?: string; managerComment?: string;
   statusText?: string; statusClass?: string;
 }
 export interface TimesheetCreateRequest {
@@ -50,7 +50,7 @@ export interface TimesheetApprovalRequest {
 export interface Attendance {
   id: number; userId: number; employeeName: string; date: string;
   checkIn?: string; checkOut?: string; isLate: boolean; totalHours?: string;
-  missedCheckout?: boolean;
+  missedCheckout?: boolean; missedDates?: string[];
 }
 
 // Leave
@@ -60,7 +60,7 @@ export interface LeaveApprovalRequest {
 }
 export interface Leave {
   id: number; userId?: number; employeeName: string; leaveType: string; fromDate: string; toDate: string;
-  reason?: number; status: Number; approvedById?: number; approvedDate?: string; managerComment?: string;
+  reason?: number; status: Number; approvedById?: number; approvedByName?: string; approvedDate?: string; managerComment?: string;
   remainingLeaves?: number;
 }
 export interface LeaveType { id: number; name: string; maxDaysPerYear: number; isActive: boolean; }

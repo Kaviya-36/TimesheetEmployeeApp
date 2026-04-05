@@ -414,6 +414,18 @@ namespace TimeSheetAppWeb.Services
                     return new ApiResponse<bool> { Success = false, Message = "You cannot approve your own timesheet.", Data = false };
                 }
 
+                // ── Department check: Manager can only approve same-department employees ──
+                var approver = await _userRepository.GetByIdAsync(request.ApprovedById);
+                if (approver != null && approver.Role == UserRole.Manager)
+                {
+                    var employee = await _userRepository.GetByIdAsync(timesheet.UserId);
+                    if (employee == null || employee.DepartmentId != approver.DepartmentId)
+                    {
+                        _logger.LogWarning("Cross-department approval attempt by ManagerId {ManagerId} for TimesheetId {TimesheetId}", request.ApprovedById, request.TimesheetId);
+                        return new ApiResponse<bool> { Success = false, Message = "You can only approve timesheets from employees in your department.", Data = false };
+                    }
+                }
+
                 timesheet.Status = request.IsApproved ? TimesheetStatus.Approved : TimesheetStatus.Rejected;
                 timesheet.ApprovedById = request.ApprovedById;
                 timesheet.ManagerComment = request.ManagerComment;
@@ -436,17 +448,31 @@ namespace TimeSheetAppWeb.Services
         }
 
         // ---------------- GET ALL TIMESHEETS ----------------
-        public async Task<ApiResponse<PagedResponse<TimesheetResponse>>> GetAllTimesheetsAsync(PaginationParams p)
+        public async Task<ApiResponse<PagedResponse<TimesheetResponse>>> GetAllTimesheetsAsync(PaginationParams p, int? callerId = null, string? callerRole = null)
         {
             try
             {
+                var allUsers = await _userRepository.GetAllAsync() ?? Enumerable.Empty<User>();
+
+                // ── Department filter for Manager role ────────────────────────────
+                HashSet<int>? deptUserIds = null;
+                if (callerRole == "Manager" && callerId.HasValue)
+                {
+                    var caller = allUsers.FirstOrDefault(u => u.Id == callerId.Value);
+                    if (caller?.DepartmentId != null)
+                        deptUserIds = allUsers.Where(u => u.DepartmentId == caller.DepartmentId).Select(u => u.Id).ToHashSet();
+                }
+
                 var query = (await _timesheetRepository.GetAllAsync() ?? Enumerable.Empty<Timesheet>()).AsQueryable();
+
+                if (deptUserIds != null)
+                    query = query.Where(t => deptUserIds.Contains(t.UserId));
 
                 // Filter
                 if (!string.IsNullOrWhiteSpace(p.Search))
                 {
                     var q = p.Search.ToLower();
-                    var matchingUserIds = (await _userRepository.GetAllAsync() ?? Enumerable.Empty<User>())
+                    var matchingUserIds = allUsers
                         .Where(u => u.Name.ToLower().Contains(q) || u.EmployeeId.ToLower().Contains(q))
                         .Select(u => u.Id).ToHashSet();
                     query = query.Where(t => matchingUserIds.Contains(t.UserId) || t.ProjectName.ToLower().Contains(q));
@@ -473,7 +499,8 @@ namespace TimeSheetAppWeb.Services
                 {
                     var user    = await _userRepository.GetByIdAsync(t.UserId);
                     var project = await _projectRepository.GetByIdAsync(t.ProjectId);
-                    if (user != null && project != null) responses.Add(MapToDto(t, user, project));
+                    string? approverName = t.ApprovedById.HasValue ? (await _userRepository.GetByIdAsync(t.ApprovedById.Value))?.Name : null;
+                    if (user != null && project != null) responses.Add(MapToDto(t, user, project, approverName));
                 }
 
                 return new ApiResponse<PagedResponse<TimesheetResponse>>
@@ -521,7 +548,8 @@ namespace TimeSheetAppWeb.Services
                 foreach (var t in data)
                 {
                     var project = await _projectRepository.GetByIdAsync(t.ProjectId);
-                    if (project != null) responses.Add(MapToDto(t, user!, project));
+                    string? approverName = t.ApprovedById.HasValue ? (await _userRepository.GetByIdAsync(t.ApprovedById.Value))?.Name : null;
+                    if (project != null) responses.Add(MapToDto(t, user!, project, approverName));
                 }
 
                 return new ApiResponse<PagedResponse<TimesheetResponse>>
@@ -580,7 +608,7 @@ namespace TimeSheetAppWeb.Services
         }
 
         // ---------------- HELPER: MAP DTO ----------------
-        private TimesheetResponse MapToDto(Timesheet t, User user, Project project)
+        private TimesheetResponse MapToDto(Timesheet t, User user, Project project, string? approvedByName = null)
         {
             return new TimesheetResponse
             {
@@ -596,6 +624,8 @@ namespace TimeSheetAppWeb.Services
                 HoursWorked  = TimeSpan.FromHours(t.TotalHours).ToString(@"hh\:mm"),
                 Description  = t.TaskDescription,
                 Status       = t.Status,
+                ApprovedById   = t.ApprovedById,
+                ApprovedByName = approvedByName,
                 ManagerComment = t.ManagerComment
             };
         }

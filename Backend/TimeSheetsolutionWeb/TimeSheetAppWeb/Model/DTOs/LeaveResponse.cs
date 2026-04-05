@@ -11,6 +11,7 @@
         public string? Reason { get; set; }
         public LeaveStatus Status { get; set; }
         public int? ApprovedById { get; set; }
+        public string? ApprovedByName { get; set; }
         public DateTime? ApprovedDate { get; set; }
         public string? ManagerComment { get; set; }
         public int RemainingLeaves { get; set; }

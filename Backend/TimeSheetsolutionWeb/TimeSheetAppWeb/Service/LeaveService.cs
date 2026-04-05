@@ -125,6 +125,15 @@ namespace TimeSheetAppWeb.Services
                 if (leave.Status != LeaveStatus.Pending)
                     return Fail<bool>("Leave already processed");
 
+                // ── Department check: Manager can only approve same-department employees ──
+                var approver = await _userRepo.GetByIdAsync(request.ApprovedById);
+                if (approver != null && approver.Role == UserRole.Manager)
+                {
+                    var employee = await _userRepo.GetByIdAsync(leave.UserId);
+                    if (employee == null || employee.DepartmentId != approver.DepartmentId)
+                        return Fail<bool>("You can only approve leave requests from employees in your department.");
+                }
+
                 leave.Status = request.IsApproved ? LeaveStatus.Approved : LeaveStatus.Rejected;
                 leave.ApprovedById = request.ApprovedById;
                 leave.ApprovedDate = DateTime.Now;
@@ -172,22 +181,37 @@ namespace TimeSheetAppWeb.Services
                     : filtered.OrderByDescending(l => l.FromDate);
 
                 var total = filtered.Count();
+                var allUsers = await _userRepo.GetAllAsync() ?? Enumerable.Empty<User>();
                 var data  = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize)
-                    .Select(l => { var type = leaveTypes.First(t => t.Id == l.LeaveTypeId); return MapToDto(l, user, type); }).ToList();
-
+                    .Select(l => {
+                        var type = leaveTypes.First(t => t.Id == l.LeaveTypeId);
+                        var approverName = l.ApprovedById.HasValue ? allUsers.FirstOrDefault(u => u.Id == l.ApprovedById)?.Name : null;
+                        return MapToDto(l, user, type, 0, approverName);
+                    }).ToList();
                 return Success("Fetched", new PagedResponse<LeaveResponse>(data, total, pageNumber, pageSize));
             }
             catch (Exception ex) { _logger.LogError(ex, "GetUserLeaves error"); return Fail<PagedResponse<LeaveResponse>>(ex.Message); }
         }
 
         // ================= GET ALL LEAVES =================
-        public async Task<ApiResponse<PagedResponse<LeaveResponse>>> GetAllLeavesAsync(int pageNumber, int pageSize, string? search = null, string? status = null, string? sortDir = "desc")
+        public async Task<ApiResponse<PagedResponse<LeaveResponse>>> GetAllLeavesAsync(int pageNumber, int pageSize, string? search = null, string? status = null, string? sortDir = "desc", int? callerId = null, string? callerRole = null)
         {
             try
             {
                 var leaves    = await _leaveRepo.GetAllAsync()     ?? Enumerable.Empty<LeaveRequest>();
                 var users     = await _userRepo.GetAllAsync()      ?? Enumerable.Empty<User>();
                 var types     = await _leaveTypeRepo.GetAllAsync() ?? Enumerable.Empty<LeaveType>();
+
+                // ── Department filter for Manager role ────────────────────────────
+                if (callerRole == "Manager" && callerId.HasValue)
+                {
+                    var caller = users.FirstOrDefault(u => u.Id == callerId.Value);
+                    if (caller?.DepartmentId != null)
+                    {
+                        var deptUserIds = users.Where(u => u.DepartmentId == caller.DepartmentId).Select(u => u.Id).ToHashSet();
+                        leaves = leaves.Where(l => deptUserIds.Contains(l.UserId));
+                    }
+                }
 
                 var filtered = leaves.AsEnumerable();
                 if (!string.IsNullOrWhiteSpace(search))
@@ -206,7 +230,12 @@ namespace TimeSheetAppWeb.Services
 
                 var total = filtered.Count();
                 var data  = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize)
-                    .Select(l => { var user = users.First(u => u.Id == l.UserId); var type = types.First(t => t.Id == l.LeaveTypeId); return MapToDto(l, user, type); }).ToList();
+                    .Select(l => {
+                        var user = users.First(u => u.Id == l.UserId);
+                        var type = types.First(t => t.Id == l.LeaveTypeId);
+                        var approverName = l.ApprovedById.HasValue ? users.FirstOrDefault(u => u.Id == l.ApprovedById)?.Name : null;
+                        return MapToDto(l, user, type, 0, approverName);
+                    }).ToList();
 
                 return Success("Fetched", new PagedResponse<LeaveResponse>(data, total, pageNumber, pageSize));
             }
@@ -241,7 +270,7 @@ namespace TimeSheetAppWeb.Services
         }
 
         // ================= HELPER =================
-        private LeaveResponse MapToDto(LeaveRequest leave, User user, LeaveType type, int remainingLeaves = 0)
+        private LeaveResponse MapToDto(LeaveRequest leave, User user, LeaveType type, int remainingLeaves = 0, string? approvedByName = null)
         {
             return new LeaveResponse
             {
@@ -254,6 +283,7 @@ namespace TimeSheetAppWeb.Services
                 Reason = leave.Reason,
                 Status = leave.Status,
                 ApprovedById = leave.ApprovedById,
+                ApprovedByName = approvedByName,
                 ApprovedDate = leave.ApprovedDate,
                 ManagerComment = leave.ManagerComment,
                 RemainingLeaves = remainingLeaves

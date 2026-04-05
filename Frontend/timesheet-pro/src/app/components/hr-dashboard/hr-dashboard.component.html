@@ -303,6 +303,9 @@
             <!-- Status + comment -->
             <div class="zhr-lv-status-col">
               <span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span>
+              @if (l.approvedByName) {
+                <span class="zhr-lv-comment">{{ +l.status === 1 ? '✅' : '❌' }} {{ l.approvedByName }}</span>
+              }
               @if (l.managerComment) {
                 <span class="zhr-lv-comment" [title]="l.managerComment">💬 {{ l.managerComment }}</span>
               }
@@ -556,6 +559,9 @@
               </div>
               <div class="zhr-ts-status-col">
                 <span class="zbadge" [class]="getStatusClass(ts.status)">{{ getStatusText(ts.status) }}</span>
+                @if (ts.approvedByName) {
+                  <div style="font-size:11px;color:#6B7280;margin-top:3px">{{ +ts.status === 1 ? '✅' : '❌' }} {{ ts.approvedByName }}</div>
+                }
               </div>
               <div class="zhr-ts-notes">
                 @if (ts.description) {
@@ -835,8 +841,15 @@
       <div class="zmco-icon">⏰</div>
       <h3 class="zmco-title">Missed Check-Out</h3>
       <div class="zmco-body">
-        You forgot to check out <strong>yesterday</strong>. Your attendance has been automatically calculated as <strong>check-in + 8 hours</strong>.
+        You forgot to check out on the following day(s). Attendance has been automatically calculated as <strong>check-in + 8 hours</strong>.
       </div>
+      @if (todayAtt()?.missedDates?.length) {
+        <div class="zmco-time">
+          @for (d of todayAtt()!.missedDates!; track d) {
+            <div class="zmco-time-item"><div class="zmco-time-lbl">📅 {{ d }}</div><div class="zmco-time-val">Auto +8h</div></div>
+          }
+        </div>
+      }
       <button class="zbtn zbtn-primary zmco-close-btn" (click)="showMissedCheckoutModal.set(false)">Got it</button>
     </div>
   </div>
@@ -999,7 +1012,12 @@
                   <td>{{ l.toDate | date:'dd MMM yyyy' }}</td>
                   <td><span class="zdays-badge">{{ leaveDays(l) }}d</span></td>
                   <td class="ztext-muted">{{ l.reason || '—' }}</td>
-                  <td><span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span></td>
+                  <td>
+                    <span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span>
+                    @if (l.approvedByName) {
+                      <div style="font-size:11px;color:#6B7280;margin-top:2px">{{ +l.status === 1 ? '✅' : '❌' }} {{ l.approvedByName }}</div>
+                    }
+                  </td>
                 </tr>
               }
             </tbody>

@@ -398,7 +398,11 @@
                       <td>{{ ts.projectName }}</td>
                       <td>{{ ts.date | date:'dd MMM yyyy' }}</td>
                       <td><strong class="zhours">{{ formatHours(parseHours(ts.hoursWorked)) }}</strong></td>
-                      <td><span class="zbadge" [class]="getStatusClass(ts.status)">{{ getStatusText(ts.status) }}</span></td>
+                      <td><span class="zbadge" [class]="getStatusClass(ts.status)">{{ getStatusText(ts.status) }}</span>
+                        @if (ts.approvedByName) {
+                          <div style="font-size:11px;color:#6B7280;margin-top:3px">{{ +ts.status === 1 ? '✅' : '❌' }} {{ ts.approvedByName }}</div>
+                        }
+                      </td>
                       <td class="ztext-muted zcomment-cell">{{ ts.description || '—' }}</td>
                       <td class="ztext-muted zcomment-cell">{{ ts.managerComment || '—' }}</td>
                     </tr>
@@ -460,7 +464,15 @@
                   <span class="zlv-days-val">{{ leaveDays(l) }}</span>
                   <span class="zlv-days-lbl">days</span>
                 </div>
-                <div><span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span></div>
+                <div>
+                  <span class="zbadge" [class]="getStatusClass(l.status)">{{ getStatusText(l.status) }}</span>
+                  @if (l.approvedByName) {
+                    <div style="font-size:11px;color:#6B7280;margin-top:3px">{{ +l.status === 1 ? '✅' : '❌' }} {{ l.approvedByName }}</div>
+                  }
+                  @if (l.managerComment) {
+                    <div style="font-size:11px;color:#6B7280;font-style:italic;margin-top:2px">💬 {{ l.managerComment }}</div>
+                  }
+                </div>
                 <div></div>
               </div>
             }
@@ -787,13 +799,45 @@
       <div class="zmodal-body">
         <form [formGroup]="addUserForm" novalidate>
           <div class="zgrid-2">
-            <div class="zform-group"><label class="zform-label">Name <span class="req">*</span></label><input formControlName="name" class="zform-control" placeholder="Full Name" /></div>
-            <div class="zform-group"><label class="zform-label">Employee ID <span class="req">*</span></label><input formControlName="employeeId" class="zform-control" placeholder="EMP001" /></div>
+            <div class="zform-group">
+              <label class="zform-label">Name <span class="req">*</span></label>
+              <input formControlName="name" class="zform-control" placeholder="Full Name" />
+              @if (addUserForm.get('name')?.touched) {
+                @if (addUserForm.get('name')?.errors?.['required']) { <span class="zform-error">Name is required</span> }
+                @else if (addUserForm.get('name')?.errors?.['minlength']) { <span class="zform-error">Name must be at least 3 characters</span> }
+              }
+            </div>
+            <div class="zform-group">
+              <label class="zform-label">Employee ID <span class="req">*</span></label>
+              <input formControlName="employeeId" class="zform-control" placeholder="EMP001" />
+              @if (addUserForm.get('employeeId')?.invalid && addUserForm.get('employeeId')?.touched) { <span class="zform-error">Required</span> }
+            </div>
           </div>
-          <div class="zform-group"><label class="zform-label">Email <span class="req">*</span></label><input formControlName="email" type="email" class="zform-control" placeholder="user@company.com" /></div>
+          <div class="zform-group">
+            <label class="zform-label">Email <span class="req">*</span></label>
+            <input formControlName="email" type="email" class="zform-control" placeholder="user@company.com" />
+            @if (addUserForm.get('email')?.touched) {
+              @if (addUserForm.get('email')?.errors?.['required']) { <span class="zform-error">Email is required</span> }
+              @else if (addUserForm.get('email')?.errors?.['email']) { <span class="zform-error">Enter a valid email address</span> }
+            }
+          </div>
           <div class="zgrid-2">
-            <div class="zform-group"><label class="zform-label">Password <span class="req">*</span></label><input formControlName="password" type="password" class="zform-control" /></div>
-            <div class="zform-group"><label class="zform-label">Phone</label><input formControlName="phone" class="zform-control" /></div>
+            <div class="zform-group">
+              <label class="zform-label">Password <span class="req">*</span></label>
+              <input formControlName="password" type="password" class="zform-control" />
+              @if (addUserForm.get('password')?.touched) {
+                @if (addUserForm.get('password')?.errors?.['required']) { <span class="zform-error">Password is required</span> }
+                @else if (addUserForm.get('password')?.errors?.['minlength']) { <span class="zform-error">Password must be at least 6 characters</span> }
+              }
+            </div>
+            <div class="zform-group">
+              <label class="zform-label">Phone <span class="req">*</span></label>
+              <input formControlName="phone" class="zform-control" placeholder="10-digit number" maxlength="10" />
+              @if (addUserForm.get('phone')?.touched) {
+                @if (addUserForm.get('phone')?.errors?.['required']) { <span class="zform-error">Phone is required</span> }
+                @else if (addUserForm.get('phone')?.errors?.['pattern'] || addUserForm.get('phone')?.errors?.['minlength']) { <span class="zform-error">Enter a valid 10-digit phone number</span> }
+              }
+            </div>
           </div>
           <div class="zgrid-2">
             <div class="zform-group"><label class="zform-label">Role</label>
@@ -804,6 +848,7 @@
                 <option value="">-- Select --</option>
                 @for (d of departments; track d.id) { <option [value]="d.id">{{ d.name }}</option> }
               </select>
+              @if (addUserForm.get('departmentId')?.invalid && addUserForm.get('departmentId')?.touched) { <span class="zform-error">Required</span> }
             </div>
           </div>
         </form>
@@ -937,8 +982,15 @@
       <div class="zmco-icon">⏰</div>
       <h3 class="zmco-title">Missed Check-Out</h3>
       <div class="zmco-body">
-        You forgot to check out <strong>yesterday</strong>. Your attendance has been automatically calculated as <strong>check-in + 8 hours</strong>.
+        You forgot to check out on the following day(s). Attendance has been automatically calculated as <strong>check-in + 8 hours</strong>.
       </div>
+      @if (todayAtt()?.missedDates?.length) {
+        <div class="zmco-time">
+          @for (d of todayAtt()!.missedDates!; track d) {
+            <div class="zmco-time-item"><div class="zmco-time-lbl">📅 {{ d }}</div><div class="zmco-time-val">Auto +8h</div></div>
+          }
+        </div>
+      }
       <button class="zbtn zbtn-primary zmco-close-btn" (click)="showMissedCheckoutModal.set(false)">Got it</button>
     </div>
   </div>

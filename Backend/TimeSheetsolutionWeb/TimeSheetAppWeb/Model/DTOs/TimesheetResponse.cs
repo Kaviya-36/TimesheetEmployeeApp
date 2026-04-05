@@ -17,6 +17,8 @@
         public string HoursWorked { get; set; }
         public string? Description { get; set; }
         public TimesheetStatus Status { get; set; }
+        public int? ApprovedById { get; set; }
+        public string? ApprovedByName { get; set; }
         public string? ManagerComment { get; set; }
     }
 }

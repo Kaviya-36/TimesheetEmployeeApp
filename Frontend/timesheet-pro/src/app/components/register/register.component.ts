@@ -26,10 +26,10 @@ export class RegisterComponent {
 
   form = this.fb.group({
     employeeId:   ['', Validators.required],
-    name:         ['', Validators.required],
+    name:         ['', [Validators.required, Validators.minLength(3)]],
     email:        ['', [Validators.required, Validators.email]],
     password:     ['', [Validators.required, Validators.minLength(6)]],
-    phone:        [''],
+    phone:        ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10), Validators.pattern('^[0-9]{10}$')]],
     role:         ['', Validators.required],
     departmentId: ['', Validators.required]
   });

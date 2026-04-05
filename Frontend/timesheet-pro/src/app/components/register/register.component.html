@@ -44,7 +44,10 @@
             <div class="zform-group">
               <label class="zform-label">Full Name <span class="req">*</span></label>
               <input formControlName="name" class="zform-control" placeholder="John Doe" />
-              @if (f['name'].invalid && f['name'].touched) { <span class="zform-error">Required</span> }
+              @if (f['name'].touched) {
+                @if (f['name'].errors?.['required']) { <span class="zform-error">Name is required</span> }
+                @else if (f['name'].errors?.['minlength']) { <span class="zform-error">Name must be at least 3 characters</span> }
+              }
             </div>
             <div class="zform-group">
               <label class="zform-label">Employee ID <span class="req">*</span></label>
@@ -55,17 +58,27 @@
           <div class="zform-group">
             <label class="zform-label">Email Address <span class="req">*</span></label>
             <input formControlName="email" type="email" class="zform-control" placeholder="john@company.com" />
-            @if (f['email'].invalid && f['email'].touched) { <span class="zform-error">Valid email required</span> }
+            @if (f['email'].touched) {
+              @if (f['email'].errors?.['required']) { <span class="zform-error">Email is required</span> }
+              @else if (f['email'].errors?.['email']) { <span class="zform-error">Enter a valid email address</span> }
+            }
           </div>
           <div class="zgrid-2">
             <div class="zform-group">
               <label class="zform-label">Password <span class="req">*</span></label>
               <input formControlName="password" type="password" class="zform-control" placeholder="Min 6 chars" />
-              @if (f['password'].invalid && f['password'].touched) { <span class="zform-error">Min 6 characters</span> }
+              @if (f['password'].touched) {
+                @if (f['password'].errors?.['required']) { <span class="zform-error">Password is required</span> }
+                @else if (f['password'].errors?.['minlength']) { <span class="zform-error">Password must be at least 6 characters</span> }
+              }
             </div>
             <div class="zform-group">
-              <label class="zform-label">Phone</label>
-              <input formControlName="phone" class="zform-control" placeholder="+91 9876543210" />
+              <label class="zform-label">Phone <span class="req">*</span></label>
+              <input formControlName="phone" class="zform-control" placeholder="10-digit number" maxlength="10" />
+              @if (f['phone'].touched) {
+                @if (f['phone'].errors?.['required']) { <span class="zform-error">Phone is required</span> }
+                @else if (f['phone'].errors?.['pattern'] || f['phone'].errors?.['minlength']) { <span class="zform-error">Enter a valid 10-digit phone number</span> }
+              }
             </div>
           </div>
           <div class="zgrid-2">
