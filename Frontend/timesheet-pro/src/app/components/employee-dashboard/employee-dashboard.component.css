@@ -190,7 +190,7 @@
   color: var(--c-green);
   border-left-color: rgba(16,185,129,.2);
 }
-.zwts-day-hdr.zwts-weekend { background: rgba(0,0,0,.02); color: var(--c-ink-4); }
+.zwts-day-hdr.zwts-weekend { background: rgba(251,146,60,.10); color: #EA580C; border-left: 2px solid rgba(251,146,60,.3); }
 .zwts-day-name { font-weight: 800; text-transform: uppercase; letter-spacing: .6px; font-size: 10px; }
 .zwts-day-date { font-size: 12px; font-weight: 600; margin-top: 2px; color: inherit; }
 
@@ -237,7 +237,7 @@
   transition: background var(--transition);
 }
 .zwts-cell.zwts-today   { background: rgba(16,185,129,.05); border-left-color: rgba(16,185,129,.2); }
-.zwts-cell.zwts-weekend { background: rgba(0,0,0,.02) !important; }
+.zwts-cell.zwts-weekend { background: rgba(251,146,60,.06) !important; border-left: 2px solid rgba(251,146,60,.2) !important; }
 .zwts-cell-approved     { background: rgba(16,185,129,.07) !important; }
 .zwts-cell-rejected     { background: rgba(220,38,38,.05) !important; }
 .zwts-cell-empty        { border-left: 1px solid var(--c-border-2); }
@@ -363,7 +363,8 @@
   color: var(--c-ink-2); padding: 4px;
   border-left: 1px solid var(--c-border-2);
 }
-.zwts-day-total.zwts-weekend { color: var(--c-ink-4); background: rgba(0,0,0,.02); }
+/* marked weekend */
+.zwts-day-total.zwts-weekend { color: #EA580C; background: rgba(251,146,60,.07); font-weight: 700; }
 .zwts-grand-total {
   text-align: center; font-size: 14px; font-weight: 900;
   color: var(--c-green);
@@ -478,7 +479,7 @@
 .zts-month-day-name { font-size: 9px; color: var(--c-ink-4); }
 .zts-month-day-hdr.zts-month-today         { background: var(--c-blue-light); color: var(--c-blue); }
 .zts-month-day-hdr.zts-month-today .zts-month-day-num { color: var(--c-blue); }
-.zts-month-day-hdr.zts-month-weekend       { background: rgba(0,0,0,.025); color: var(--c-ink-4); }
+.zts-month-day-hdr.zts-month-weekend       { background: rgba(251,146,60,.10); color: #EA580C; border-left: 2px solid rgba(251,146,60,.3); }
 
 .zts-month-row {
   display: grid;
@@ -499,7 +500,7 @@
   font-size: 11px; gap: 2px;
 }
 .zts-month-cell.zts-month-today    { background: var(--c-blue-light); }
-.zts-month-cell.zts-month-weekend  { background: rgba(0,0,0,.02); }
+.zts-month-cell.zts-month-weekend  { background: rgba(251,146,60,.06) !important; border-left: 2px solid rgba(251,146,60,.2) !important; }
 .zts-month-cell.zts-month-approved { background: var(--c-green-light); }
 .zts-month-cell.zts-month-pending  { background: var(--c-amber-light); }
 .zts-month-cell.zts-month-rejected { background: var(--c-red-light); }
@@ -528,7 +529,7 @@
   font-size: 11px; font-weight: 600; color: var(--c-ink-2);
   border-left: 1px solid var(--c-border-2);
 }
-.zts-month-day-total.zts-month-weekend { color: var(--c-ink-4); }
+.zts-month-day-total.zts-month-weekend { color: #EA580C; font-weight: 700; }
 .zts-month-grand-total {
   display: flex; align-items: center; justify-content: center;
   padding: 4px 6px; border-left: 1px solid var(--c-border);
@@ -558,7 +559,7 @@
 .zts-hist-day-date { font-size: 11px; margin-top: 1px; }
 .zts-hist-day-hdr.zts-hist-today         { background: var(--c-blue-light); color: var(--c-blue); }
 .zts-hist-day-hdr.zts-hist-today .zts-hist-day-name { color: var(--c-blue); }
-.zts-hist-day-hdr.zts-hist-weekend       { background: rgba(0,0,0,.025); color: var(--c-ink-4); }
+.zts-hist-day-hdr.zts-hist-weekend       { background: rgba(251,146,60,.10); color: #EA580C; border-left: 2px solid rgba(251,146,60,.3); }
 
 .zts-hist-row {
   display: grid; grid-template-columns: 160px repeat(7, 1fr) 90px;
@@ -576,7 +577,7 @@
   padding: 6px 4px; min-height: 52px; border-left: 1px solid var(--c-border-2); gap: 2px;
 }
 .zts-hist-cell.zts-hist-today    { background: var(--c-blue-light); }
-.zts-hist-cell.zts-hist-weekend  { background: rgba(0,0,0,.02); }
+.zts-hist-cell.zts-hist-weekend  { background: rgba(251,146,60,.06) !important; border-left: 2px solid rgba(251,146,60,.2) !important; }
 .zts-hist-cell.zts-hist-approved { background: var(--c-green-light); }
 .zts-hist-cell.zts-hist-pending  { background: var(--c-amber-light); }
 .zts-hist-cell.zts-hist-rejected { background: var(--c-red-light); }
@@ -609,7 +610,7 @@
   font-size: 11px; font-weight: 600; color: var(--c-ink-2);
   border-left: 1px solid var(--c-border-2);
 }
-.zts-hist-day-total.zts-hist-weekend { color: var(--c-ink-4); }
+.zts-hist-day-total.zts-hist-weekend { color: #EA580C; font-weight: 700; }
 .zts-hist-grand-total {
   display: flex; align-items: center; justify-content: center;
   padding: 4px 6px; border-left: 1px solid var(--c-border);

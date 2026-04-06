@@ -72,6 +72,7 @@ export interface ProjectCreateRequest {
 export interface Project {
   id: number; projectName: string; description?: string;
   managerId?: number; managerName?: string; startDate?: string; endDate?: string;
+  isExpired?: boolean;
 }
 export interface ProjectAssignment { id: number; projectId: number; projectName: string; }
 
@@ -82,6 +83,7 @@ export interface PayrollCreateRequest {
 export interface Payroll {
   payrollId: number; employeeName: string; employeeId: string;
   basicSalary: number; overtimeAmount: number; deductions: number;
+  dailyRate: number; weekendBonus: number;
   netSalary: number; salaryMonth: string; generatedDate: string;
 }
 

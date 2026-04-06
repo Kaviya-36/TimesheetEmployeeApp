@@ -175,10 +175,10 @@
           </div>
           <div class="zadm-project-list">
             @for (p of pagedProjects(); track p.id) {
-              <div class="zadm-project-row">
+              <div class="zadm-project-row" [class.zadm-project-expired]="p.isExpired">
                 <div class="zadm-project-icon">🗂</div>
                 <div class="zadm-project-info">
-                  <div class="zadm-project-name">{{ p.projectName }}</div>
+                  <div class="zadm-project-name">{{ p.projectName }}@if (p.isExpired) { <span class="zadm-expired-badge">Expired</span> }</div>
                   <div class="zadm-project-meta">{{ p.description || 'No description' }}</div>
                 </div>
                 <div class="zadm-project-manager">

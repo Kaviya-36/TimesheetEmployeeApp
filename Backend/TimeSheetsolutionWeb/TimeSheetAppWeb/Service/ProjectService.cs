@@ -338,6 +338,17 @@ namespace TimeSheetAppWeb.Services
                     };
                 }
 
+                // Reject expired projects
+                if (project.EndDate.HasValue && project.EndDate.Value.Date < DateTime.Today)
+                {
+                    _logger.LogWarning("Project ID {ProjectId} has expired and cannot accept new assignments", request.ProjectId);
+                    return new ApiResponse<ProjectAssignmentResponse>
+                    {
+                        Success = false,
+                        Message = "Cannot assign users to an expired project"
+                    };
+                }
+
                 // Allow only Employees and Managers
                 if (user.Role is not UserRole.Employee and not UserRole.Manager)
                 {
@@ -527,6 +538,7 @@ namespace TimeSheetAppWeb.Services
                         ProjectId = project.Id,
                         ProjectName = project.ProjectName,
                         UserId = user.Id,
+ 
                         UserName = user.Name,
                         UserEmail = user.Email
                     });
@@ -546,8 +558,18 @@ namespace TimeSheetAppWeb.Services
             }
         }
         // ---------------- HELPER: MAP PROJECT TO DTO ----------------
+        //enddate calculation.
         private ProjectResponse MapToDto(Project project, User? manager)
         {
+            var isExpired = project.EndDate.HasValue && project.EndDate.Value.Date < DateTime.Today;
+
+            // Auto-mark project as Completed if end date has passed
+            if (isExpired && project.Status == ProjectStatus.Active)
+            {
+                project.Status = ProjectStatus.Completed;
+                _ = _projectRepository.UpdateAsync(project.Id, project);
+            }
+
             return new ProjectResponse
             {
                 Id = project.Id,
@@ -556,7 +578,8 @@ namespace TimeSheetAppWeb.Services
                 ManagerId = project.ManagerId,
                 ManagerName = manager?.Name,
                 StartDate = project.StartDate,
-                EndDate = project.EndDate
+                EndDate = project.EndDate,
+                IsExpired = isExpired
             };
         }
     }

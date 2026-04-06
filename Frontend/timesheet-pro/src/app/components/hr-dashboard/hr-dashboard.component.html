@@ -646,9 +646,19 @@
               <span class="zpay-breakdown-val">₹{{ p.basicSalary | number:'1.0-0' }}</span>
             </div>
             <div class="zpay-breakdown-row">
+              <span class="zpay-breakdown-lbl">Daily Rate</span>
+              <span class="zpay-breakdown-val">₹{{ p.dailyRate | number:'1.0-2' }}</span>
+            </div>
+            <div class="zpay-breakdown-row">
               <span class="zpay-breakdown-lbl">Overtime</span>
               <span class="zpay-breakdown-val zpay-green">+₹{{ p.overtimeAmount | number:'1.0-0' }} ({{ p.overtimeAmount / 100 }}h)</span>
             </div>
+            @if (p.weekendBonus > 0) {
+              <div class="zpay-breakdown-row zpay-weekend-row">
+                <span class="zpay-breakdown-lbl">🗓 Weekend Bonus</span>
+                <span class="zpay-breakdown-val zpay-weekend">+₹{{ p.weekendBonus | number:'1.0-0' }}</span>
+              </div>
+            }
             <div class="zpay-breakdown-row">
               <span class="zpay-breakdown-lbl">Deductions</span>
               <span class="zpay-breakdown-val zpay-red">−₹{{ p.deductions | number:'1.0-0' }}</span>

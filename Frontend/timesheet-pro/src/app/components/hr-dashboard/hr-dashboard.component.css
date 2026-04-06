@@ -175,7 +175,7 @@
 .zmgr-month-total-hdr { padding: 10px 4px; font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; text-align: center; }
 .zmgr-month-today { background: #F0FDF4 !important; }
 .zmgr-month-today .zmgr-month-day-num { color: #16A34A; }
-.zmgr-month-weekend { background: rgba(0,0,0,.025) !important; color: #9CA3AF; }
+.zmgr-month-weekend { background: rgba(251,146,60,.08) !important; color: #EA580C; border-left: 2px solid rgba(251,146,60,.25) !important; }
 .zmgr-month-row { border-bottom: 1px solid #F3F4F6; transition: background .12s; }
 .zmgr-month-row:last-child { border-bottom: none; }
 .zmgr-month-row:hover { background: #FAFAFA; }
@@ -507,4 +507,15 @@
   width: 100%; margin-top: 28px; padding-top: 20px;
   border-top: 1px solid #F3F4F6;
   display: flex; justify-content: center;
+}
+
+/* ── Weekend bonus payroll row ──────────────────────────────────────────── */
+.zpay-weekend-row {
+  background: rgba(251,146,60,.07);
+  border-radius: 6px;
+  padding: 2px 4px;
+}
+.zpay-weekend {
+  color: #EA580C;
+  font-weight: 700;
 }

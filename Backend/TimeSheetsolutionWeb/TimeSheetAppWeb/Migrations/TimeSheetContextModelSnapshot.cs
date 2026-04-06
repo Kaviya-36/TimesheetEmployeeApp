@@ -292,6 +292,10 @@ namespace TimeSheetAppWeb.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal>("DailyRate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("Deductions")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -312,6 +316,10 @@ namespace TimeSheetAppWeb.Migrations
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("WeekendBonus")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -481,13 +489,13 @@ namespace TimeSheetAppWeb.Migrations
                     b.HasOne("TimeSheetAppWeb.Model.Project", "Project")
                         .WithMany("ProjectAssignments")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("TimeSheetAppWeb.Model.User", "User")
                         .WithMany("ProjectAssignments")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Project");
@@ -500,7 +508,7 @@ namespace TimeSheetAppWeb.Migrations
                     b.HasOne("TimeSheetAppWeb.Model.User", "User")
                         .WithMany("Attendances")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -516,7 +524,7 @@ namespace TimeSheetAppWeb.Migrations
                     b.HasOne("TimeSheetAppWeb.Model.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Mentor");
@@ -529,7 +537,7 @@ namespace TimeSheetAppWeb.Migrations
                     b.HasOne("TimeSheetAppWeb.Model.User", "Intern")
                         .WithMany()
                         .HasForeignKey("InternId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Intern");
@@ -551,7 +559,7 @@ namespace TimeSheetAppWeb.Migrations
                     b.HasOne("TimeSheetAppWeb.Model.User", "User")
                         .WithMany("LeaveRequests")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("ApprovedBy");
@@ -592,13 +600,13 @@ namespace TimeSheetAppWeb.Migrations
                     b.HasOne("TimeSheetAppWeb.Model.Project", "Project")
                         .WithMany("Timesheets")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("TimeSheetAppWeb.Model.User", "User")
                         .WithMany("Timesheets")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("ApprovedBy");

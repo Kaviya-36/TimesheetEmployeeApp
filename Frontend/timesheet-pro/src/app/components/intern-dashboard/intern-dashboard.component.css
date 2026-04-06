@@ -71,7 +71,7 @@
 .zts-hist-day-name { font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
 .zts-hist-day-date { font-size: 11px; margin-top: 1px; }
 .zts-hist-day-hdr.zts-hist-today { background: #EFF6FF; color: #2563EB; }
-.zts-hist-day-hdr.zts-hist-weekend { background: rgba(0,0,0,.025); color: #9CA3AF; }
+.zts-hist-day-hdr.zts-hist-weekend { background: rgba(251,146,60,.10); color: #EA580C; border-left: 2px solid rgba(251,146,60,.3); }
 .zts-hist-row {
   display: grid; grid-template-columns: 160px repeat(7, 1fr) 90px;
   border-bottom: 1px solid #F3F4F6; min-width: max-content;
@@ -88,7 +88,7 @@
   padding: 6px 4px; min-height: 52px; border-left: 1px solid #F3F4F6; gap: 2px;
 }
 .zts-hist-cell.zts-hist-today    { background: #EFF6FF; }
-.zts-hist-cell.zts-hist-weekend  { background: rgba(0,0,0,.02); }
+.zts-hist-cell.zts-hist-weekend  { background: rgba(251,146,60,.06) !important; border-left: 2px solid rgba(251,146,60,.2) !important; }
 .zts-hist-cell.zts-hist-approved { background: #F0FDF4; }
 .zts-hist-cell.zts-hist-pending  { background: #FFFBEB; }
 .zts-hist-cell.zts-hist-rejected { background: #FEF2F2; }
@@ -106,7 +106,7 @@
   text-transform: uppercase; position: sticky; left: 0; z-index: 1; background: #F9FAFB;
 }
 .zts-hist-day-total { text-align: center; padding: 8px 4px; font-size: 11px; font-weight: 600; color: #374151; border-left: 1px solid #F3F4F6; }
-.zts-hist-day-total.zts-hist-weekend { color: #9CA3AF; }
+.zts-hist-day-total.zts-hist-weekend { color: #EA580C; font-weight: 700; }
 .zts-hist-grand-total { display: flex; align-items: center; justify-content: center; padding: 4px 6px; border-left: 1px solid #E5E7EB; }
 
 /* ── Monthly calendar grid ── */
@@ -125,7 +125,7 @@
 .zts-month-day-num  { font-weight: 700; font-size: 12px; color: #374151; }
 .zts-month-day-name { font-size: 9px; color: #9CA3AF; }
 .zts-month-day-hdr.zts-month-today   { background: #EFF6FF; color: #2563EB; }
-.zts-month-day-hdr.zts-month-weekend { background: rgba(0,0,0,.025); color: #9CA3AF; }
+.zts-month-day-hdr.zts-month-weekend { background: rgba(251,146,60,.10); color: #EA580C; border-left: 2px solid rgba(251,146,60,.3); }
 .zts-month-row {
   display: grid; grid-template-columns: 150px repeat(var(--month-days, 31), 44px) 72px;
   border-bottom: 1px solid #F3F4F6; width: max-content; min-width: 100%;
@@ -142,7 +142,7 @@
   padding: 4px 2px; min-height: 44px; border-left: 1px solid #F3F4F6; font-size: 11px; gap: 2px;
 }
 .zts-month-cell.zts-month-today    { background: #EFF6FF; }
-.zts-month-cell.zts-month-weekend  { background: rgba(0,0,0,.02); }
+.zts-month-cell.zts-month-weekend  { background: rgba(251,146,60,.06) !important; border-left: 2px solid rgba(251,146,60,.2) !important; }
 .zts-month-cell.zts-month-approved { background: #F0FDF4; }
 .zts-month-cell.zts-month-pending  { background: #FFFBEB; }
 .zts-month-cell.zts-month-rejected { background: #FEF2F2; }
@@ -157,7 +157,7 @@
   text-transform: uppercase; position: sticky; left: 0; z-index: 1; background: #F9FAFB;
 }
 .zts-month-day-total { text-align: center; padding: 8px 2px; font-size: 11px; font-weight: 600; color: #374151; border-left: 1px solid #F3F4F6; }
-.zts-month-day-total.zts-month-weekend { color: #9CA3AF; }
+.zts-month-day-total.zts-month-weekend { color: #EA580C; font-weight: 700; }
 .zts-month-grand-total { display: flex; align-items: center; justify-content: center; padding: 4px 6px; border-left: 1px solid #E5E7EB; }
 
 /* ── List view table ── */
