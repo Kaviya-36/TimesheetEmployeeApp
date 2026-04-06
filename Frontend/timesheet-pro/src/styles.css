@@ -683,7 +683,7 @@ textarea.zform-control { resize: vertical; min-height: 80px; }
   border-left: 1px solid #F3F4F6; transition: background .15s;
 }
 .zwts-day-hdr.zwts-today { background: rgba(16,185,129,.08); color: #10B981; border-left-color: rgba(16,185,129,.2); }
-.zwts-day-hdr.zwts-weekend { background: rgba(0,0,0,.02); color: #9CA3AF; }
+.zwts-day-hdr.zwts-weekend { background: rgba(251,146,60,.10); color: #EA580C; border-left: 2px solid rgba(251,146,60,.3); }
 .zwts-day-name { font-weight: 800; text-transform: uppercase; letter-spacing: .6px; font-size: 10px; }
 .zwts-day-date { font-size: 12px; font-weight: 600; margin-top: 2px; color: inherit; }
 .zwts-rows { min-height: 80px; }
@@ -711,7 +711,7 @@ textarea.zform-control { resize: vertical; min-height: 80px; }
   position: relative; transition: background .15s;
 }
 .zwts-cell.zwts-today   { background: rgba(16,185,129,.05); border-left-color: rgba(16,185,129,.2); }
-.zwts-cell.zwts-weekend { background: rgba(0,0,0,.02) !important; }
+.zwts-cell.zwts-weekend { background: rgba(251,146,60,.06) !important; border-left: 2px solid rgba(251,146,60,.2) !important; }
 .zwts-cell-approved     { background: rgba(16,185,129,.07) !important; }
 .zwts-cell-rejected     { background: rgba(220,38,38,.05) !important; }
 .zwts-cell-empty        { border-left: 1px solid #F3F4F6; }
@@ -780,7 +780,7 @@ textarea.zform-control { resize: vertical; min-height: 80px; }
   text-align: center; font-size: 12px; font-weight: 700; color: #374151;
   padding: 4px; border-left: 1px solid #F3F4F6;
 }
-.zwts-day-total.zwts-weekend { color: #9CA3AF; background: rgba(0,0,0,.02); }
+.zwts-day-total.zwts-weekend { color: #EA580C; background: rgba(251,146,60,.07); font-weight: 700; }
 .zwts-grand-total {
   text-align: center; font-size: 14px; font-weight: 900; color: #10B981;
   border-left: 2px solid #E5E7EB; padding: 4px 8px;
@@ -897,7 +897,7 @@ textarea.zform-control { resize: vertical; min-height: 80px; }
 .zmgr-month-today   { background: #EFF6FF !important; }
 .zmgr-month-today .zmgr-month-day-num  { color: #2563EB; }
 .zmgr-month-today .zmgr-month-day-name { color: #2563EB; }
-.zmgr-month-weekend { background: rgba(0,0,0,.025) !important; color: #9CA3AF; }
+.zmgr-month-weekend { background: rgba(251,146,60,.08) !important; color: #EA580C; border-left: 2px solid rgba(251,146,60,.25) !important; }
 .zmgr-month-row { border-bottom: 1px solid #F3F4F6; transition: background .12s; }
 .zmgr-month-row:last-child { border-bottom: none; }
 .zmgr-month-row:hover { background: #FAFAFA; }

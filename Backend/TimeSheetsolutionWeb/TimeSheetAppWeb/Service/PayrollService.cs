@@ -9,15 +9,18 @@ namespace TimeSheetAppWeb.Services
     {
         private readonly IRepository<int, Payroll> _payrollRepository;
         private readonly IRepository<int, User> _userRepository;
+        private readonly IRepository<int, Timesheet> _timesheetRepository;
         private readonly ILogger<PayrollService> _logger;
 
         public PayrollService(
             IRepository<int, Payroll> payrollRepository,
             IRepository<int, User> userRepository,
+            IRepository<int, Timesheet> timesheetRepository,
             ILogger<PayrollService> logger)
         {
             _payrollRepository = payrollRepository;
             _userRepository = userRepository;
+            _timesheetRepository = timesheetRepository;
             _logger = logger;
         }
 
@@ -58,7 +61,37 @@ namespace TimeSheetAppWeb.Services
                         Message = $"Payroll for {user.Name} has already been generated for {request.SalaryMonth:MMMM yyyy}."
                     };
 
-                decimal netSalary = request.BasicSalary + request.OvertimeAmount - request.Deductions;
+                // ── Calculate daily rate and weekend bonus ─────────────────────────
+                // Count working weekdays in the salary month
+                var salaryYear  = request.SalaryMonth.Year;
+                var salaryMonthNum = request.SalaryMonth.Month;
+                var daysInMonth = DateTime.DaysInMonth(salaryYear, salaryMonthNum);
+                int weekdayCount = Enumerable.Range(1, daysInMonth)
+                    .Count(d => { var day = new DateTime(salaryYear, salaryMonthNum, d).DayOfWeek;
+                                  return day != DayOfWeek.Saturday && day != DayOfWeek.Sunday; });
+
+                decimal dailyRate = weekdayCount > 0 ? Math.Round(request.BasicSalary / weekdayCount, 2) : 0;
+
+                // Find approved timesheets for this user in the salary month that fall on weekends
+                var allTimesheets = await _timesheetRepository.GetAllAsync() ?? Enumerable.Empty<Timesheet>();
+                var weekendDaysWorked = allTimesheets
+                    .Where(t => t.UserId == request.UserId
+                             && t.Status == TimesheetStatus.Approved
+                             && t.WorkDate.Year == salaryYear
+                             && t.WorkDate.Month == salaryMonthNum
+                             && (t.WorkDate.DayOfWeek == DayOfWeek.Saturday || t.WorkDate.DayOfWeek == DayOfWeek.Sunday))
+                    .Select(t => t.WorkDate.Date)
+                    .Distinct()
+                    .Count();
+
+                // Weekend bonus = 1x daily rate extra per weekend day (total pay = 2x normal)
+                decimal weekendBonus = weekendDaysWorked * dailyRate;
+
+                _logger.LogInformation(
+                    "Payroll calc for UserId={UserId}: DailyRate={DailyRate}, WeekendDaysWorked={WeekendDays}, WeekendBonus={WeekendBonus}",
+                    request.UserId, dailyRate, weekendDaysWorked, weekendBonus);
+
+                decimal netSalary = request.BasicSalary + request.OvertimeAmount + weekendBonus - request.Deductions;
 
                 var payroll = new Payroll
                 {
@@ -66,6 +99,8 @@ namespace TimeSheetAppWeb.Services
                     BasicSalary = request.BasicSalary,
                     OvertimeAmount = request.OvertimeAmount,
                     Deductions = request.Deductions,
+                    DailyRate = dailyRate,
+                    WeekendBonus = weekendBonus,
                     NetSalary = netSalary,
                     SalaryMonth = request.SalaryMonth,
                     GeneratedDate = DateTime.Now
@@ -251,6 +286,8 @@ namespace TimeSheetAppWeb.Services
                 BasicSalary = payroll.BasicSalary,
                 OvertimeAmount = payroll.OvertimeAmount,
                 Deductions = payroll.Deductions,
+                DailyRate = payroll.DailyRate,
+                WeekendBonus = payroll.WeekendBonus,
                 NetSalary = payroll.NetSalary,
                 SalaryMonth = payroll.SalaryMonth,
                 GeneratedDate = payroll.GeneratedDate

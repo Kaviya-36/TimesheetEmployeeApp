@@ -9,6 +9,8 @@
         public decimal BasicSalary { get; set; }
         public decimal OvertimeAmount { get; set; }
         public decimal Deductions { get; set; }
+        public decimal DailyRate { get; set; }
+        public decimal WeekendBonus { get; set; }
         public decimal NetSalary { get; set; }
 
         public DateTime SalaryMonth { get; set; }

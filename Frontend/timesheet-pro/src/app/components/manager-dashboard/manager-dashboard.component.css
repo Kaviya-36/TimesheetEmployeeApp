@@ -183,7 +183,7 @@
 .zmgr-month-total-hdr, .zmgr-month-action-hdr { padding: 10px 4px; font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; text-align: center; }
 .zmgr-month-today { background: #EFF6FF !important; }
 .zmgr-month-today .zmgr-month-day-num, .zmgr-month-today .zmgr-month-day-name { color: #2563EB; }
-.zmgr-month-weekend { background: rgba(0,0,0,.025) !important; color: #9CA3AF; }
+.zmgr-month-weekend { background: rgba(251,146,60,.08) !important; color: #EA580C; border-left: 2px solid rgba(251,146,60,.25) !important; }
 .zmgr-month-row { border-bottom: 1px solid #F3F4F6; transition: background .12s; }
 .zmgr-month-row:last-child { border-bottom: none; }
 .zmgr-month-row:hover { background: #FAFAFA; }
@@ -377,3 +377,22 @@
 .zprofile-info-label { display: block; font-size: 10px; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 5px; }
 .zprofile-info-value { display: block; font-size: 14px; font-weight: 700; color: #111827; }
 .zprofile-footer { width: 100%; margin-top: 28px; padding-top: 20px; border-top: 1px solid #F3F4F6; display: flex; justify-content: center; }
+
+/* ── Expired project styles ─────────────────────────────────────────────── */
+.zmgr-project-expired {
+  opacity: 0.5;
+  filter: blur(0.6px) grayscale(40%);
+  pointer-events: none;
+  position: relative;
+}
+.zmgr-expired-badge {
+  margin-left: auto;
+  background: #EF4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}

@@ -245,3 +245,21 @@ input[type="time"].zform-control { -webkit-appearance: none; appearance: none; }
   .zadm-audit-row { grid-template-columns: 110px 1fr; grid-template-rows: auto auto; }
   .zadm-audit-key, .zadm-audit-meta { grid-column: 1 / -1; }
 }
+
+/* ── Expired project styles ─────────────────────────────────────────────── */
+.zadm-project-expired {
+  opacity: 0.5;
+  filter: blur(0.6px) grayscale(40%);
+}
+.zadm-expired-badge {
+  display: inline-block;
+  margin-left: 8px;
+  background: #EF4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
