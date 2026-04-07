@@ -396,13 +396,14 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
 
   toStr(v: any): string { return String(v); }
 
-  /** Returns projects not yet added to the current grid. */
+  /** Returns projects not yet added to the current grid and not expired. */
   availableProjects = () => this.projectsAssignment().filter(a =>
-    !this.gridRows().some(r => r.projectName === a.projectName)
+    !a.isExpired && !this.gridRows().some(r => r.projectName === a.projectName)
   );
 
   /** Adds a new project row to the weekly grid. */
   addGridRow(asgn: ProjectAssignment) {
+    if (asgn.isExpired) { this.toast.error('Expired Project', 'Cannot log time on an expired project.'); return; }
     if (this.gridRows().some(r => r.projectName === asgn.projectName)) return;
     this.gridRows.update(rows => [...rows, {
       projectId: asgn.projectId || 0,
@@ -567,6 +568,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
 
     const entries: { projectId: number; projectName: string; workDate: string; hours: number; taskDescription?: string }[] = [];
     for (const row of this.gridRows()) {
+      const asgn = this.projectsAssignment().find(a => a.projectName === row.projectName);
       for (const [dateStr, val] of Object.entries(row.hours)) {
         const hours = this.parseCell(val); if (!hours) continue;
         // On current week: skip future dates
@@ -574,6 +576,12 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
         // Skip approved cells
         const existing = row.tsPerDay?.[dateStr];
         if (existing && Number(existing.status) === 1) continue;
+        // Block dates before project start
+        if (asgn?.startDate && dateStr < asgn.startDate) {
+          this.toast.error('Invalid Date', `"${row.projectName}" starts on ${new Date(asgn.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}. Cannot log time before that.`);
+          this.gridSaving.set(false);
+          return;
+        }
         entries.push({
           projectId:       row.projectId,
           projectName:     row.projectName,
@@ -791,6 +799,11 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     const v = this.tsForm.value; const uid = this.auth.currentUser(); if (!uid) return;
     const asgn = this.projectsAssignment().find(p => p.id === +v.projectId!);
     if (!asgn) { this.toast.error('Invalid Project', 'Please select a valid project.'); return; }
+    if (asgn.isExpired) { this.toast.error('Expired Project', 'Cannot log time on an expired project.'); return; }
+    if (asgn.startDate && v.workDate! < asgn.startDate) {
+      this.toast.error('Invalid Date', `Work date cannot be before the project start date (${new Date(asgn.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })})`);
+      return;
+    }
     this.timesheetService.create(uid, {
       projectId: asgn.projectId, projectName: asgn.projectName, workDate: v.workDate!,
       startTime: this.formatTime(v.startTime!), endTime: this.formatTime(v.endTime!),

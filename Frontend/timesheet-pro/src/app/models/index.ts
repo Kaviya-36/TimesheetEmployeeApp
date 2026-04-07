@@ -72,9 +72,9 @@ export interface ProjectCreateRequest {
 export interface Project {
   id: number; projectName: string; description?: string;
   managerId?: number; managerName?: string; startDate?: string; endDate?: string;
-  isExpired?: boolean;
+  isExpired?: boolean; status?: string;
 }
-export interface ProjectAssignment { id: number; projectId: number; projectName: string; }
+export interface ProjectAssignment { id: number; projectId: number; projectName: string; startDate?: string; endDate?: string; isExpired?: boolean; }
 
 // Payroll
 export interface PayrollCreateRequest {

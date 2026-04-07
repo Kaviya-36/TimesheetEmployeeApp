@@ -247,19 +247,9 @@ input[type="time"].zform-control { -webkit-appearance: none; appearance: none; }
 }
 
 /* ── Expired project styles ─────────────────────────────────────────────── */
-.zadm-project-expired {
-  opacity: 0.5;
-  filter: blur(0.6px) grayscale(40%);
-}
+.zadm-project-expired { background: #FFF5F5; border-left: 3px solid #EF4444; opacity: .75; }
 .zadm-expired-badge {
-  display: inline-block;
-  margin-left: 8px;
-  background: #EF4444;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 20px;
-  letter-spacing: 0.5px;
-  vertical-align: middle;
+  display: inline-block; margin-left: 8px; background: #EF4444; color: #fff;
+  font-size: 10px; font-weight: 700; padding: 2px 8px;
+  border-radius: 20px; vertical-align: middle;
 }

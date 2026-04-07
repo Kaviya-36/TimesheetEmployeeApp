@@ -500,10 +500,11 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
   }
 
   myAvailableProjects = () => this.myProjectAssign().filter(a =>
-    !this.myGridRows().some(r => r.projectName === a.projectName)
+    !a.isExpired && !this.myGridRows().some(r => r.projectName === a.projectName)
   );
 
   myAddRow(asgn: any) {
+    if (asgn.isExpired) { this.toast.error('Expired Project', 'Cannot log time on an expired project.'); return; }
     this.myGridRows.update(rows => [...rows, { projectId: asgn.projectId||0, projectName: asgn.projectName, hours:{}, notes:{}, tsPerDay:{} }]);
     this.myShowPicker.set(false);
   }
@@ -555,12 +556,19 @@ export class ManagerDashboardComponent implements OnInit, OnDestroy {
     const isCurrentWeek = this.myWeekOffset() === 0;
     const entries: any[] = [];
     for (const row of this.myGridRows()) {
+      const asgn = this.myProjectAssign().find((a: any) => a.projectName === row.projectName);
       for (const [ds, val] of Object.entries(row.hours)) {
         const hours = this.myParseCell(val as string); if (!hours) continue;
         // On current week: skip future dates
         if (isCurrentWeek && ds > todayStr) continue;
         const existing = row.tsPerDay?.[ds];
         if (existing && Number(existing.status) === 1) continue;
+        // Block dates before project start
+        if (asgn?.startDate && ds < asgn.startDate) {
+          this.toast.error('Invalid Date', `"${row.projectName}" starts on ${new Date(asgn.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}. Cannot log time before that.`);
+          this.myGridSaving.set(false);
+          return;
+        }
         entries.push({ projectId: row.projectId, projectName: row.projectName, workDate: ds, hours, taskDescription: row.notes?.[ds] ?? '' });
       }
     }

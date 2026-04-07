@@ -193,7 +193,7 @@
                       <div class="zdash-recent-info">
                         <div class="zdash-recent-project">{{ p.projectName }}</div>
                       </div>
-                      <span class="zbadge zbadge-role" style="font-size:10px">Active</span>
+                      <span class="zbadge" [class]="p.isExpired ? 'zbadge-danger' : 'zbadge-role'" style="font-size:10px">{{ p.isExpired ? 'Expired' : 'Active' }}</span>
                     </div>
                   }
                 </div>

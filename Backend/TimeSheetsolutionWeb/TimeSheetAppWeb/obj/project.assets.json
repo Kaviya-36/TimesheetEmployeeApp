@@ -3553,23 +3553,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Sangeetha.Rengasamy\\.nuget\\packages\\": {},
+    "C:\\Users\\Kaviya.N\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Sangeetha\\Kaviya-timesheet\\TimesheetEmployeeApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\TimeSheetAppWeb.csproj",
+      "projectUniqueName": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Desktop\\TimesheetEmployeeApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\TimeSheetAppWeb.csproj",
       "projectName": "TimeSheetAppWeb",
-      "projectPath": "C:\\Sangeetha\\Kaviya-timesheet\\TimesheetEmployeeApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\TimeSheetAppWeb.csproj",
-      "packagesPath": "C:\\Users\\Sangeetha.Rengasamy\\.nuget\\packages\\",
-      "outputPath": "C:\\Sangeetha\\Kaviya-timesheet\\TimesheetEmployeeApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\obj\\",
+      "projectPath": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Desktop\\TimesheetEmployeeApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\TimeSheetAppWeb.csproj",
+      "packagesPath": "C:\\Users\\Kaviya.N\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Kaviya.N\\OneDrive - New American Funding\\Desktop\\TimesheetEmployeeApp\\Backend\\TimeSheetsolutionWeb\\TimeSheetAppWeb\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Sangeetha.Rengasamy\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Kaviya.N\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -3596,7 +3596,7 @@
         "auditLevel": "low",
         "auditMode": "all"
       },
-      "SdkAnalysisLevel": "10.0.100"
+      "SdkAnalysisLevel": "10.0.200"
     },
     "frameworks": {
       "net10.0": {
@@ -3646,7 +3646,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.200/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

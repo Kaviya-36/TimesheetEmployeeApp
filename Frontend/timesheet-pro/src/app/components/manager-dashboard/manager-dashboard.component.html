@@ -614,7 +614,7 @@
             <div class="zassign-row">
               <select class="zfilter-select" [(ngModel)]="selProjectId">
                 <option [value]="null">— Select Project —</option>
-                @for (p of projects(); track p.id) { <option [value]="p.id" [disabled]="p.isExpired">{{ p.projectName }}{{ p.isExpired ? ' (Expired)' : '' }}</option> }
+                @for (p of projects(); track p.id) { <option [value]="p.id" [disabled]="p.isExpired">{{ p.projectName }}{{ p.isExpired ? ' (' + (p.status || 'Expired') + ')' : '' }}</option> }
               </select>
               <select class="zfilter-select" [(ngModel)]="selUserId">
                 <option [value]="null">— Select Member —</option>
@@ -635,7 +635,7 @@
                   <div class="zmgr-project-name">{{ p.projectName }}</div>
                   <div class="zmgr-project-manager">{{ p.managerName || 'No manager' }}</div>
                 </div>
-                @if (p.isExpired) { <span class="zmgr-expired-badge">Expired</span> }
+                @if (p.isExpired) { <span class="zmgr-expired-badge">{{ p.status || 'Expired' }}</span> }
               </div>
               <div class="zmgr-project-desc">{{ p.description || 'No description provided.' }}</div>
               <div class="zmgr-project-dates">

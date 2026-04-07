@@ -378,21 +378,10 @@
 .zprofile-info-value { display: block; font-size: 14px; font-weight: 700; color: #111827; }
 .zprofile-footer { width: 100%; margin-top: 28px; padding-top: 20px; border-top: 1px solid #F3F4F6; display: flex; justify-content: center; }
 
-/* ── Expired project styles ─────────────────────────────────────────────── */
-.zmgr-project-expired {
-  opacity: 0.5;
-  filter: blur(0.6px) grayscale(40%);
-  pointer-events: none;
-  position: relative;
-}
+/* ── Expired project card ────────────────────────────────────────────────── */
+.zmgr-project-expired { border-color: #FECACA; background: #FFF5F5; opacity: .75; }
 .zmgr-expired-badge {
-  margin-left: auto;
-  background: #EF4444;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 20px;
-  letter-spacing: 0.5px;
-  pointer-events: none;
+  margin-left: auto; background: #EF4444; color: #fff;
+  font-size: 10px; font-weight: 700; padding: 2px 8px;
+  border-radius: 20px; flex-shrink: 0;
 }

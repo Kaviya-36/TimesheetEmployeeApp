@@ -125,6 +125,14 @@ namespace TimeSheetAppWeb.Services
                     if (project == null)
                     { result.Errors.Add($"Project not found: {entry.ProjectName}"); result.Skipped++; continue; }
 
+                    // ❌ Reject expired project
+                    if (project.EndDate.HasValue && project.EndDate.Value.Date < DateTime.Today)
+                    { result.Errors.Add($"Project '{project.ProjectName}' is expired. Cannot log time."); result.Skipped++; continue; }
+
+                    // ❌ Reject work date before project start date
+                    if (workDate.Date < project.StartDate.Date)
+                    { result.Errors.Add($"Work date {workDate:dd MMM yyyy} is before project '{project.ProjectName}' start date ({project.StartDate:dd MMM yyyy})."); result.Skipped++; continue; }
+
                     var startTime = new TimeSpan(9, 0, 0);
                     var totalMinutes = (int)Math.Round(entry.Hours * 60);
                     var endTime = startTime.Add(TimeSpan.FromMinutes(totalMinutes));
@@ -255,6 +263,14 @@ namespace TimeSheetAppWeb.Services
                 var isAssigned = assignments.Data?.Any(a => a.ProjectId == project.Id) ?? false;
                 if (!isAssigned && project.ProjectName != "Intern Tasks")
                     return new ApiResponse<TimesheetResponse> { Success = false, Message = "User is not assigned to this project" };
+
+                // ❌ Reject expired project
+                if (project.EndDate.HasValue && project.EndDate.Value.Date < DateTime.Today)
+                    return new ApiResponse<TimesheetResponse> { Success = false, Message = "Cannot log time on an expired project" };
+
+                // ❌ Reject work date before project start date
+                if (request.WorkDate.Date < project.StartDate.Date)
+                    return new ApiResponse<TimesheetResponse> { Success = false, Message = $"Work date cannot be before the project start date ({project.StartDate:dd MMM yyyy})" };
 
                 // ❌ Prevent duplicate
                 var allExisting = (await _timesheetRepository.GetAllAsync())?.ToList() ?? new List<Timesheet>();

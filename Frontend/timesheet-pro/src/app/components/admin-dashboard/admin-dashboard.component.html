@@ -178,7 +178,7 @@
               <div class="zadm-project-row" [class.zadm-project-expired]="p.isExpired">
                 <div class="zadm-project-icon">🗂</div>
                 <div class="zadm-project-info">
-                  <div class="zadm-project-name">{{ p.projectName }}@if (p.isExpired) { <span class="zadm-expired-badge">Expired</span> }</div>
+                  <div class="zadm-project-name">{{ p.projectName }}@if (p.isExpired) { <span class="zadm-expired-badge">{{ p.status || 'Expired' }}</span> }</div>
                   <div class="zadm-project-meta">{{ p.description || 'No description' }}</div>
                 </div>
                 <div class="zadm-project-manager">

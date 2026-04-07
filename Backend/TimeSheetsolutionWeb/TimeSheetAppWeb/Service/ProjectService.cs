@@ -393,7 +393,10 @@ namespace TimeSheetAppWeb.Services
                         ProjectName = project.ProjectName,
                         UserId = user.Id,
                         UserName = user.Name,
-                        UserEmail = user.Email
+                        UserEmail = user.Email,
+                        EndDate = project.EndDate,
+                        IsExpired = project.EndDate.HasValue && project.EndDate.Value.Date < DateTime.Today,
+                        StartDate = project.StartDate
                     }
                 };
             }
@@ -472,7 +475,10 @@ namespace TimeSheetAppWeb.Services
                         ProjectName = project.ProjectName,
                         UserId = user!.Id,
                         UserName = user.Name,
-                        UserEmail = user.Email
+                        UserEmail = user.Email,
+                        EndDate = project.EndDate,
+                        IsExpired = project.EndDate.HasValue && project.EndDate.Value.Date < DateTime.Today,
+                        StartDate = project.StartDate
                     });
                 }
 
@@ -525,7 +531,10 @@ namespace TimeSheetAppWeb.Services
                         ProjectName = project.ProjectName,
                         UserId = user.Id,
                         UserName = user.Name,
-                        UserEmail = user.Email
+                        UserEmail = user.Email,
+                        EndDate = project.EndDate,
+                        IsExpired = project.EndDate.HasValue && project.EndDate.Value.Date < DateTime.Today,
+                        StartDate = project.StartDate
                     });
                 }
 
@@ -538,9 +547,11 @@ namespace TimeSheetAppWeb.Services
                         ProjectId = project.Id,
                         ProjectName = project.ProjectName,
                         UserId = user.Id,
- 
                         UserName = user.Name,
-                        UserEmail = user.Email
+                        UserEmail = user.Email,
+                        EndDate = project.EndDate,
+                        IsExpired = project.EndDate.HasValue && project.EndDate.Value.Date < DateTime.Today,
+                        StartDate = project.StartDate
                     });
                 }
 
@@ -558,7 +569,6 @@ namespace TimeSheetAppWeb.Services
             }
         }
         // ---------------- HELPER: MAP PROJECT TO DTO ----------------
-        //enddate calculation.
         private ProjectResponse MapToDto(Project project, User? manager)
         {
             var isExpired = project.EndDate.HasValue && project.EndDate.Value.Date < DateTime.Today;
@@ -570,6 +580,9 @@ namespace TimeSheetAppWeb.Services
                 _ = _projectRepository.UpdateAsync(project.Id, project);
             }
 
+            // Determine human-readable status
+            var statusLabel = isExpired ? "Expired" : project.Status.ToString();
+
             return new ProjectResponse
             {
                 Id = project.Id,
@@ -579,7 +592,8 @@ namespace TimeSheetAppWeb.Services
                 ManagerName = manager?.Name,
                 StartDate = project.StartDate,
                 EndDate = project.EndDate,
-                IsExpired = isExpired
+                IsExpired = isExpired,
+                Status = statusLabel
             };
         }
     }
